@@ -25,6 +25,19 @@
         </button> 
     </div>
   </header>
+  <main>
+    <section class="pesquisa">
+      <div>
+        <input
+      type="text"
+      v-model="searchQuery"
+      placeholder="Encontre eventos, shows, restaurantes"
+      class="search-input"
+    />
+    <button @click="search" class="search-button">🔍</button>
+      </div>
+    </section>
+  </main>
 </template>
 
 <style scoped>
