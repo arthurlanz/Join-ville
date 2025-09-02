@@ -1,4 +1,6 @@
 <script setup>
+import CadastroComponent from './CadastroComponent.vue';
+import CarrosselComponent from './CarrosselComponent.vue';
 
 const categorias = [
   {
@@ -70,6 +72,10 @@ const categorias = [
 
 <template>
   <main class="main">
+    <!-- CARROSSEL -->
+    <CarrosselComponent />
+
+    <!-- SEÇÕES DE EVENTOS -->
     <section v-for="(cat, i) in categorias" :key="i" class="categoria">
       <div class="categoria-header">
         <h2>{{ cat.titulo }}</h2>
@@ -79,82 +85,84 @@ const categorias = [
         </div>
       </div>
 
-      <!-- GRID -->
       <div class="grid">
-        <div v-for="(item, j) in cat.itens" :key="j" class="card">
-          <img :src="item.img" :alt="item.nome" />
-          <p>{{ item.nome }}</p>
-        </div>
+        <article v-for="(item, j) in cat.itens" :key="j" class="card">
+          <div class="card-media" :data-pos="item.pos || 'center'">
+            <img :src="item.img" :alt="item.nome" />
+          </div>
+          <p class="card-title">{{ item.nome }}</p>
+        </article>
       </div>
     </section>
+
+    <!-- BLOCO DE CADASTRO -->
+    <CadastroComponent />
   </main>
 </template>
 
 <style scoped>
-.main {
-  padding: 2rem;
+.main{
+  padding: 0 24px 24px;
   background: #FFFCEE;
   color: #1a1a1a;
   font-family: 'Inter', sans-serif;
+  max-width: 1280px; margin: 0 auto;
 }
-
-.categoria {
-  margin-bottom: 3rem;
+.categoria{ margin: 18px 0 34px; }
+.categoria-header{
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 6px 0 12px;
 }
-
-.categoria-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 1.5rem 0;
+.categoria-header h2{
+  font-size: 24px; font-weight: 800; color: #1a1a1a;
 }
-
-.categoria-header h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
+.links{ display: flex; gap: 18px; }
+.links a{
+  color: #11508E; text-decoration: none; font-weight: 700; font-size: 14px;
 }
+.links a:hover{ text-decoration: underline; }
 
-.categoria-header .links {
-  display: flex;
-  gap: 1rem;
-}
-
-.categoria-header a {
-  color: #11508E;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.grid {
+/* Grid responsivo */
+.grid{
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.2rem;
+  gap: 18px;
+}
+@media (max-width: 1100px){
+  .grid{ grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 760px){
+  .grid{ grid-template-columns: repeat(2, 1fr); }
 }
 
-.card {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease;
+/* Cards */
+.card{
+  background: #fff; border-radius: 16px; overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  transition: transform .18s ease, box-shadow .18s ease;
 }
-
-.card:hover {
+.card:hover{
   transform: translateY(-4px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.12);
 }
-
-.card img {
-  width: 100%;
-  height: 160px;
+.card-media{
+  aspect-ratio: 16 / 9;
+  background: #f3f3f3; position: relative;
+}
+.card-media img{
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
   object-fit: cover;
+  object-position: center;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
 }
+.card-media[data-pos="top"] img{ object-position: 50% 20%; }
+.card-media[data-pos="bottom"] img{ object-position: 50% 80%; }
 
-.card p {
-  padding: 0.8rem;
-  font-weight: 500;
-  color: #222;
-  font-size: 0.95rem;
-  text-align: center;
+.card-title{
+  padding: 10px 12px 12px;
+  text-align: center; font-weight: 600; font-size: 14px; color: #222;
 }
 </style>

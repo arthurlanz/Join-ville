@@ -12,7 +12,7 @@
       <div class="links">
         <h3>Categorias</h3>
         <ul>
-          <li><a href="#">Gastronomia</a></li>
+          <li><a href="">Gastronomia</a></li>
           <li><a href="#">Clássicos de Joinville</a></li>
           <li><a href="#">Festas e Shows</a></li>
           <li><a href="#">Esportes</a></li>
@@ -26,9 +26,9 @@
         <p>Email: contato@joinville.com</p>
         <p>Telefone: (47) 0000-0000</p>
         <div class="social">
-          <a href="#"><img src="" alt="Facebook" /></a>
-          <a href="#"><img src="" alt="Instagram" /></a>
-          <a href="#"><img src="" alt="Youtube" /></a>
+          <a href=""><img src="" alt="Facebook" /></a>
+          <a href=""><img src="" alt="Instagram" /></a>
+          <a href=""><img src="" alt="Youtube" /></a>
         </div>
       </div>
     </div>
@@ -86,10 +86,6 @@
   transition: color 0.2s ease;
 }
 
-.footer ul li a:hover {
-  color: #FFD700;
-}
-
 .contato p {
   margin-bottom: 0.5rem;
 }
@@ -104,11 +100,6 @@
   width: 24px;
   height: 24px;
   filter: brightness(0) invert(1);
-  transition: transform 0.2s ease;
-}
-
-.social img:hover {
-  transform: scale(1.1);
 }
 
 .copy {

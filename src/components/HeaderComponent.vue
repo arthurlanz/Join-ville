@@ -100,9 +100,6 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   text-decoration: none;
   padding: .25rem 0;
 }
-.main-nav a:hover{
-  text-decoration: underline;
-}
 
 .actions{
   display: flex;
