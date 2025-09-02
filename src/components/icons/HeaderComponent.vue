@@ -6,12 +6,9 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
 
 <template>
   <header class="site-header">
-    <!-- Faixa azul com slogan -->
     <div class="slogan-bar">
       <span>Explore, Avalie e Viva Joinville de Verdade</span>
     </div>
-
-    <!-- Área creme com logo / menu / ícones -->
     <div class="nav-area">
       <div class="container">
         <a href="/" class="brand">
@@ -34,12 +31,10 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
             <img src="/Star 1.png" alt="" />
           </button>
           <button class="profile-btn" aria-label="Perfil">
-            <img src="/Group 37.png" alt="" />
+            <img src="/fotoperfil.png" alt="" />
           </button>
         </div>
       </div>
-
-      <!-- Linha da busca centralizada -->
       <form class="search-line" @submit.prevent="onSubmit">
         <div class="search">
           <span class="icon" aria-hidden="true">🔍</span>
@@ -55,33 +50,28 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
 </template>
 
 <style scoped>
-:root {
-  --blue: #11508E;
-  --cream: #FFFCEE;
-}
-
 .slogan-bar{
   background: #11508E;
-  color: #FFFCEE;
-  font-family: 'Istok Web', sans-serif;
-  font-size: .95rem;
+  color: #fff;
+  font-family: 'Istok Web', sans-serif;   
   line-height: 1;
   padding: .65rem 1rem;
   text-align: center;
 }
 
 .nav-area{
-  background: var(--cream);
-  color: var(--blue);
+  background: #FFFCEE;
+  color: #11508E;
   border-bottom: 1px solid rgba(17,80,142,.10);
+  margin: 5px 0 0 0;
 }
 
 .container{
   max-width: 1200px;
+  padding: .6rem 24px;
   margin: 0 auto;
-  padding: .9rem 24px;
   display: grid;
-  grid-template-columns: 180px 1fr 120px; /* logo / menu / ícones */
+  grid-template-columns: 180px 1fr 120px;
   align-items: center;
   gap: 16px;
 }
@@ -90,6 +80,7 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
 .brand img{
   height: 36px;
   display: block;
+
 }
 
 /* Menu central */
@@ -113,11 +104,11 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   text-decoration: underline;
 }
 
-/* Ícones à direita */
 .actions{
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  gap: 20px;
 }
 .icon-btn{
   background: transparent;
@@ -143,7 +134,6 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   width: 18px; height: 18px;
 }
 
-/* Barra de busca (segunda linha, centrada) */
 .search-line{
   max-width: 1200px;
   margin: 0 auto;
@@ -165,7 +155,7 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
 .search input{
   width: 100%;
   height: 36px;
-  padding: 0 14px 0 38px;      /* espaço pro ícone */
+  padding: 0 14px 0 38px;
   border: 1px solid rgba(17,80,142,.25);
   background: #fff;
   color: var(--blue);
@@ -176,7 +166,6 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
 }
 .search input::placeholder{ color: rgba(17,80,142,.6); }
 
-/* Responsivo sutil pra não quebrar o alinhamento do Figma */
 @media (max-width: 1100px){
   .container{ grid-template-columns: 140px 1fr 100px; }
   .main-nav ul{ gap: 18px; }

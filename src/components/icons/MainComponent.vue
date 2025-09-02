@@ -1,12 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
 
 const categorias = [
   {
     titulo: 'Gastronomia',
     itens: [
       { nome: 'Festa do colono', img: '/gastronomia/festadocolono.png' },
-      { nome: 'Festival gastronômico', img: '/gastronomia/festivalgastronomico.png' },
+      { nome: 'Festival gastronômico de Joinville', img: '/gastronomia/festivalgastronomico.png' },
       { nome: 'Craft Beer', img: '/gastronomia/craftbeer.png' },
       { nome: 'Comida di buteco', img: '/gastronomia/comidadibuteco.png' },
     ],
@@ -14,36 +13,64 @@ const categorias = [
   {
     titulo: 'Clássicos de Joinville',
     itens: [
-      { nome: 'Festa das flores', img: '/classicos/festadasflores.png' },
-      { nome: 'Festival de dança', img: '/classicos/festivaldedanca.png' },
-      { nome: 'Feira do livro', img: '/classicos/feiradolivro.png' },
-      { nome: 'Festa das cores', img: '/classicos/festadascores.png' },
+      { nome: 'Festa das flores', img: '/classicosdejoinville/festadasflores.png' },
+      { nome: 'Festival de dança', img: '/classicosdejoinville/festivaldedanca.png' },
+      { nome: 'Feira do livro', img: '/classicosdejoinville/feiradolivro.png' },
+      { nome: 'Festa das cores', img: '/classicosdejoinville/festadascores.png' },
+    ],
+  },
+  {
+    titulo: 'Festas e Shows',
+    itens: [
+      { nome: 'Armandinho', img: '/festaseshows/armandinho.png' },
+      { nome: 'Matuê', img: '/festaseshows/matue.png' },
+      { nome: 'Menos é Mais e Ferrugem', img: '/festaseshows/menosemais.png' },
+      { nome: 'Victor e Leo', img: '/festaseshows/victoreleo.png' },
+    ],
+  },
+  {
+    titulo: 'Destaques da semana',
+    itens: [
+      { nome: 'Festival pianístico', img: '/destaquesdasemana/festivalpianistico.png' },
+      { nome: 'Festival da Vigorelli', img: '/destaquesdasemana/festivaldavigorelli.png' },
+      { nome: 'Musicarium In Concert', img: '/destaquesdasemana/concertomusical.png' },
+      { nome: "Exposição 'O que permanece...'", img: '/destaquesdasemana/exposicao.png' },
+      { nome: 'Festival Meraki', img: '/destaquesdasemana/festivalmeraki.png' },
+    ],
+  },
+  {
+    titulo: 'Esportes',
+    itens: [
+      { nome: 'Jec x Blumenau', img: '/esportes/jecfutsal.png' },
+      { nome: 'Jec x Nação', img: '/esportes/jecenacao.png' },
+      { nome: 'Jec x Carlos Renaux', img: '/esportes/jececarlos.png' },
+      { nome: 'Jec x Cianorte', img: '/esportes/jececianorte.png' },
+    ],
+  },
+  {
+    titulo: 'Atividades ao Ar Livre',
+    itens: [
+      { nome: 'Parque Zoobotânico', img: '/atividadesaoarlivre/zoobotanico.png' },
+      { nome: 'Corrida Pela Vida', img: '/atividadesaoarlivre/corridapelavida.png' },
+      { nome: 'Parque Caminho das Águas', img: '/atividadesaoarlivre/caminhodasaguas.png' },
+      { nome: 'Corrida Halloween', img: '/atividadesaoarlivre/corridahallowen.png' },
+    ],
+  },
+  {
+    titulo: 'Cultura',
+    itens: [
+      { nome: 'Animaneco', img: '/cultura/animaneco.png' },
+      { nome: 'Irmã Selma', img: '/cultura/comedia.png' },
+      { nome: 'VinVeneto', img: '/cultura/vinveneto.png' },
+      { nome: 'Joinville Matsuri', img: '/cultura/matsuri.png' },
     ],
   },
 ]
-
-const tracks = ref([])
-
-onMounted(() => {
-  tracks.value = document.querySelectorAll('.carousel-track')
-})
-
-function scrollLeft(index) {
-  tracks.value[index].scrollBy({ left: -300, behavior: 'smooth' })
-}
-
-function scrollRight(index) {
-  tracks.value[index].scrollBy({ left: 300, behavior: 'smooth' })
-}
 </script>
 
 <template>
   <main class="main">
-    <section
-      v-for="(cat, i) in categorias"
-      :key="i"
-      class="categoria"
-    >
+    <section v-for="(cat, i) in categorias" :key="i" class="categoria">
       <div class="categoria-header">
         <h2>{{ cat.titulo }}</h2>
         <div class="links">
@@ -52,16 +79,12 @@ function scrollRight(index) {
         </div>
       </div>
 
-      <!-- Carrossel -->
-      <div class="carousel">
-        <button class="prev" @click="scrollLeft(i)">‹</button>
-        <div class="carousel-track">
-          <div v-for="(item, j) in cat.itens" :key="j" class="card">
-            <img :src="item.img" :alt="item.nome" />
-            <p>{{ item.nome }}</p>
-          </div>
+      <!-- GRID -->
+      <div class="grid">
+        <div v-for="(item, j) in cat.itens" :key="j" class="card">
+          <img :src="item.img" :alt="item.nome" />
+          <p>{{ item.nome }}</p>
         </div>
-        <button class="next" @click="scrollRight(i)">›</button>
       </div>
     </section>
   </main>
@@ -71,7 +94,8 @@ function scrollRight(index) {
 .main {
   padding: 2rem;
   background: #FFFCEE;
-  color: #11508E;
+  color: #1a1a1a;
+  font-family: 'Inter', sans-serif;
 }
 
 .categoria {
@@ -83,11 +107,10 @@ function scrollRight(index) {
   justify-content: space-between;
   align-items: center;
   margin: 1.5rem 0;
-  font-family: 'Inter', sans-serif;
 }
 
 .categoria-header h2 {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 700;
 }
 
@@ -100,69 +123,38 @@ function scrollRight(index) {
   color: #11508E;
   text-decoration: none;
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
-.carousel {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.carousel-track {
+.grid {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: calc(25% - 1rem); /* 4 colunas */
-  gap: 1rem;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: none; /* Firefox */
-}
-
-.carousel-track::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
 }
 
 .card {
-  background: #FFF;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  text-align: center;
-  padding: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   transition: transform 0.2s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
 }
 
 .card img {
   width: 100%;
-  border-radius: 8px;
+  height: 160px;
+  object-fit: cover;
 }
 
-.carousel button {
-  position: absolute;
-  top: 40%;
-  background: #11508E;
-  color: #FFFCEE;
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  font-size: 1.5rem;
-  transition: background 0.2s ease;
-}
-
-.carousel button:hover {
-  background: #B30012;
-}
-
-.prev {
-  left: -20px;
-}
-
-.next {
-  right: -20px;
+.card p {
+  padding: 0.8rem;
+  font-weight: 500;
+  color: #222;
+  font-size: 0.95rem;
+  text-align: center;
 }
 </style>
