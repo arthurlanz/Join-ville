@@ -1,17 +1,22 @@
 <script setup>
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules'
+
+// Import Swiper styles
 import 'swiper/css'
 import 'swiper/css/effect-coverflow'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 
-// Ajuste os paths para seus banners 1200x500 aprox.
-const slides = [
-  { id: 1, img: '/festaseshows/matue.png',    alt: 'Matuê - Joinville Square Garden' },
-  { id: 2, img: '/festaseshows/armandinho.png', alt: 'Armandinho em Joinville' },
-  { id: 3, img: '/gastronomia/festivalgastronomico.png', alt: 'Festival Gastronômico de Joinville' },
-  { id: 4, img: '/classicosdejoinville/festadascores.png', alt: 'Festa das Cores' },
+// Eventos do seu site
+const eventos = [
+  { id: 1, img: '/festaseshows/matue.png', title: 'Matuê', location: 'Joinville Square Garden', time: '20h' },
+  { id: 2, img: '/festaseshows/armandinho.png', title: 'Armandinho', location: 'Joinville', time: '19h' },
+  { id: 3, img: '/gastronomia/festivalgastronomico.png', title: 'Festival Gastronômico', location: 'Joinville', time: '12h' },
+  { id: 4, img: '/classicosdejoinville/festadascores.png', title: 'Festa das Cores', location: 'Joinville', time: '18h' },
+  { id: 5, img: '/esportes/jececianorte.png', title: 'JEC x Cianorte', location: 'Estádio Joinville', time: '16h' },
+  { id: 6, img: '/cultura/animaneco.png', title: 'AnimaNeco', location: 'Joinville', time: '14h' },
+  { id: 7, img: '/classicosdejoinville/festivaldedanca.png', title: 'Festival de Dança', location: 'Joinville', time: '21h' },
 ]
 </script>
 
@@ -20,78 +25,144 @@ const slides = [
     <Swiper
       :modules="[EffectCoverflow, Pagination, Navigation, Autoplay]"
       effect="coverflow"
-      :centered-slides="true"
       :grab-cursor="true"
+      :centered-slides="true"
       :slides-per-view="'auto'"
       :loop="true"
       :autoplay="{ delay: 3500, pauseOnMouseEnter: true, disableOnInteraction: false }"
       :coverflow-effect="{
         rotate: 0,
         stretch: 0,
-        depth: 180,
-        modifier: 1.1,
-        slideShadows: false
+        depth: 250,
+        modifier: 2.5,
+        slideShadows: false,
       }"
-      :navigation="true"
       :pagination="{ clickable: true }"
+      navigation
       class="hero-swiper"
     >
-      <SwiperSlide v-for="s in slides" :key="s.id" class="hero-slide">
-        <img :src="s.img" :alt="s.alt" />
+      <SwiperSlide
+        v-for="evento in eventos"
+        :key="evento.id"
+        class="hero-slide"
+      >
+        <div class="slide-wrapper">
+          <img :src="evento.img" :alt="evento.title" />
+          <div class="slide-info">
+            <h3>{{ evento.title }}</h3>
+            <p>{{ evento.location }}</p>
+            <span>{{ evento.time }}</span>
+          </div>
+        </div>
       </SwiperSlide>
     </Swiper>
   </section>
 </template>
 
 <style scoped>
-.hero{
+.hero {
   padding: 18px 0 8px;
-  background: #FFFCEE;
+  background: #fffcee;
 }
-.hero-swiper{
+.hero-swiper {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding-bottom: 36px;
 }
-.hero-slide{
+.hero-slide {
   width: 860px;
   max-width: calc(100vw - 140px);
 }
-.hero-slide img{
+.slide-wrapper {
+  position: relative;
+}
+.slide-wrapper img {
   width: 100%;
   height: 420px;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: 20px;
   display: block;
-  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+  transition: all 0.3s ease;
+}
+
+/* Lateral arredondada maior */
+:deep(.swiper-slide-prev) img,
+:deep(.swiper-slide-next) img {
+  border-radius: 40px;
+  transform: scale(0.8);
+  opacity: 0.8;
+}
+:deep(.swiper-slide-active) img {
+  border-radius: 20px;
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Info do evento sobre a imagem */
+.slide-info {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+.slide-info h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.slide-info p {
+  margin: 2px 0 0;
+  font-size: 1rem;
+}
+.slide-info span {
+  font-size: 0.9rem;
+  opacity: 0.85;
 }
 
 /* Botões de navegação */
 :deep(.swiper-button-prev),
-:deep(.swiper-button-next){
-  width: 42px; height: 42px;
-  background: #2D69A8;
+:deep(.swiper-button-next) {
+  width: 42px;
+  height: 42px;
+  background: #11508e;
   color: #fff;
-  border-radius: 9999px;
-  box-shadow: 0 6px 16px rgba(45,105,168,.35);
+  border-radius: 50%;
 }
 :deep(.swiper-button-prev::after),
-:deep(.swiper-button-next::after){
-  font-size: 18px; font-weight: 700;
+:deep(.swiper-button-next::after) {
+  font-size: 18px;
+  font-weight: bold;
 }
-:deep(.swiper-button-prev){ left: 24px; }
-:deep(.swiper-button-next){ right: 24px; }
+:deep(.swiper-button-prev) {
+  left: 24px;
+}
+:deep(.swiper-button-next) {
+  right: 24px;
+}
 
 /* Bullets */
-:deep(.swiper-pagination-bullet){
-  background: rgba(17,80,142,.35);
+:deep(.swiper-pagination-bullet) {
+  background: rgba(17, 80, 142, 0.35);
   opacity: 1;
 }
-:deep(.swiper-pagination-bullet-active){
-  background: #11508E;
+:deep(.swiper-pagination-bullet-active) {
+  background: #11508e;
 }
-@media (max-width: 900px){
-  .hero-slide img{ height: 300px; }
+
+/* Responsividade */
+@media (max-width: 900px) {
+  .hero-slide img {
+    height: 300px;
+  }
+  .slide-info h3 {
+    font-size: 1rem;
+  }
+  .slide-info p,
+  .slide-info span {
+    font-size: 0.85rem;
+  }
 }
 </style>
