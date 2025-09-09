@@ -48,11 +48,6 @@ const eventos = [
       >
         <div class="slide-wrapper">
           <img :src="evento.img" :alt="evento.title" />
-          <div class="slide-info">
-            <h3>{{ evento.title }}</h3>
-            <p>{{ evento.location }}</p>
-            <span>{{ evento.time }}</span>
-          </div>
         </div>
       </SwiperSlide>
     </Swiper>
@@ -60,31 +55,30 @@ const eventos = [
 </template>
 
 <style scoped>
+
 .hero {
-  padding: 18px 0 8px;
-  background: #fffcee;
+ margin-top: 100px;
+ margin-bottom: 100px;
 }
 .hero-swiper {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-bottom: 36px;
+  padding-top: 5vh;
+  padding-bottom: 5vh;
+  width: auto;  
+  max-width: none;
 }
+
 .hero-slide {
-  width: 860px;
-  max-width: calc(100vw - 140px);
+  width: auto;
+  max-width: none;
 }
-.slide-wrapper {
-  position: relative;
-}
-.slide-wrapper img {
+
+.hero-slide img {
   width: 100%;
-  height: 420px;
-  object-fit: cover;
-  border-radius: 20px;
-  display: block;
-  transition: all 0.3s ease;
+  max-width: 1600px;
+  /* height: auto; */
 }
+
+
 
 /* Lateral arredondada maior */
 :deep(.swiper-slide-prev) img,
@@ -95,32 +89,11 @@ const eventos = [
 }
 :deep(.swiper-slide-active) img {
   border-radius: 20px;
-  transform: scale(1);
+  transform: scale(1.3); /* aumenta 30% */
   opacity: 1;
 }
 
-/* Info do evento sobre a imagem */
-.slide-info {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 10px 14px;
-  border-radius: 12px;
-}
-.slide-info h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-.slide-info p {
-  margin: 2px 0 0;
-  font-size: 1rem;
-}
-.slide-info span {
-  font-size: 0.9rem;
-  opacity: 0.85;
-}
+
 
 /* Botões de navegação */
 :deep(.swiper-button-prev),
