@@ -1,106 +1,154 @@
-<script setup>
-const bullets = [
-  {
-    icon: '/icons/paper.svg',
-    title: 'Publicação grátis',
-    text: 'sem taxa de adesão ou mensalidade.'
-  },
-  {
-    icon: '/icons/building.svg',
-    title: 'Para quem faz Joinville acontecer',
-    text: 'exclusivo para empresas com CNPJ válido.'
-  }
-]
-</script>
-
 <template>
-  <section class="cta">
-    <div class="cta__inner">
-      <div class="cta__left">
-        <h3>Crie, divulgue e conecte seus eventos com a maior cidade de SC</h3>
-
-        <ul class="cta__bullets">
-          <li v-for="(b, i) in bullets" :key="i">
-            <img :src="b.icon" alt="" />
-            <div>
-              <strong>{{ b.title }}:</strong> {{ b.text }}
+  <section class="cadastro-section">
+    <div class="container">
+      <div class="cadastro-content">
+        <div class="cadastro-text">
+          <h2>Crie, divulgue e conecte seus eventos com a maior cidade de SC</h2>
+          
+          <div class="features">
+            <div class="feature">
+              <div class="feature-icon">📝</div>
+              <div class="feature-text">
+                <strong>Publicação grátis:</strong> sem taxa de adesão ou mensalidade.
+              </div>
             </div>
-          </li>
-        </ul>
-
-        <div class="cta__actions">
-          <a class="btn btn--primary" href="/cadastrar-evento">cadastre seu evento</a>
-          <a class="btn btn--ghost" href="/como-funciona">veja como funciona</a>
+            
+            <div class="feature">
+              <div class="feature-icon">🏢</div>
+              <div class="feature-text">
+                <strong>Para quem faz Joinville acontecer:</strong> exclusivo para empresas com CNPJ válido.
+              </div>
+            </div>
+          </div>
+          
+          <div class="cadastro-buttons">
+            <button class="btn-primary">Cadastre seu evento</button>
+            <button class="btn-secondary">Veja como funciona</button>
+          </div>
         </div>
-      </div>
-
-      <div class="cta__right">
-        <!-- coloque aqui uma ilustração ou animação Lottie -->
-        <img src="" alt="Cadastro" />
+        
+        <div class="cadastro-illustration">
+          <img src="/pessoastrabalhando.png" alt="Ilustração de pessoas trabalhando" />
+        </div>
       </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.cta{
-  background: #D7E0DE;
-  border: 1px solid rgba(17,80,142,.10);
-  border-radius: 22px;
+.cadastro-section {
+  background: #c2d9e4;
+  padding: 4rem 2rem 2rem ;
+  border-radius: 20px;
+  margin: 4rem 20rem 0 20rem;
+}
+
+.container {
   max-width: 1200px;
-  margin: 28px auto 48px;
-  padding: 22px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
-.cta__inner{
-  display: grid;
-  grid-template-columns: 1.2fr .8fr;
-  gap: 18px;
+
+.cadastro-content {
+  display: flex;
   align-items: center;
+  gap: 4rem;
 }
-.cta__left h3{
-  color: #1F4773;
-  font-family: 'Inter', sans-serif;
-  font-weight: 800;
-  font-size: 28px;
-  line-height: 1.15;
-  margin: 2px 0 14px;
-}
-.cta__bullets{
-  list-style: none; margin: 0; padding: 0 0 6px;
-  display: grid; gap: 12px;
-}
-.cta__bullets li{
-  display: grid; grid-template-columns: 28px 1fr; gap: 10px;
-  color: #1a1a1a;
-  font-size: 15px;
-}
-.cta__bullets img{ width: 24px; height: 24px; }
-.cta__bullets strong{ color: #1F4773; }
 
-.cta__actions{
-  margin-top: 14px; display: flex; gap: 10px;
+.cadastro-text {
+  flex: 1;
 }
-.btn{
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 40px; padding: 0 18px; border-radius: 10px;
-  font-weight: 700; text-decoration: none; font-family: 'Inter', sans-serif;
-  border: 1px solid transparent;
-}
-.btn--primary{
-  background: #1F4773; color: #fff;
-}
-.btn--primary:hover{ filter: brightness(.95); }
-.btn--ghost{
-  background: #fff; color: #1F4773; border-color: #1F4773;
-}
-.btn--ghost:hover{ background: #F1F5FA; }
 
-.cta__right img{
-  display: block; width: 100%; max-width: 380px; margin: 0 auto;
+.cadastro-text h2 {
+  font-size: 2.5rem;
+  color: #1e4d8b;
+  margin-bottom: 2rem;
+  line-height: 1.2;
+  font-weight: bold;
 }
-@media (max-width: 900px){
-  .cta__inner{ grid-template-columns: 1fr; }
-  .cta__left h3{ font-size: 22px; }
-  .cta{ padding: 16px; }
+
+.features {
+  margin-bottom: 2rem;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.feature-text {
+  color: #333;
+  line-height: 1.5;
+}
+
+.cadastro-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary {
+  background-color: #1e4d8b;
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #164080;
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: #1e4d8b;
+  padding: 1rem 2rem;
+  border: 2px solid #1e4d8b;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+  background-color: #1e4d8b;
+  color: white;
+}
+
+.cadastro-illustration {
+  flex: 1;
+  text-align: center;
+}
+
+.cadastro-illustration img {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .cadastro-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .cadastro-text h2 {
+    font-size: 2rem;
+  }
+  
+  .cadastro-buttons {
+    justify-content: center;
+  }
 }
 </style>

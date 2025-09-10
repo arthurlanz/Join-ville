@@ -1,17 +1,28 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+
 const q = ref('')
-const onSubmit = () => { /* faça a ação de busca aqui */ }
+const onSubmit = () => {
+  // ação de busca
+}
+
+const isScrolled = ref(false)
+
+onMounted(() => {
+  window.addEventListener('scroll', () => {
+    isScrolled.value = window.scrollY > 10
+  })
+})
 </script>
 
 <template>
-  <header class="site-header">
+  <header :class="['site-header', { 'scrolled': isScrolled }]">
     <div class="slogan-bar">
       <span>Explore, Avalie e Viva Joinville de Verdade</span>
     </div>
     <div class="nav-area">
       <div class="container">
-        <a href="/" class="brand">
+        <a href="HeaderComponent.vue" class="brand">
           <img src="/logotipo.png" alt="JoinVille" />
         </a>
 
@@ -35,6 +46,7 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
           </button>
         </div>
       </div>
+
       <form class="search-line" @submit.prevent="onSubmit">
         <div class="search">
           <span class="icon" aria-hidden="true">🔍</span>
@@ -50,7 +62,25 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
 </template>
 
 <style scoped>
-.slogan-bar{
+/* HEADER FIXO */
+.site-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  box-shadow: none;
+}
+
+/* sombra suave quando scroll > 10px */
+.site-header.scrolled {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background-color: white; /* mantém a cor do header ao rolar */
+}
+
+/* slogan-bar */
+.slogan-bar {
   background: #11508E;
   color: #fff;
   font-family: 'Istok Web', sans-serif;   
@@ -59,14 +89,16 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   text-align: center;
 }
 
-.nav-area{
-  background: #FFFCEE;
+/* nav-area */
+.nav-area {
+  background: #FFFEEE;
   color: #11508E;
   border-bottom: 1px solid rgba(17,80,142,.10);
-  margin: 5px 0 0 0;
+  margin: 0;
 }
 
-.container{
+/* container */
+.container {
   max-width: 1200px;
   padding: .6rem 24px;
   margin: 0 auto;
@@ -76,15 +108,14 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   gap: 16px;
 }
 
-/* Logo à esquerda */
-.brand img{
+/* logo */
+.brand img {
   height: 36px;
   display: block;
-
 }
 
-/* Menu central */
-.main-nav ul{
+/* menu central */
+.main-nav ul {
   display: flex;
   gap: 28px;
   list-style: none;
@@ -92,31 +123,36 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   padding: 0;
   justify-content: center;
 }
-.main-nav a{
+
+.main-nav a {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: .98rem;
-  color: var(--blue);
+  color: #11508E;
   text-decoration: none;
   padding: .25rem 0;
 }
 
-.actions{
+/* actions */
+.actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 20px;
 }
-.icon-btn{
+
+.icon-btn {
   background: transparent;
   border: 0;
   padding: 6px;
   cursor: pointer;
 }
-.icon-btn img{
-  width: 20px; height: 20px;
+.icon-btn img {
+  width: 20px;
+  height: 20px;
 }
-.profile-btn{
+
+.profile-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -127,21 +163,23 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   border-radius: 9999px;
   cursor: pointer;
 }
-.profile-btn img{
-  width: 18px; height: 18px;
+.profile-btn img {
+  width: 18px;
+  height: 18px;
 }
 
-.search-line{
+/* busca */
+.search-line {
   max-width: 1200px;
   margin: 0 auto;
   padding: 4px 24px 18px;
 }
-.search{
+.search {
   position: relative;
   width: 520px;
   margin: 0 auto;
 }
-.search .icon{
+.search .icon {
   position: absolute;
   left: 14px;
   top: 50%;
@@ -149,20 +187,23 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
   font-size: 1rem;
   opacity: .6;
 }
-.search input{
+.search input {
   width: 100%;
   height: 36px;
   padding: 0 14px 0 38px;
   border: 1px solid rgba(17,80,142,.25);
   background: #fff;
-  color: var(--blue);
+  color: #11508E;
   border-radius: 9999px;
   outline: none;
   font-family: 'Inter', sans-serif;
   font-size: .95rem;
 }
-.search input::placeholder{ color: rgba(17,80,142,.6); }
+.search input::placeholder {
+  color: rgba(17,80,142,.6);
+}
 
+/* Responsividade */
 @media (max-width: 1100px){
   .container{ grid-template-columns: 140px 1fr 100px; }
   .main-nav ul{ gap: 18px; }
@@ -179,5 +220,10 @@ const onSubmit = () => { /* faça a ação de busca aqui */ }
     -webkit-overflow-scrolling: touch;
   }
   .search{ width: 100%; }
+}
+
+/* EVITA QUE CONTEÚDO FIQUE DEBAIXO DO HEADER FIXO */
+body {
+  padding-top: 104px; /* ajuste conforme altura total do header */
 }
 </style>

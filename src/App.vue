@@ -1,23 +1,41 @@
 <script setup>
-import Header from './components/HeaderComponent.vue'
-import MainContent from './components/MainComponent.vue'
-import Footer from './components/FooterComponent.vue'
-</script>
+import CadastroComponent from './components/CadastroComponent.vue';
+import CarrosselComponent from './components/CarrosselComponent.vue';
+import FooterComponent from './components/FooterComponent.vue';
+import HeaderComponent from './components/HeaderComponent.vue';
 
-<template>
-  <div class="app">
-    <Header />
-    <MainContent />
-    <Footer />
+</script>
+<script>
+export default {
+  name: 'App'
+}
+</script>
+<template class= "joinville">
+  <div id="app">
+    <HeaderComponent />
+    <CarrosselComponent />
+    <router-view />
+    <CadastroComponent />
+    <FooterComponent />
   </div>
 </template>
 
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Istok+Web:wght@400;700&family=Inter:wght@400;600;700&display=swap');
 
-.app {
-  background-color: #FFFCEE;
-  color: #11508E;
-  font-family: 'Inter', sans-serif;
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+#app {
+  min-height: 100vh;
 }
 </style>

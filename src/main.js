@@ -1,14 +1,27 @@
-import './assets/main.css'
+import { createApp } from "vue"
+import { createRouter, createWebHistory } from "vue-router"
+import App from "./App.vue"
+import MainComponent from "./components/MainComponent.vue"
+import EventDetails from "./components/EventDetails.vue"
 
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
+const routes = [
+  {
+    path: "/",
+    name: "Home",
+    component: MainComponent,
+  },
+  {
+    path: "/event/:id",
+    name: "EventDetails",
+    component: EventDetails,
+  },
+]
 
-import App from './App.vue'
-import router from './router'
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+})
 
 const app = createApp(App)
-
-app.use(createPinia())
 app.use(router)
-
-app.mount('#app')
+app.mount("#app")
