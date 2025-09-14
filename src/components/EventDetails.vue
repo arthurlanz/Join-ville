@@ -1,5 +1,5 @@
 <template>
-  <div class="event-details">
+  <div class="event-details-page">
     <div class="event-header">
       <button @click="goBack" class="back-button">
         ← Voltar
@@ -43,7 +43,7 @@
             </div>
             <div class="detail-item">
               <h3>Categoria</h3>
-              <p>{{ getEventCategory(event.id) }}</p>
+              <p>{{ event.category }}</p>
             </div>
           </div>
           
@@ -54,22 +54,30 @@
         </div>
       </div>
     </div>
+    <div v-else class="loading">
+        <p>Carregando detalhes do evento...</p>
+    </div>
   </div>
 </template>
 
 <script>
+import { eventService } from '@/services/eventService.js';
+
 export default {
   name: 'EventDetails',
+  props: {
+      id: {
+          type: [String, Number],
+          required: true
+      }
+  },
   data() {
     return {
       event: null
     }
   },
   created() {
-    const eventData = this.$route.query.event;
-    if (eventData) {
-      this.event = JSON.parse(eventData);
-    }
+    this.event = eventService.getEventById(this.id);
   },
   methods: {
     goBack() {
@@ -84,21 +92,12 @@ export default {
       };
       return descriptions[event.title] || `Venha participar do evento ${event.title} em ${event.location}. Uma experiência única que você não pode perder!`;
     },
-    getEventCategory(eventId) {
-      if (eventId <= 4) return 'Gastronomia';
-      if (eventId <= 8) return 'Clássicos de Joinville';
-      if (eventId <= 12) return 'Festas e Shows';
-      if (eventId <= 16) return 'Destaques da Semana';
-      if (eventId <= 20) return 'Esportes';
-      if (eventId <= 24) return 'Atividades ao Ar Livre';
-      return 'Cultura';
-    }
   }
 }
 </script>
 
 <style scoped>
-.event-details {
+.event-details-page {
   min-height: 100vh;
   background-color: #f8f9fa;
 }
@@ -233,6 +232,13 @@ export default {
 .share-btn:hover {
   background: #0066cc;
   color: white;
+}
+
+.loading {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+    color: #555;
 }
 
 @media (max-width: 768px) {

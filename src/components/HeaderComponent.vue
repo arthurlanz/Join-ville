@@ -13,36 +13,70 @@ onMounted(() => {
     isScrolled.value = window.scrollY > 10
   })
 })
+
+// Define o evento que o componente pode emitir
+const emit = defineEmits(['open-login-modal'])
+
+const openLogin = () => {
+  emit('open-login-modal')
+}
 </script>
 
 <template>
-  <header :class="['site-header', { 'scrolled': isScrolled }]">
+  <header :class="['site-header', { scrolled: isScrolled }]">
     <div class="slogan-bar">
       <span>Explore, Avalie e Viva Joinville de Verdade</span>
     </div>
     <div class="nav-area">
       <div class="container">
-        <a href="HeaderComponent.vue" class="brand">
+        <router-link to="/" class="brand">
           <img src="/logotipo.png" alt="JoinVille" />
-        </a>
+        </router-link>
 
         <nav class="main-nav" aria-label="Categorias">
           <ul>
-            <li><a href="#">Gastronomia</a></li>
-            <li><a href="#">Clássicos de Joinville</a></li>
-            <li><a href="#">Festas e shows</a></li>
-            <li><a href="#">Esportes</a></li>
-            <li><a href="#">Atividades ao ar livre</a></li>
-            <li><a href="#">Cultura</a></li>
+            <li>
+              <router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Gastronomia' } }"
+                >Gastronomia</router-link
+              >
+            </li>
+            <li>
+              <router-link
+                :to="{ name: 'CategoryPage', params: { categoryName: 'Clássicos de Joinville' } }"
+                >Clássicos de Joinville</router-link
+              >
+            </li>
+            <li>
+              <router-link
+                :to="{ name: 'CategoryPage', params: { categoryName: 'Festas e Shows' } }"
+                >Festas e shows</router-link
+              >
+            </li>
+            <li>
+              <router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Esportes' } }"
+                >Esportes</router-link
+              >
+            </li>
+            <li>
+              <router-link
+                :to="{ name: 'CategoryPage', params: { categoryName: 'Atividades ao Ar Livre' } }"
+                >Atividades ao ar livre</router-link
+              >
+            </li>
+            <li>
+              <router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Cultura' } }"
+                >Cultura</router-link
+              >
+            </li>
           </ul>
         </nav>
 
         <div class="actions">
-          <button class="icon-btn" aria-label="Favoritos">
-            <img src="/Star 1.png" alt="" />
-          </button>
-          <button class="profile-btn" aria-label="Perfil">
-            <img src="/fotoperfil.png" alt="" />
+          <router-link to="/favorites" class="icon-btn" aria-label="Favoritos">
+            <font-awesome-icon icon="fa-solid fa-heart" style="color: #11508e" size="lg" />
+          </router-link>
+          <button @click="openLogin" class="profile-btn" aria-label="Perfil">
+            <font-awesome-icon icon="fa-solid fa-user" />
           </button>
         </div>
       </div>
@@ -50,11 +84,7 @@ onMounted(() => {
       <form class="search-line" @submit.prevent="onSubmit">
         <div class="search">
           <span class="icon" aria-hidden="true">🔍</span>
-          <input
-            v-model="q"
-            type="text"
-            placeholder="Encontre eventos, shows, restaurantes"
-          />
+          <input v-model="q" type="text" placeholder="Encontre eventos, shows, restaurantes" />
         </div>
       </form>
     </div>
@@ -71,36 +101,35 @@ onMounted(() => {
   z-index: 1000;
   transition: all 0.3s ease;
   box-shadow: none;
+  background-color: white;
 }
 
 /* sombra suave quando scroll > 10px */
 .site-header.scrolled {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  background-color: white; /* mantém a cor do header ao rolar */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* slogan-bar */
 .slogan-bar {
-  background: #11508E;
+  background: #11508e;
   color: #fff;
-  font-family: 'Istok Web', sans-serif;   
+  font-family: 'Istok Web', sans-serif;
   line-height: 1;
-  padding: .65rem 1rem;
+  padding: 0.65rem 1rem;
   text-align: center;
 }
 
 /* nav-area */
 .nav-area {
-  background: #FFFEEE;
-  color: #11508E;
-  border-bottom: 1px solid rgba(17,80,142,.10);
+  background: #f7f7f7;
+  color: #11508e;
   margin: 0;
 }
 
 /* container */
 .container {
   max-width: 1200px;
-  padding: .6rem 24px;
+  padding: 0.6rem 24px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 180px 1fr 120px;
@@ -127,10 +156,10 @@ onMounted(() => {
 .main-nav a {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
-  font-size: .98rem;
-  color: #11508E;
+  font-size: 0.98rem;
+  color: #11508e;
   text-decoration: none;
-  padding: .25rem 0;
+  padding: 0.25rem 0;
 }
 
 /* actions */
@@ -159,7 +188,7 @@ onMounted(() => {
   height: 28px;
   padding: 0 10px;
   background: #fff;
-  border: 1px solid rgba(0,0,0,.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 9999px;
   cursor: pointer;
 }
@@ -185,45 +214,52 @@ onMounted(() => {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1rem;
-  opacity: .6;
+  opacity: 0.6;
 }
 .search input {
   width: 100%;
   height: 36px;
   padding: 0 14px 0 38px;
-  border: 1px solid rgba(17,80,142,.25);
+  border: 1px solid rgba(17, 80, 142, 0.25);
   background: #fff;
-  color: #11508E;
+  color: #11508e;
   border-radius: 9999px;
   outline: none;
   font-family: 'Inter', sans-serif;
-  font-size: .95rem;
+  font-size: 0.95rem;
 }
 .search input::placeholder {
-  color: rgba(17,80,142,.6);
+  color: rgba(17, 80, 142, 0.6);
 }
 
 /* Responsividade */
-@media (max-width: 1100px){
-  .container{ grid-template-columns: 140px 1fr 100px; }
-  .main-nav ul{ gap: 18px; }
-  .search{ width: 460px; }
+@media (max-width: 1100px) {
+  .container {
+    grid-template-columns: 140px 1fr 100px;
+  }
+  .main-nav ul {
+    gap: 18px;
+  }
+  .search {
+    width: 460px;
+  }
 }
-@media (max-width: 900px){
-  .brand{ display:none; }
-  .container{ grid-template-columns: 1fr 120px; }
+@media (max-width: 900px) {
+  .brand {
+    display: none;
+  }
+  .container {
+    grid-template-columns: 1fr 120px;
+  }
 }
-@media (max-width: 720px){
-  .main-nav ul{
+@media (max-width: 720px) {
+  .main-nav ul {
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
   }
-  .search{ width: 100%; }
-}
-
-/* EVITA QUE CONTEÚDO FIQUE DEBAIXO DO HEADER FIXO */
-body {
-  padding-top: 104px; /* ajuste conforme altura total do header */
+  .search {
+    width: 100%;
+  }
 }
 </style>

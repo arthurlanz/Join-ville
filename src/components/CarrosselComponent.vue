@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router' // Importa o useRouter
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { EffectCoverflow, Pagination, Navigation, Autoplay } from 'swiper/modules'
 
@@ -8,57 +9,61 @@ import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import 'swiper/css/effect-coverflow'
 
+const router = useRouter() // Inicializa o router
+
 const events = [
   {
-    id: 1,
+    id: 10,
     title: 'MATUÊ',
     subtitle: 'SHOW DE RAP NACIONAL',
     location: 'SQUARE GARDEN - JOINVILLE - SC',
     date: 'Sexta, 31 de Out às 22:00',
     image: '/festaseshows/matuebanner.png',
-    badge: 'NOVO'
+    badge: 'NOVO',
   },
   {
-    id: 2,
+    id: 6,
     title: 'FESTIVAL DE DANÇA',
     subtitle: 'MAIOR FESTIVAL DE DANÇA DO MUNDO',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
     date: '21 De Jul à 2 De Ago',
     image: '/classicosdejoinville/festivaldancabanner.jpeg',
-    badge: 'CLÁSSICOS DE JOINVILLE'
+    badge: 'CLÁSSICOS DE JOINVILLE',
   },
   {
-    id: 3,
+    id: 2,
     title: 'FESTIVAL GASTRONÔMICO',
     subtitle: 'DIVERSIDADE CULINÁRIA',
     location: 'Joinville - SC',
     date: '6 De Ago à 24 De Ago',
     image: '/gastronomia/festivalgastronomicobanner.jpg',
-    badge: 'FOOD'
+    badge: 'FOOD',
   },
   {
-    id: 4,
+    id: 11,
     title: 'MENOS É MAIS + FERRUGEM',
     subtitle: 'PAGODE NACIONAL',
     location: 'SQUARE GARDEN - JOINVILLE - SC',
     date: 'Sexta, 19 de Set às 22:00',
     image: '/festaseshows/menosemaisbanner.png',
-    badge: 'EM BREVE'
+    badge: 'EM BREVE',
   },
   {
-    id: 5,
+    id: 20,
     title: 'JEC KRONA X SANTO ANDRÉ',
     subtitle: 'LIGA NACIONAL DE FUTSAL',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
     date: 'Sexta Feira, 5 de Set às 20:00',
     image: '/esportes/jecbanner.jpeg',
-    badge: 'FUTSAL'
-
-  }
+    badge: 'FUTSAL',
+  },
 ]
 
-
 const activeEvent = ref(events[0])
+
+const goToEventDetails = (eventId) => {
+  router.push({ name: 'EventDetails', params: { id: eventId } })
+}
 </script>
 
 <template>
@@ -77,7 +82,7 @@ const activeEvent = ref(events[0])
       class="carousel-swiper"
       @slideChange="activeEvent = events[$event.realIndex]"
     >
-      <SwiperSlide v-for="event in events" :key="event.id">
+      <SwiperSlide v-for="event in events" :key="event.id" @click="goToEventDetails(event.id)">
         <div class="event-card">
           <img :src="event.image" :alt="event.title" class="event-image" />
           <div class="event-overlay">
@@ -91,23 +96,40 @@ const activeEvent = ref(events[0])
       </SwiperSlide>
     </Swiper>
 
-    <!-- Event details below carousel -->
     <div class="event-details" v-if="activeEvent">
       <h2 class="event-main-title">{{ activeEvent.title }}</h2>
       <div class="event-meta">
         <span class="event-location">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M21 10C21 17 12 23 12 23S3 17 3 10C3 5.02944 7.02944 1 12 1C16.9706 1 21 5.02944 21 10Z" stroke="currentColor" stroke-width="2"/>
-            <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-10a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
           </svg>
           {{ activeEvent.location }}
         </span>
         <span class="event-date">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
-            <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="2"/>
-            <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="2"/>
-            <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="2"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
           {{ activeEvent.date }}
         </span>
@@ -134,6 +156,7 @@ const activeEvent = ref(events[0])
   display: flex;
   justify-content: center;
   align-items: center;
+  cursor: pointer; /* Adiciona cursor de clique */
 }
 
 .event-card {
@@ -147,7 +170,7 @@ const activeEvent = ref(events[0])
 
 .event-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
 }
 
 .event-image {
@@ -159,7 +182,12 @@ const activeEvent = ref(events[0])
 .event-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.8) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -167,7 +195,7 @@ const activeEvent = ref(events[0])
 }
 
 .event-badge {
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   color: #333;
   padding: 6px 12px;
   border-radius: 20px;

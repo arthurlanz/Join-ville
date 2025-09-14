@@ -31,7 +31,7 @@ export default {
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #f8f9fa;
+  background-color: #f7f7f7;
   color: #333;
 }
 

@@ -1,434 +1,167 @@
 <template>
   <main class="main-content">
-    <!-- Gastronomia Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Gastronomia</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
-        </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in gastronomiaEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
+    <div class="content-wrapper">
+      <div class="events-column">
+        <section v-for="category in categories" :key="category" class="events-section">
+          <div class="section-header">
+            <h2>{{ category }}</h2>
+            <div class="section-actions">
+              <span @click="toggleFilterSidebar" class="filter-link">Filtrar</span>
+              <router-link :to="{ name: 'CategoryPage', params: { categoryName: category } }" class="view-all">Ver Tudo</router-link>
+            </div>
           </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
+          <div class="events-grid">
+            <div 
+              v-for="event in getEventsForCategory(category).slice(0, 4)" 
+              :key="event.id"
+              class="event-card"
+            >
+              <div class="event-image" @click="openEvent(event)">
+                <img :src="event.image" :alt="event.title" />
+                <div class="event-date-badge">{{ event.date }}</div>
+              </div>
+              <div class="event-info">
+                 <div class="info-header">
+                    <h3 @click="openEvent(event)">{{ event.title }}</h3>
+                    <button @click="toggleFavorite(event.id)" class="favorite-btn">
+                      <font-awesome-icon :icon="isFavorite(event.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" />
+                    </button>
+                 </div>
+                <p class="event-location">{{ event.location }}</p>
+                <div class="event-price" v-if="event.price">{{ event.price }}</div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
-    </section>
 
-    <!-- Clássicos de Joinville Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Clássicos de Joinville</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
+      <aside :class="['filter-sidebar', { 'is-open': isFilterVisible }]">
+        <div class="filter-header">
+          <h3>Filtrar e ordenar</h3>
+          <button @click="toggleFilterSidebar" class="close-btn">&times;</button>
         </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in classicosEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
-          </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
+        <div class="filter-group">
+          <h4>Ordenar</h4>
+          <div class="order-options">
+            <button :class="{ active: filters.sortBy === 'Novidades' }" @click="setSortBy('Novidades')">Novidades</button>
+            <button :class="{ active: filters.sortBy === 'Melhor avaliado' }" @click="setSortBy('Melhor avaliado')">Melhor avaliado</button>
+            <button :class="{ active: filters.sortBy === 'A-Z' }" @click="setSortBy('A-Z')">A-Z</button>
+            <button :class="{ active: filters.sortBy === 'Z-A' }" @click="setSortBy('Z-A')">Z-A</button>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Festas e Shows Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Festas e Shows</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
+        <div class="filter-group">
+            <h4>Categoria</h4>
+            <div class="category-options">
+                <button 
+                  v-for="cat in categories" 
+                  :key="cat"
+                  :class="{ active: filters.selectedCategories.includes(cat) }"
+                  @click="toggleCategoryFilter(cat)"
+                >
+                  {{ cat }}
+                </button>
+            </div>
         </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in festasEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
-          </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
-          </div>
+         <div class="filter-actions">
+            <button class="apply-btn" @click="applyFilters">Aplicar Filtros</button>
+            <button class="clear-btn" @click="clearFilters">Limpar Filtros</button>
         </div>
-      </div>
-    </section>
-
-    <!-- Destaques da Semana Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Destaques da semana</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
-        </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in destaquesEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
-          </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Esportes Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Esportes</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
-        </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in esportesEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
-          </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Atividades ao Ar Livre Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Atividades ao Ar Livre</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
-        </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in atividadesEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
-          </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Cultura Section -->
-    <section class="events-section">
-      <div class="section-header">
-        <h2>Cultura</h2>
-        <div class="section-actions">
-          <span class="filter-link">Filtrar</span>
-          <span class="view-all">Ver Tudo</span>
-        </div>
-      </div>
-      <div class="events-grid">
-        <div 
-          v-for="event in culturaEvents" 
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
-          </div>
-          <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
-          </div>
-        </div>
-      </div>
-    </section>
+      </aside>
+    </div>
+    <div v-if="isFilterVisible" @click="toggleFilterSidebar" class="overlay"></div>
   </main>
 </template>
 
 <script>
+import { eventService } from '@/services/eventService.js';
+
 export default {
   name: 'MainComponent',
   data() {
     return {
-      gastronomiaEvents: [
-        {
-          id: 1,
-          title: 'Festa do colono',
-          location: 'Joinville - SC',
-          date: '15 SET',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 2,
-          title: 'Festival gastronômico de Joinville',
-          location: 'Centro de Eventos',
-          date: '20 SET',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 3,
-          title: 'Craft Beer',
-          location: 'Cervejaria Local',
-          date: '25 SET',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 4,
-          title: 'Comida di buteco',
-          location: 'Vários locais',
-          date: '30 SET',
-          image: '/placeholder.svg?height=200&width=300'        
-        }
-      ],
-      classicosEvents: [
-        {
-          id: 5,
-          title: 'Festa das flores',
-          location: 'Parque da Cidade',
-          date: '10 OUT',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 6,
-          title: 'Festival de dança',
-          location: 'Teatro Bolshoi',
-          date: '15 OUT',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 7,
-          title: 'Feira do livro',
-          location: 'Centro Cultural',
-          date: '20 OUT',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 8,
-          title: 'Festa das cores',
-          location: 'Praça Central',
-          date: '25 OUT',
-          image: '/placeholder.svg?height=200&width=300'
-        }
-      ],
-      festasEvents: [
-        {
-          id: 9,
-          title: 'Armandinho',
-          location: 'Arena Joinville',
-          date: '05 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 10,
-          title: 'Matue',
-          location: 'Estádio da Ressacada',
-          date: '10 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 11,
-          title: 'Menos é Mais e Ferrugem',
-          location: 'Centro de Eventos',
-          date: '15 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 12,
-          title: 'Victor e Leo',
-          location: 'Teatro Municipal',
-          date: '20 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        }
-      ],
-      destaquesEvents: [
-        {
-          id: 13,
-          title: 'Festival pianístico',
-          location: 'Conservatório',
-          date: '12 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 14,
-          title: 'Festival da Vigorelli',
-          location: 'Vigorelli',
-          date: '18 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 15,
-          title: 'Musicarium in Concert',
-          location: 'Sala de Concertos',
-          date: '22 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 16,
-          title: 'Festival Meraki',
-          location: 'Parque Zoobotânico',
-          date: '28 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        }
-      ],
-      esportesEvents: [
-        {
-          id: 17,
-          title: 'JEC x Blumenau',
-          location: 'Arena Joinville',
-          date: '14 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 18,
-          title: 'JEC x Nação',
-          location: 'Arena Joinville',
-          date: '21 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 19,
-          title: 'JEC x Carlos Renaux',
-          location: 'Arena Joinville',
-          date: '28 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 20,
-          title: 'JEC x Chapecoense',
-          location: 'Arena Joinville',
-          date: '05 DEZ',
-          image: '/placeholder.svg?height=200&width=300'
-        }
-      ],
-      atividadesEvents: [
-        {
-          id: 21,
-          title: 'Parque Zoobotânico',
-          location: 'Zona Sul',
-          date: 'Permanente',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 22,
-          title: 'Corrida Pela Vida',
-          location: 'Parque da Cidade',
-          date: '16 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 23,
-          title: 'Parque caminho das Águas',
-          location: 'Pirabeiraba',
-          date: 'Permanente',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 24,
-          title: 'Corrida Halloween',
-          location: 'Centro',
-          date: '31 OUT',
-          image: '/placeholder.svg?height=200&width=300'
-        }
-      ],
-      culturaEvents: [
-        {
-          id: 25,
-          title: 'Animameco',
-          location: 'Centro de Convenções',
-          date: '18 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 26,
-          title: 'Portão Comedy Night com Irmã Selma',
-          location: 'Teatro Portão',
-          date: '25 NOV',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 27,
-          title: 'VivVeneto',
-          location: 'Museu da Imigração',
-          date: '02 DEZ',
-          image: '/placeholder.svg?height=200&width=300'
-        },
-        {
-          id: 28,
-          title: 'Joinville Matsuri',
-          location: 'Parque da Cidade',
-          date: '09 DEZ',
-          image: '/placeholder.svg?height=200&width=300'
-        }
-      ]
+      allEvents: [],
+      categories: [],
+      favoriteEvents: [],
+      isFilterVisible: false,
+      filters: {
+          sortBy: 'Novidades',
+          selectedCategories: []
+      },
+      filteredEvents: []
     }
+  },
+  created() {
+    this.allEvents = eventService.getAllEvents();
+    this.categories = eventService.getEventCategories();
+    this.loadFavorites();
+    this.applyFilters();
   },
   methods: {
     openEvent(event) {
-      this.$router.push({
-        name: 'EventDetails',
-        params: { id: event.id },
-        query: { event: JSON.stringify(event) }
-      });
+      this.$router.push({ name: 'EventDetails', params: { id: event.id } });
+    },
+    loadFavorites() {
+        const favorites = localStorage.getItem('favoriteEvents');
+        if (favorites) {
+            this.favoriteEvents = JSON.parse(favorites);
+        }
+    },
+    toggleFavorite(eventId) {
+        const index = this.favoriteEvents.indexOf(eventId);
+        if (index > -1) {
+            this.favoriteEvents.splice(index, 1);
+        } else {
+            this.favoriteEvents.push(eventId);
+        }
+        localStorage.setItem('favoriteEvents', JSON.stringify(this.favoriteEvents));
+    },
+    isFavorite(eventId) {
+        return this.favoriteEvents.includes(eventId);
+    },
+    getEventsForCategory(category) {
+        // Retorna os eventos filtrados para a categoria específica
+        return this.filteredEvents.filter(event => event.category === category);
+    },
+    toggleFilterSidebar() {
+        this.isFilterVisible = !this.isFilterVisible;
+    },
+    setSortBy(criteria) {
+        this.filters.sortBy = criteria;
+    },
+    toggleCategoryFilter(category) {
+        const index = this.filters.selectedCategories.indexOf(category);
+        if (index > -1) {
+            this.filters.selectedCategories.splice(index, 1);
+        } else {
+            this.filters.selectedCategories.push(category);
+        }
+    },
+    applyFilters() {
+        let events = [...this.allEvents];
+
+        // Filtro por categoria
+        if (this.filters.selectedCategories.length > 0) {
+            events = events.filter(event => this.filters.selectedCategories.includes(event.category));
+        }
+
+        // Ordenação
+        switch (this.filters.sortBy) {
+            case 'A-Z':
+                events.sort((a, b) => a.title.localeCompare(b.title));
+                break;
+            case 'Z-A':
+                events.sort((a, b) => b.title.localeCompare(a.title));
+                break;
+            // Adicionar mais lógicas de ordenação se necessário
+        }
+
+        this.filteredEvents = events;
+        if(this.isFilterVisible) this.toggleFilterSidebar();
+    },
+    clearFilters() {
+        this.filters.sortBy = 'Novidades';
+        this.filters.selectedCategories = [];
+        this.applyFilters();
     }
   }
 }
@@ -440,11 +173,17 @@ export default {
   margin: 0 auto;
   padding: 40px 20px;
 }
-
+.content-wrapper {
+  display: flex;
+  position: relative;
+}
+.events-column {
+  flex-grow: 1;
+  transition: margin-right 0.3s ease;
+}
 .events-section {
   margin-bottom: 60px;
 }
-
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -453,19 +192,16 @@ export default {
   padding-bottom: 12px;
   border-bottom: 1px solid #e9ecef;
 }
-
 .section-header h2 {
   font-size: 28px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
 }
-
 .section-actions {
   display: flex;
   gap: 20px;
 }
-
 .filter-link,
 .view-all {
   color: #0066cc;
@@ -473,53 +209,48 @@ export default {
   cursor: pointer;
   font-size: 14px;
   transition: color 0.2s ease;
+  text-decoration: none;
 }
-
 .filter-link:hover,
 .view-all:hover {
   color: #0052a3;
   text-decoration: underline;
 }
-
 .events-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
-
 .event-card {
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  cursor: pointer;
   border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
 }
-
 .event-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
   border-color: #e0e0e0;
 }
-
 .event-image {
   position: relative;
   height: 180px;
   overflow: hidden;
+  cursor: pointer;
 }
-
 .event-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
-
 .event-card:hover .event-image img {
   transform: scale(1.05);
 }
-
 .event-date-badge {
   position: absolute;
   top: 12px;
@@ -530,86 +261,145 @@ export default {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  backdrop-filter: blur(10px);
 }
-
 .event-info {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
-.event-info h3 {
+.info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.info-header h3 {
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 8px 0;
   line-height: 1.3;
+  cursor: pointer;
+  flex-grow: 1;
 }
-
+.favorite-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 20px;
+    color: #ff4d4d;
+}
 .event-location {
   color: #666;
   font-size: 14px;
   margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
 }
-
-.event-location::before {
-  content: "📍";
-  margin-right: 6px;
-}
-
 .event-price {
   color: #0066cc;
   font-weight: 600;
   font-size: 16px;
+  margin-top: auto;
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .main-content {
-    padding: 20px 16px;
-  }
-  
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .section-header h2 {
-    font-size: 24px;
-  }
-  
-  .events-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
-  }
-  
-  .event-card {
-    border-radius: 8px;
-  }
-  
-  .event-image {
-    height: 160px;
-  }
-  
-  .event-info {
-    padding: 16px;
-  }
-  
-  .event-info h3 {
+/* Estilos da Sidebar de Filtro */
+.filter-sidebar {
+  position: fixed;
+  top: 0;
+  right: -350px; /* Começa fora da tela */
+  width: 350px;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+  padding: 20px;
+  transition: right 0.3s ease-in-out;
+  z-index: 1001;
+  overflow-y: auto;
+}
+.filter-sidebar.is-open {
+  right: 0;
+}
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.filter-header h3 {
+    margin: 0;
+    font-size: 20px;
+}
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #888;
+}
+.filter-group {
+    margin-bottom: 25px;
+}
+.filter-group h4 {
     font-size: 16px;
-  }
+    margin-bottom: 12px;
+    color: #333;
+}
+.order-options, .category-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.order-options button, .category-options button {
+    background: #f0f0f0;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+.order-options button.active, .category-options button.active {
+    background: #e0efff;
+    color: #0066cc;
+    border-color: #0066cc;
+    font-weight: 500;
+}
+.filter-actions {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.apply-btn {
+    background: #0066cc;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.clear-btn {
+    background: transparent;
+    color: #555;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
 }
 
-@media (max-width: 480px) {
-  .events-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .section-actions {
-    flex-direction: column;
-    gap: 8px;
-  }
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 1000;
 }
 </style>
