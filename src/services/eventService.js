@@ -5,17 +5,17 @@ const allEvents = [
     id: 1,
     category: 'Gastronomia',
     title: 'Festa do colono',
-    location: 'Joinville - SC',
-    date: '15 SET',
+    location: 'Sociedade Rio da Prata - Pirabeiraba',
+    date: '17 à 20 JUL',
     image:
-      'https://images.unsplash.com/photo-1519623259418-ee41a8b2b7c1?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+      '',
   },
   {
     id: 2,
     category: 'Gastronomia',
     title: 'Festival gastronômico de Joinville',
     location: 'Centro de Eventos',
-    date: '20 SET',
+    date: '06 a 24 AGO',
     image: '/gastronomia/festivalgastronomicobanner.jpg',
   },
   {

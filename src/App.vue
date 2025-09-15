@@ -1,26 +1,42 @@
 <script setup>
-import CadastroComponent from './components/CadastroComponent.vue';
-import CarrosselComponent from './components/CarrosselComponent.vue';
-import FooterComponent from './components/FooterComponent.vue';
+import { ref, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import HeaderComponent from './components/HeaderComponent.vue';
+import CarrosselComponent from './components/CarrosselComponent.vue';
+import CadastroComponent from './components/CadastroComponent.vue';
+import FooterComponent from './components/FooterComponent.vue';
+import LoginModal from './components/LoginModal.vue'; // Importa o novo modal
 
+const route = useRoute();
+const isLoginModalVisible = ref(false);
+
+// Verifica se a rota atual é a Home
+const isHomePage = computed(() => route.name === 'Home');
+
+const showLoginModal = () => {
+  isLoginModalVisible.value = true;
+};
+
+const hideLoginModal = () => {
+  isLoginModalVisible.value = false;
+};
 </script>
-<script>
-export default {
-  name: 'App'
-}
-</script>
-<template class= "joinville">
+
+<template>
   <div id="app">
-    <HeaderComponent />
-    <CarrosselComponent />
+    <HeaderComponent @open-login-modal="showLoginModal" />
+    
+    <CarrosselComponent v-if="isHomePage" />
+    
     <router-view />
-    <CadastroComponent />
+    
+    <CadastroComponent v-if="isHomePage" />
+
+    <LoginModal :is-visible="isLoginModalVisible" @close-modal="hideLoginModal" />
+    
     <FooterComponent />
   </div>
 </template>
-
-
 
 <style>
 * {
