@@ -84,7 +84,7 @@ const openLogin = () => {
       <form class="search-line" @submit.prevent="onSubmit">
         <div class="search">
           <span class="icon" aria-hidden="true">🔍</span>
-          <input v-model="q" type="text" placeholder="Encontre eventos, shows, restaurantes" />
+          <input v-model="q" type="text" placeholder="Encontre eventos, shows, festivais" />
         </div>
       </form>
     </div>

@@ -6,15 +6,14 @@ const allEvents = [
     category: 'Gastronomia',
     title: 'Festa do colono',
     location: 'Sociedade Rio da Prata - Pirabeiraba',
-    date: '17 à 20 JUL',
-    image:
-      '',
+    date: '17 a 20 JUL',
+    image:'/gastronomia/festadocolono.jpg',
   },
   {
     id: 2,
     category: 'Gastronomia',
     title: 'Festival gastronômico de Joinville',
-    location: 'Centro de Eventos',
+    location: 'Joinville - SC',
     date: '06 a 24 AGO',
     image: '/gastronomia/festivalgastronomicobanner.jpg',
   },
@@ -25,7 +24,7 @@ const allEvents = [
     location: 'Cervejaria Local',
     date: '25 SET',
     image:
-      'https://images.unsplash.com/photo-1587870321793-183b3b3a6a9b?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+      '/gastronomia/craftbeer.jpg',
   },
   {
     id: 4,
@@ -59,10 +58,10 @@ const allEvents = [
     id: 7,
     category: 'Clássicos de Joinville',
     title: 'Feira do livro',
-    location: 'Centro Cultural',
+    location: 'Centreventos Cau Hansen',
     date: '20 OUT',
     image:
-      'https://images.unsplash.com/photo-1532012197267-da84d127e765?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+      '/classicosdejoinville/feiradolivro.png',
   },
   {
     id: 8,
@@ -71,7 +70,7 @@ const allEvents = [
     location: 'Praça Central',
     date: '25 OUT',
     image:
-      'https://images.unsplash.com/photo-1517457373958-b7bdd4e87205?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+      '/classicosdejoinville/festadascores.png',
   },
   // Festas e Shows
   {
@@ -81,32 +80,32 @@ const allEvents = [
     location: 'Arena Joinville',
     date: '05 NOV',
     image:
-      'https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=600',
+      '/festaseshows/armandinho.png',
   },
   {
     id: 10,
     category: 'Festas e Shows',
     title: 'Matue',
-    location: 'Estádio da Ressacada',
-    date: '10 NOV',
+    location: 'SQUARE GARDEN - Joinville',
+    date: '31 OUT',
     image: '/festaseshows/matuebanner.png',
   },
   {
     id: 11,
     category: 'Festas e Shows',
     title: 'Menos é Mais e Ferrugem',
-    location: 'Centro de Eventos',
-    date: '15 NOV',
+    location: 'SQUARE GARDEN - Joinville',
+    date: '19 SET',
     image: '/festaseshows/menosemaisbanner.png',
   },
   {
     id: 12,
     category: 'Festas e Shows',
     title: 'Victor e Leo',
-    location: 'Teatro Municipal',
-    date: '20 NOV',
+    location: 'SQUARE GARDEN - Joinville',
+    date: '24 OUT',
     image:
-      'https://images.pexels.com/photos/2263436/pexels-photo-2263436.jpeg?auto=compress&cs=tinysrgb&w=600',
+      '/festaseshows/victoreleo.jpg',
   },
   // Destaques da Semana
   {
