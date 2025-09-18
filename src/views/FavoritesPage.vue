@@ -66,10 +66,12 @@ export default {
     this.loadFavoriteEvents()
   },
   methods: {
-    loadFavoriteEvents() {
+    async loadFavoriteEvents() {
       const favoriteIds = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-      const allEvents = eventService.getAllEvents()
-      this.favoriteEventsDetails = allEvents.filter((event) => favoriteIds.includes(event.id))
+
+      const allEvents = await eventService.getAllEvents()
+
+      this.favoriteEventsDetails = allEvents.filter(event => favoriteIds.includes(event.id))
     },
     openEvent(event) {
       this.$router.push({ name: 'EventDetails', params: { id: event.id } })

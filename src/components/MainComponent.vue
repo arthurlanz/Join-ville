@@ -26,9 +26,9 @@
         </div>
 
         <!-- Mostrar apenas categorias que têm eventos quando filtros estão aplicados -->
-        <section 
-          v-for="category in visibleCategories" 
-          :key="category" 
+        <section
+          v-for="category in categories"
+          :key="category.id"
           class="events-section"
         >
           <div class="section-header">
@@ -44,8 +44,8 @@
             </div>
           </div>
           <div class="events-grid">
-            <div 
-              v-for="event in getEventsForCategory(category).slice(0, 4)" 
+            <div
+              v-for="event in getEventsForCategory(category)"
               :key="event.id"
               class="event-card"
             >
@@ -56,8 +56,8 @@
               <div class="event-info">
                  <div class="info-header">
                     <h3 @click="openEvent(event)" :title="event.title">{{ event.title }}</h3>
-                    <button 
-                      @click="toggleFavorite(event.id)" 
+                    <button
+                      @click="toggleFavorite(event.id)"
                       class="favorite-btn"
                       :class="{ 'is-favorited': isFavorite(event.id) }"
                       :aria-label="isFavorite(event.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
@@ -90,7 +90,7 @@
         <!-- ... resto do código da sidebar permanece igual ... -->
       </aside>
     </div>
-    
+
     <!-- Overlay -->
     <div v-if="isFilterVisible" @click="toggleFilterSidebar" class="overlay"></div>
   </main>
@@ -116,14 +116,14 @@ export default {
         dateFilter: 'all'
       },
       sortedEvents: [],
-      
+
       sortOptions: [
         { value: 'Novidades', label: 'Mais recentes' },
         { value: 'Melhor avaliado', label: 'Melhor avaliados' },
         { value: 'A-Z', label: 'A → Z' },
         { value: 'Z-A', label: 'Z → A' }
       ],
-      
+
       dateOptions: [
         { value: 'all', label: 'Qualquer data' },
         { value: 'today', label: 'Hoje' },
@@ -133,7 +133,7 @@ export default {
       ]
     }
   },
-  
+
   computed: {
     visibleCategories() {
       if (this.filters.selectedCategories.length > 0) {
@@ -146,26 +146,26 @@ export default {
         });
       }
     },
-    
+
     totalFilteredEvents() {
       return this.sortedEvents.length;
     },
-    
+
     hasFiltersApplied() {
-      return this.filters.sortBy !== 'Novidades' || 
+      return this.filters.sortBy !== 'Novidades' ||
              this.filters.selectedCategories.length > 0 ||
              this.filters.dateFilter !== 'all';
     },
-    
+
     hasChanges() {
       return true;
     }
   },
-  
+
   async created() {
     await this.loadInitialData();
   },
-  
+
   methods: {
     async loadInitialData() {
       try {
@@ -184,12 +184,15 @@ export default {
           eventService.getEventCategories()
         ]);
 
+        console.log('Exemplo de evento:', events[0]);
+        console.log('Exemplo de categoria:', categories[0]);
+
         console.log('Eventos carregados:', events?.length || 0);
         console.log('Categorias carregadas:', categories?.length || 0);
 
         this.allEvents = events || [];
         this.categories = categories || [];
-        
+
         this.loadFavorites();
         this.applySorting();
 
@@ -209,11 +212,11 @@ export default {
     handleImageError(event) {
       event.target.src = '/default-event.jpg';
     },
-    
+
     openEvent(event) {
       this.$router.push({ name: 'EventDetails', params: { id: event.id } });
     },
-    
+
     loadFavorites() {
       try {
         const favorites = localStorage.getItem('favoriteEvents');
@@ -225,7 +228,7 @@ export default {
         this.favoriteEvents = [];
       }
     },
-    
+
     toggleFavorite(eventId) {
       try {
         const index = this.favoriteEvents.indexOf(eventId);
@@ -239,23 +242,24 @@ export default {
         console.error('Erro ao salvar favoritos:', error);
       }
     },
-    
+
     isFavorite(eventId) {
       return this.favoriteEvents.includes(eventId);
     },
-    
+
     getEventsForCategory(category) {
+      console.log(this.sortedEvents)
       return this.sortedEvents.filter(event => event.category === category);
     },
-    
+
     getEventCountByCategory(category) {
       return this.allEvents.filter(event => event.category === category).length;
     },
-    
+
     toggleFilterSidebar() {
       this.isFilterVisible = !this.isFilterVisible;
     },
-    
+
     removeCategoryFilter(category) {
       const index = this.filters.selectedCategories.indexOf(category);
       if (index > -1) {
@@ -263,23 +267,23 @@ export default {
         this.applySorting();
       }
     },
-    
+
     getSortLabel(sortBy) {
       const option = this.sortOptions.find(opt => opt.value === sortBy);
       return option ? option.label : sortBy;
     },
-    
+
     getDateLabel(dateFilter) {
       const option = this.dateOptions.find(opt => opt.value === dateFilter);
       return option ? option.label : dateFilter;
     },
-    
+
     applySorting() {
       let events = [...this.allEvents];
 
       // Filtrar por categoria
       if (this.filters.selectedCategories.length > 0) {
-        events = events.filter(event => 
+        events = events.filter(event =>
           this.filters.selectedCategories.includes(event.category)
         );
       }
@@ -316,16 +320,17 @@ export default {
       }
 
       this.sortedEvents = events;
+      console.log(this.sortedEvents, this.categories)
     },
-    
+
     filterByDate(events) {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       return events.filter(event => {
         const eventDates = this.parseEventDate(event.date);
         if (!eventDates) return true; // Se não conseguir parsear, mostra o evento
-        
+
         switch (this.filters.dateFilter) {
           case 'today':
             return this.isToday(eventDates, today);
@@ -359,7 +364,7 @@ export default {
         const startDay = parseInt(rangeMatch[1]);
         const endDay = parseInt(rangeMatch[2]);
         const monthIndex = monthMap[rangeMatch[3]];
-        
+
         if (monthIndex !== undefined) {
           return {
             start: new Date(currentYear, monthIndex, startDay),
@@ -374,7 +379,7 @@ export default {
       if (singleMatch) {
         const day = parseInt(singleMatch[1]);
         const monthIndex = monthMap[singleMatch[2]];
-        
+
         if (monthIndex !== undefined) {
           const eventDate = new Date(currentYear, monthIndex, day);
           return {
@@ -387,49 +392,49 @@ export default {
 
       return null;
     },
-    
+
     isToday(eventDates, today) {
       if (!eventDates) return false;
-      
+
       const todayTime = today.getTime();
       const startTime = eventDates.start.getTime();
       const endTime = eventDates.end.getTime();
-      
+
       return todayTime >= startTime && todayTime <= endTime;
     },
-    
+
     isThisWeek(eventDates, today) {
       if (!eventDates) return false;
-      
+
       // Calcular início e fim da semana (domingo a sábado)
       const startOfWeek = new Date(today);
       startOfWeek.setDate(today.getDate() - today.getDay());
-      
+
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
-      
+
       // Verificar se há sobreposição entre o evento e a semana
       return this.dateRangesOverlap(eventDates, {
         start: startOfWeek,
         end: endOfWeek
       });
     },
-    
+
     isThisMonth(eventDates, today) {
       if (!eventDates) return false;
-      
+
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-      
+
       return this.dateRangesOverlap(eventDates, {
         start: startOfMonth,
         end: endOfMonth
       });
     },
-    
+
     isFutureEvent(eventDates, today) {
       if (!eventDates) return false;
-      
+
       // Evento é futuro se a data de início é depois de hoje
       return eventDates.start.getTime() > today.getTime();
     },
@@ -437,59 +442,59 @@ export default {
     dateRangesOverlap(range1, range2) {
       return range1.start <= range2.end && range2.start <= range1.end;
     },
-    
+
     applyFiltersAndClose() {
       this.applySorting();
       this.toggleFilterSidebar();
     },
-    
+
     clearFilters() {
       this.filters.sortBy = 'Novidades';
       this.filters.selectedCategories = [];
       this.filters.dateFilter = 'all';
       this.applySorting();
     },
-    
+
     formatDate(date) {
       if (!date) return 'Data não disponível';
-      
+
       const monthMap = {
         'JAN': '01', 'FEV': '02', 'MAR': '03', 'ABR': '04',
         'MAI': '05', 'JUN': '06', 'JUL': '07', 'AGO': '08',
         'SET': '09', 'OUT': '10', 'NOV': '11', 'DEZ': '12'
       };
-      
+
       if (date.toLowerCase().includes('permanente')) {
         return '∞';
       }
-      
+
       const match = date.match(/(\d{1,2})(?:\s+a\s+\d{1,2})?\s+([A-Z]{3})/);
-      
+
       if (match) {
         const day = match[1].padStart(2, '0');
         const monthAbbr = match[2];
         const month = monthMap[monthAbbr];
-        
+
         if (month) {
           return `${day}/${month}`;
         }
       }
-      
+
       return date;
     },
-    
+
     getStars(rating) {
       const fullStars = Math.floor(rating);
       const hasHalfStar = rating % 1 >= 0.5;
       let stars = '';
-      
+
       for (let i = 0; i < fullStars; i++) {
         stars += '★';
       }
       if (hasHalfStar) {
         stars += '☆';
       }
-      
+
       return stars;
     }
   }
@@ -967,37 +972,37 @@ export default {
   .main-content {
     padding: 20px 15px;
   }
-  
+
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
   }
-  
+
   .section-header h2 {
     font-size: 24px;
   }
-  
+
   .events-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
   }
-  
+
   .filter-sidebar {
     width: 100%;
     right: -100%;
   }
-  
+
   .event-info {
     padding: 15px;
   }
-  
+
   .info-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .favorite-btn {
     align-self: flex-end;
     margin-top: -10px;
@@ -1008,25 +1013,25 @@ export default {
   .main-content {
     padding: 15px 10px;
   }
-  
+
   .events-grid {
     grid-template-columns: 1fr;
     gap: 15px;
   }
-  
+
   .event-card {
     max-width: 100%;
   }
-  
+
   .section-actions {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .filter-sidebar {
     padding: 15px;
   }
-  
+
   .no-events {
     padding: 40px 15px;
   }

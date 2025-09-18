@@ -240,7 +240,7 @@ export const apiService = {
           }
         }
       }
-      
+
       return { success: false, message: 'Credenciais inválidas' }
     } catch (error) {
       console.error('Erro no login:', error)

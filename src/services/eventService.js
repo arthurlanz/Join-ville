@@ -247,7 +247,7 @@ const allEventsMock = [
 // Mapeamento entre categorias do front e back
 const categoryMapping = {
   'Gastronomia': 'Gastronomia',
-  'Clássicos de Joinville': 'Clássicos de Joinville', 
+  'Clássicos de Joinville': 'Clássicos de Joinville',
   'Festas e Shows': 'Festas e shows',
   'Esportes': 'Esportes',
   'Atividades ao Ar Livre': 'Atividades ao ar livre',
@@ -273,12 +273,11 @@ export const eventService = {
         apiService.getEventos(),
         apiService.getCategorias()
       ])
-      
+
       this._eventosCache = this._transformEventos(eventosResponse.results || eventosResponse)
       this._categoriasCache = categoriasResponse.results || categoriasResponse
       this._lastCacheTime = Date.now()
-      
-      console.log(`${this._eventosCache.length} eventos carregados da API`)
+
       return true
     } catch (error) {
       console.error('Erro ao carregar da API, usando dados mock:', error)
@@ -295,7 +294,7 @@ export const eventService = {
       category: evento.categoria?.nome || 'Outros',
       location: evento.endereco,
       date: this._formatDateRange(evento.data_inicio, evento.data_fim),
-      image: evento.foto ? `http://127.0.0.1:8000${evento.foto}` : '/default-event.jpg',
+      image: evento.foto ? `${evento.foto}` : '/default-event.jpg',
       description: evento.descricao,
       empresa: evento.empresa,
       horario_inicio: evento.horario_inicio,
@@ -306,18 +305,18 @@ export const eventService = {
 
   _formatDateRange(dataInicio, dataFim) {
     if (!dataInicio) return 'Data não disponível'
-    
+
     const inicio = new Date(dataInicio)
     const fim = dataFim ? new Date(dataFim) : inicio
-    
-    const meses = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 
+
+    const meses = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN',
                    'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
-    
+
     const diaInicio = inicio.getDate()
     const diaFim = fim.getDate()
     const mesInicio = meses[inicio.getMonth()]
     const mesFim = meses[fim.getMonth()]
-    
+
     if (inicio.getTime() === fim.getTime()) {
       return `${diaInicio} ${mesInicio}`
     } else if (mesInicio === mesFim) {
@@ -336,19 +335,18 @@ export const eventService = {
 
   async getEventById(id) {
     try {
-      const evento = await apiService.getEventoById(id)
-      return this._transformEventos([evento])[0]
+      return await apiService.getEventoById(id)
     } catch (error) {
-      console.error('Erro ao buscar evento por ID:', error)
-      // Fallback para cache local
-      const eventos = await this.getAllEvents()
-      return eventos.find(event => event.id === parseInt(id))
+      console.error("Erro ao buscar evento por ID:", error)
+      return null
     }
   },
 
   async getEventsByCategory(categoryName) {
     const eventos = await this.getAllEvents()
-    return eventos.filter(event => event.category === categoryName)
+    return eventos.filter(event =>
+      event.category?.trim().toLowerCase() === categoryName.trim().toLowerCase()
+    )
   },
 
   async getEventCategories() {
@@ -386,8 +384,8 @@ export const eventService = {
     try {
       const favoritos = await apiService.getFavoritos(usuarioId)
       const eventos = await this.getAllEvents()
-      
-      return eventos.filter(evento => 
+
+      return eventos.filter(evento =>
         favoritos.results?.some(fav => fav.evento === evento.id) ||
         favoritos.some?.(fav => fav.evento === evento.id)
       )

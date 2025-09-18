@@ -60,7 +60,7 @@ const routes = [
     component: MainComponent,
   },
   {
-    path: "/event/:id",
+    path: "/evento/:id",
     name: "EventDetails",
     component: EventDetails,
     props: true,

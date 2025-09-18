@@ -3,8 +3,8 @@
     <div class="container">
       <h1 class="page-title">{{ categoryName }}</h1>
       <div v-if="events.length > 0" class="events-grid">
-         <div 
-            v-for="event in events" 
+         <div
+            v-for="event in events"
             :key="event.id"
             class="event-card"
             @click="openEvent(event)"
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import { eventService } from '@/services/eventService.js';
+import { eventService } from '@/services/eventService.js'
 
 export default {
   name: 'CategoryPage',
@@ -41,22 +41,32 @@ export default {
   data() {
     return {
       events: [],
-    };
+      isLoading: false,
+    }
   },
   watch: {
     categoryName: {
-        immediate: true,
-        handler(newCategoryName) {
-            this.events = eventService.getEventsByCategory(newCategoryName);
+      immediate: true,
+      async handler(newCategoryName) {
+        this.isLoading = true
+        try {
+          this.events = await eventService.getEventsByCategory(newCategoryName)
+        } catch (error) {
+          console.error(error)
+          this.events = []
+        } finally {
+          this.isLoading = false
         }
-    }
+      },
+    },
   },
   methods: {
-      openEvent(event) {
-          this.$router.push({ name: 'EventDetails', params: { id: event.id } });
-      }
-  }
-};
+    openEvent(event) {
+      // Se a tua rota for /evento/:id
+      this.$router.push(`/evento/${event.id}`)
+    },
+  },
+}
 </script>
 
 <style scoped>
