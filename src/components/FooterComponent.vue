@@ -26,7 +26,7 @@
           <a href="https://www.instagram.com/joinville_eventos">
             <font-awesome-icon :icon="['fab', 'instagram']" size="2x" style="color:#FFFCEE;" />
           </a>
-          <a href="#">
+          <a href="https://www.facebook.com/profile.php?id=61581158812680">
             <font-awesome-icon :icon="['fab', 'facebook']" size="2x" style="color:#FFFCEE;" />
           </a>
         </div>

@@ -5,19 +5,54 @@ import App from "./App.vue"
 // Importação dos componentes de página
 import MainComponent from "./components/MainComponent.vue"
 import EventDetails from "./components/EventDetails.vue"
-import CategoryPage from "./views/CategoryPage.vue" // Novo componente de Categoria
-import FavoritesPage from "./views/FavoritesPage.vue" // Novo componente de Favoritos
+import CategoryPage from "./views/CategoryPage.vue"
+import FavoritesPage from "./views/FavoritesPage.vue"
+
+// Novas páginas de autenticação e perfis
+import LoginPage from "./views/LoginPage.vue"
+import UserProfile from "./views/UserProfile.vue"
+import CompanyProfile from "./views/CompanyProfile.vue"
+import TutorialPage from "./views/TutorialPage.vue"
 
 // Font Awesome
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
-import { faUser, faHome, faHeart as faHeartSolid } from "@fortawesome/free-solid-svg-icons"
+import { faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine} from "@fortawesome/free-solid-svg-icons"
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons"
 import { faFacebook, faInstagram } from "@fortawesome/free-brands-svg-icons"
 
 // Adiciona os ícones à biblioteca
-library.add(faUser, faHome, faFacebook, faInstagram, faHeartSolid, faHeartRegular)
+library.add(
+  faUser, faHome, faFacebook, faInstagram, faHeartSolid, faHeartRegular,
+  faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit,
+  faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine
+)
 
+// Auth Guard para rotas protegidas
+const requiresAuth = (to, from, next) => {
+  const isAuthenticated = localStorage.getItem('userToken')
+  if (isAuthenticated) {
+    next()
+  } else {
+    next('/login')
+  }
+}
+
+// Guard para empresas
+const requiresCompany = (to, from, next) => {
+  const userType = localStorage.getItem('userType')
+  const isAuthenticated = localStorage.getItem('userToken')
+
+  if (isAuthenticated && userType === 'company') {
+    next()
+  } else if (isAuthenticated) {
+    next('/user-profile')
+  } else {
+    next('/login')
+  }
+}
+
+// ROTAS CORRIGIDAS
 const routes = [
   {
     path: "/",
@@ -28,7 +63,7 @@ const routes = [
     path: "/event/:id",
     name: "EventDetails",
     component: EventDetails,
-    props: true, // Permite passar o ID como prop para o componente
+    props: true,
   },
   {
     path: "/category/:categoryName",
@@ -41,13 +76,34 @@ const routes = [
     name: "FavoritesPage",
     component: FavoritesPage,
   },
+  {
+    path: "/login",
+    name: "LoginPage",
+    component: LoginPage,
+  },
+  {
+    path: "/user-profile",
+    name: "UserProfile",
+    component: UserProfile,
+    beforeEnter: requiresAuth,
+  },
+  {
+    path: "/company-profile",
+    name: "CompanyProfile",
+    component: CompanyProfile,
+    beforeEnter: requiresCompany,
+  },
+  {
+    path: "/tutorial",
+    name: "TutorialPage",
+    component: TutorialPage,
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  // Rola para o topo da página a cada mudança de rota
-  scrollBehavior(to, from, savedPosition) {
+  scrollBehavior() {
     return { top: 0 }
   },
 })

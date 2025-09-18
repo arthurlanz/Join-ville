@@ -1,6 +1,8 @@
-// Usaremos imagens do Unsplash e Pexels para um visual mais atraente.
-const allEvents = [
-  // Gastronomia
+// services/eventService.js
+import { apiService } from './apiService.js'
+
+// Dados mock para fallback (manter temporariamente)
+const allEventsMock = [
   {
     id: 1,
     category: 'Gastronomia',
@@ -21,38 +23,36 @@ const allEvents = [
     id: 3,
     category: 'Gastronomia',
     title: 'Craft Beer',
-    location: 'Cervejaria Local',
-    date: '25 SET',
-    image:
-      '/gastronomia/craftbeer.jpg',
+    location: 'Expocentro Edmundo Doubrawa',
+    date: '26 a 27 ABR',
+    image:'/gastronomia/craftbeer.jpg',
   },
   {
     id: 4,
     category: 'Gastronomia',
     title: 'Comida di buteco',
-    location: 'Vários locais',
-    date: '30 SET',
+    location: 'Joinville - SC',
+    date: '11 ABR a 04 MAI',
     image:
-      'https://images.unsplash.com/photo-1621873491071-b7b3aa2a4f4e?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+      '/gastronomia/comidadibuteco.webp',
   },
   // Clássicos de Joinville
   {
     id: 5,
     category: 'Clássicos de Joinville',
     title: 'Festa das flores',
-    location: 'Parque da Cidade',
-    date: '10 OUT',
+    location: 'Expoville - Centro de Convenções e Exposições',
+    date: '18 a 23 NOV',
     image:
-      'https://images.unsplash.com/photo-1599511135142-1dd20e7552f1?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+      '/classicosdejoinville/festadasflores.png',
   },
   {
     id: 6,
     category: 'Clássicos de Joinville',
     title: 'Festival de dança',
     location: 'Teatro Bolshoi',
-    date: '15 OUT',
-    image:
-      'https://images.unsplash.com/photo-1518314916381-9d93de2e7c4f?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=600',
+    date: '20 JUL a 01 AGO',
+    image:'/classicosdejoinville/festivaldancabanner.jpeg',
   },
   {
     id: 7,
@@ -112,37 +112,33 @@ const allEvents = [
     id: 13,
     category: 'Destaques da Semana',
     title: 'Festival pianístico',
-    location: 'Conservatório',
-    date: '12 NOV',
-    image:
-      'https://images.pexels.com/photos/811838/pexels-photo-811838.jpeg?auto=compress&cs=tinysrgb&w=600',
+    location: 'Pianos Pela Cidade',
+    date: '23 a 28 SET',
+    image:'/destaquesdasemana/festivalpianistico.webp',
   },
   {
     id: 14,
     category: 'Destaques da Semana',
     title: 'Festival da Vigorelli',
     location: 'Vigorelli',
-    date: '18 NOV',
-    image:
-      'https://images.pexels.com/photos/2608517/pexels-photo-2608517.jpeg?auto=compress&cs=tinysrgb&w=600',
+    date: '14 a 17 AGO',
+    image:'/destaquesdasemana/festivalvigorelli.jpg',
   },
   {
     id: 15,
     category: 'Destaques da Semana',
     title: 'Musicarium in Concert',
-    location: 'Sala de Concertos',
-    date: '22 NOV',
-    image:
-      'https://images.pexels.com/photos/713149/pexels-photo-713149.jpeg?auto=compress&cs=tinysrgb&w=600',
+    location: 'Escola SESI',
+    date: '09 AGO',
+    image:'/destaquesdasemana/concertomusical.png',
   },
   {
     id: 16,
     category: 'Destaques da Semana',
     title: 'Festival Meraki',
-    location: 'Parque Zoobotânico',
-    date: '28 NOV',
-    image:
-      'https://images.pexels.com/photos/4553364/pexels-photo-4553364.jpeg?auto=compress&cs=tinysrgb&w=600',
+    location: 'Cidade das Águas',
+    date: '09 AGO',
+    image:'/destaquesdasemana/festivalmeraki.webp',
   },
   // Esportes
   {
@@ -168,7 +164,7 @@ const allEvents = [
     category: 'Esportes',
     title: 'JEC x Carlos Renaux',
     location: 'Arena Joinville',
-    date: '28 NOV',
+    date: '21 SET',
     image:
       '/esportes/jececarlos.jpg',
   },
@@ -177,7 +173,7 @@ const allEvents = [
     category: 'Esportes',
     title: 'JEC x Santo André',
     location: 'Arena Joinville',
-    date: '05 DEZ',
+    date: '06 SET',
     image: '/esportes/jecbanner.jpeg',
   },
   // Atividades ao Ar Livre
@@ -185,28 +181,25 @@ const allEvents = [
     id: 21,
     category: 'Atividades ao Ar Livre',
     title: 'Parque Zoobotânico',
-    location: 'Zona Sul',
+    location: 'Bairro Saguaçu',
     date: 'Permanente',
-    image:
-      'https://images.pexels.com/photos/1660603/pexels-photo-1660603.jpeg?auto=compress&cs=tinysrgb&w=600',
+    image:'/atividadesaoarlivre/zoobotanico.webp',
   },
   {
     id: 22,
     category: 'Atividades ao Ar Livre',
     title: 'Corrida Pela Vida',
-    location: 'Parque da Cidade',
-    date: '16 NOV',
-    image:
-      'https://images.pexels.com/photos/1571939/pexels-photo-1571939.jpeg?auto=compress&cs=tinysrgb&w=600',
+    location: 'Shopping Mueller',
+    date: '12 OUT',
+    image:'/atividadesaoarlivre/corridapelavida.png',
   },
   {
     id: 23,
     category: 'Atividades ao Ar Livre',
     title: 'Parque caminho das Águas',
-    location: 'Pirabeiraba',
+    location: 'Bairro Vila Nova',
     date: 'Permanente',
-    image:
-      'https://images.pexels.com/photos/34753/hiker-wanderer-mountain-stream.jpg?auto=compress&cs=tinysrgb&w=600',
+    image:'/atividadesaoarlivre/caminhodasaguas.png',
   },
   {
     id: 24,
@@ -214,60 +207,245 @@ const allEvents = [
     title: 'Corrida Halloween',
     location: 'Centro',
     date: '31 OUT',
-    image:
-      'https://images.pexels.com/photos/3764560/pexels-photo-3764560.jpeg?auto=compress&cs=tinysrgb&w=600',
+    image:'/atividadesaoarlivre/corridahallowen.png',
   },
   // Cultura
   {
     id: 25,
     category: 'Cultura',
-    title: 'Animameco',
-    location: 'Centro de Convenções',
-    date: '18 NOV',
-    image:
-      'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=600',
+    title: 'Festival Internacional de Bonecos - Animaneco',
+    location: 'Joinville - SC',
+    date: '14 a 24 AGO',
+    image:'/cultura/animaneco.webp',
   },
   {
     id: 26,
     category: 'Cultura',
-    title: 'Portão Comedy Night com Irmã Selma',
-    location: 'Teatro Portão',
-    date: '25 NOV',
-    image:
-      'https://images.pexels.com/photos/7180928/pexels-photo-7180928.jpeg?auto=compress&cs=tinysrgb&w=600',
+    title: 'Porão Comedy Night com Irmã Selma',
+    location: 'Porão da Liga',
+    date: '21 AGO',
+    image:'/cultura/comedia.png',
   },
   {
     id: 27,
     category: 'Cultura',
     title: 'VivVeneto',
-    location: 'Museu da Imigração',
-    date: '02 DEZ',
-    image:
-      'https://images.pexels.com/photos/764883/pexels-photo-764883.jpeg?auto=compress&cs=tinysrgb&w=600',
+    location: 'ExpoCentro Edmundo Doubrawa',
+    date: '28 a 31 AGO',
+    image:'/cultura/vinveneto.webp',
   },
   {
     id: 28,
     category: 'Cultura',
     title: 'Joinville Matsuri',
-    location: 'Parque da Cidade',
-    date: '09 DEZ',
-    image:
-      'https://images.pexels.com/photos/1907009/pexels-photo-1907009.jpeg?auto=compress&cs=tinysrgb&w=600',
+    location: 'Expocentro Edmundo Doubrawa',
+    date: '16 a 18 MAI',
+    image:'/cultura/matsuri.jpg',
   },
 ]
 
+// Mapeamento entre categorias do front e back
+const categoryMapping = {
+  'Gastronomia': 'Gastronomia',
+  'Clássicos de Joinville': 'Clássicos de Joinville', 
+  'Festas e Shows': 'Festas e shows',
+  'Esportes': 'Esportes',
+  'Atividades ao Ar Livre': 'Atividades ao ar livre',
+  'Cultura': 'Cultura'
+}
+
+
 export const eventService = {
-  getAllEvents() {
-    return allEvents
+  // Cache para melhorar performance
+  _eventosCache: null,
+  _categoriasCache: null,
+  _cacheTimeout: 5 * 60 * 1000, // 5 minutos
+  _lastCacheTime: 0,
+
+  async _shouldRefreshCache() {
+    return Date.now() - this._lastCacheTime > this._cacheTimeout
   },
-  getEventById(id) {
-    return allEvents.find((event) => event.id === parseInt(id))
+
+  async _refreshCache() {
+    try {
+      console.log('Carregando eventos da API...')
+      const [eventosResponse, categoriasResponse] = await Promise.all([
+        apiService.getEventos(),
+        apiService.getCategorias()
+      ])
+      
+      this._eventosCache = this._transformEventos(eventosResponse.results || eventosResponse)
+      this._categoriasCache = categoriasResponse.results || categoriasResponse
+      this._lastCacheTime = Date.now()
+      
+      console.log(`${this._eventosCache.length} eventos carregados da API`)
+      return true
+    } catch (error) {
+      console.error('Erro ao carregar da API, usando dados mock:', error)
+      this._eventosCache = allEventsMock
+      this._categoriasCache = Object.keys(categoryMapping).map(name => ({ nome: name }))
+      return false
+    }
   },
-  getEventsByCategory(categoryName) {
-    return allEvents.filter((event) => event.category === categoryName)
+
+  _transformEventos(eventosApi) {
+    return eventosApi.map(evento => ({
+      id: evento.id,
+      title: evento.nome,
+      category: evento.categoria?.nome || 'Outros',
+      location: evento.endereco,
+      date: this._formatDateRange(evento.data_inicio, evento.data_fim),
+      image: evento.foto ? `http://127.0.0.1:8000${evento.foto}` : '/default-event.jpg',
+      description: evento.descricao,
+      empresa: evento.empresa,
+      horario_inicio: evento.horario_inicio,
+      horario_fim: evento.horario_fim,
+      ativo: evento.ativo
+    }))
   },
-  getEventCategories() {
-    // Cria um Set para pegar apenas os nomes únicos de categoria, e depois converte para Array
-    return [...new Set(allEvents.map((event) => event.category))]
+
+  _formatDateRange(dataInicio, dataFim) {
+    if (!dataInicio) return 'Data não disponível'
+    
+    const inicio = new Date(dataInicio)
+    const fim = dataFim ? new Date(dataFim) : inicio
+    
+    const meses = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 
+                   'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']
+    
+    const diaInicio = inicio.getDate()
+    const diaFim = fim.getDate()
+    const mesInicio = meses[inicio.getMonth()]
+    const mesFim = meses[fim.getMonth()]
+    
+    if (inicio.getTime() === fim.getTime()) {
+      return `${diaInicio} ${mesInicio}`
+    } else if (mesInicio === mesFim) {
+      return `${diaInicio} a ${diaFim} ${mesInicio}`
+    } else {
+      return `${diaInicio} ${mesInicio} a ${diaFim} ${mesFim}`
+    }
   },
+
+  async getAllEvents() {
+    if (!this._eventosCache || await this._shouldRefreshCache()) {
+      await this._refreshCache()
+    }
+    return this._eventosCache
+  },
+
+  async getEventById(id) {
+    try {
+      const evento = await apiService.getEventoById(id)
+      return this._transformEventos([evento])[0]
+    } catch (error) {
+      console.error('Erro ao buscar evento por ID:', error)
+      // Fallback para cache local
+      const eventos = await this.getAllEvents()
+      return eventos.find(event => event.id === parseInt(id))
+    }
+  },
+
+  async getEventsByCategory(categoryName) {
+    const eventos = await this.getAllEvents()
+    return eventos.filter(event => event.category === categoryName)
+  },
+
+  async getEventCategories() {
+    if (!this._categoriasCache || await this._shouldRefreshCache()) {
+      await this._refreshCache()
+    }
+    return this._categoriasCache.map(cat => cat.nome)
+  },
+
+  // Métodos para interação com favoritos
+  async addToFavorites(usuarioId, eventoId) {
+    try {
+      await apiService.addFavorito(usuarioId, eventoId)
+      return true
+    } catch (error) {
+      console.error('Erro ao adicionar aos favoritos:', error)
+      return false
+    }
+  },
+
+  async removeFromFavorites(usuarioId, eventoId) {
+    try {
+      const favorito = await apiService.getFavoritoByUserAndEvent(usuarioId, eventoId)
+      if (favorito) {
+        await apiService.removeFavorito(favorito.id)
+      }
+      return true
+    } catch (error) {
+      console.error('Erro ao remover dos favoritos:', error)
+      return false
+    }
+  },
+
+  async getUserFavorites(usuarioId) {
+    try {
+      const favoritos = await apiService.getFavoritos(usuarioId)
+      const eventos = await this.getAllEvents()
+      
+      return eventos.filter(evento => 
+        favoritos.results?.some(fav => fav.evento === evento.id) ||
+        favoritos.some?.(fav => fav.evento === evento.id)
+      )
+    } catch (error) {
+      console.error('Erro ao buscar favoritos:', error)
+      return []
+    }
+  },
+
+  // Métodos para empresas
+  async getEventsByCompany(empresaId) {
+    try {
+      const eventos = await apiService.getEventosByEmpresa(empresaId)
+      return this._transformEventos(eventos.results || eventos)
+    } catch (error) {
+      console.error('Erro ao buscar eventos da empresa:', error)
+      return []
+    }
+  },
+
+  async createEvent(eventoData) {
+    try {
+      const novoEvento = await apiService.createEvento(eventoData)
+      // Limpar cache para forçar atualização
+      this._eventosCache = null
+      return this._transformEventos([novoEvento])[0]
+    } catch (error) {
+      console.error('Erro ao criar evento:', error)
+      throw error
+    }
+  },
+
+  async updateEvent(eventoId, eventoData) {
+    try {
+      const eventoAtualizado = await apiService.updateEvento(eventoId, eventoData)
+      // Limpar cache para forçar atualização
+      this._eventosCache = null
+      return this._transformEventos([eventoAtualizado])[0]
+    } catch (error) {
+      console.error('Erro ao atualizar evento:', error)
+      throw error
+    }
+  },
+
+  async deleteEvent(eventoId) {
+    try {
+      await apiService.deleteEvento(eventoId)
+      // Limpar cache para forçar atualização
+      this._eventosCache = null
+      return true
+    } catch (error) {
+      console.error('Erro ao deletar evento:', error)
+      return false
+    }
+  },
+
+  // Método utilitário para testar conectividade
+  async testConnection() {
+    return await apiService.testConnection()
+  }
 }

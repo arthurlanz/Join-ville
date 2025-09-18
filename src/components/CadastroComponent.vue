@@ -22,8 +22,8 @@
           </div>
           
           <div class="cadastro-buttons">
-            <button class="btn-primary">Cadastre seu evento</button>
-            <button class="btn-secondary">Veja como funciona</button>
+            <button @click="handleCadastroClick" class="btn-primary">Cadastre seu evento</button>
+            <router-link to="/tutorial" class="btn-secondary">Veja como funciona</router-link>
           </div>
         </div>
         
@@ -35,10 +35,35 @@
   </section>
 </template>
 
+<script>
+export default {
+  name: 'CadastroComponent',
+  methods: {
+    handleCadastroClick() {
+      // Verificar se o usuário está logado
+      const userToken = localStorage.getItem('userToken')
+      const userType = localStorage.getItem('userType')
+      
+      if (userToken && userType === 'company') {
+        // Se for empresa logada, redirecionar para o perfil da empresa
+        this.$router.push('/company-profile')
+      } else if (userToken && userType === 'user') {
+        // Se for usuário comum logado, mostrar mensagem
+        alert('Para cadastrar eventos, você precisa de uma conta de empresa com CNPJ válido.')
+        this.$router.push('/login')
+      } else {
+        // Se não estiver logado, redirecionar para login
+        this.$router.push('/login')
+      }
+    }
+  }
+}
+</script>
+
 <style scoped>
 .cadastro-section {
   background: #c2d9e4;
-  padding: 4rem 2rem 2rem ;
+  padding: 4rem 2rem 2rem;
   border-radius: 20px;
   margin: 4rem 20rem 0 20rem;
 }
@@ -120,6 +145,8 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-secondary:hover {
@@ -138,6 +165,11 @@
 }
 
 @media (max-width: 768px) {
+  .cadastro-section {
+    margin: 2rem 1rem 0;
+    padding: 2rem 1rem;
+  }
+  
   .cadastro-content {
     flex-direction: column;
     text-align: center;
