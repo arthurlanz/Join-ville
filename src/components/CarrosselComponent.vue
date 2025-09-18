@@ -13,7 +13,7 @@ const router = useRouter() // Inicializa o router
 
 const events = [
   {
-    id: 10,
+    id: 1,
     title: 'MATUÊ',
     subtitle: 'SHOW DE RAP NACIONAL',
     location: 'SQUARE GARDEN - JOINVILLE - SC',
@@ -22,7 +22,7 @@ const events = [
     badge: 'NOVO',
   },
   {
-    id: 6,
+    id: 9,
     title: 'FESTIVAL DE DANÇA',
     subtitle: 'MAIOR FESTIVAL DE DANÇA DO MUNDO',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
@@ -31,7 +31,7 @@ const events = [
     badge: 'CLÁSSICOS DE JOINVILLE',
   },
   {
-    id: 2,
+    id: 4,
     title: 'FESTIVAL GASTRONÔMICO',
     subtitle: 'DIVERSIDADE CULINÁRIA',
     location: 'Joinville - SC',
@@ -40,22 +40,22 @@ const events = [
     badge: 'FOOD',
   },
   {
-    id: 11,
-    title: 'MENOS É MAIS + FERRUGEM',
-    subtitle: 'PAGODE NACIONAL',
-    location: 'SQUARE GARDEN - JOINVILLE - SC',
-    date: 'Sexta, 19 de Set às 22:00',
-    image: '/festaseshows/menosemaisbanner.png',
-    badge: 'EM BREVE',
-  },
-  {
-    id: 20,
-    title: 'JEC KRONA X SANTO ANDRÉ',
+    id: 5,
+    title: 'JEC KRONA X BLUMENAU',
     subtitle: 'LIGA NACIONAL DE FUTSAL',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
     date: 'Sexta Feira, 5 de Set às 20:00',
     image: '/esportes/jecbanner.jpeg',
     badge: 'FUTSAL',
+  },
+  {
+    id: 11,
+    title: "ARMANDINHO",
+    subtitle: 'SHOW DE REAGE NACIONAL',
+    location: 'SQUARE GARDEN',
+    date: 'Sexta, 31 de Out às 22:00',
+    image: '/festaseshows/armandinho.png',
+    badge: 'SHOW',
   },
 ]
 

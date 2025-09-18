@@ -19,11 +19,11 @@ const checkLoginStatus = () => {
   const token = localStorage.getItem('userToken')
   const type = localStorage.getItem('userType')
   const userData = localStorage.getItem('userData')
-  
+
   if (token && type) {
     isLoggedIn.value = true
     userType.value = type
-    
+
     if (userData) {
       const user = JSON.parse(userData)
       // Para empresas, usar companyName se disponível
@@ -64,15 +64,15 @@ onMounted(() => {
   scrollHandler = () => {
     isScrolled.value = window.scrollY > 10
   }
-  
+
   window.addEventListener('scroll', scrollHandler)
-  
+
   // Verificar login no carregamento
   checkLoginStatus()
-  
+
   // Escutar mudanças no localStorage
   window.addEventListener('storage', checkLoginStatus)
-  
+
   // Verificar login periodicamente para mudanças na mesma aba
   intervalId = setInterval(checkLoginStatus, 1000)
 })
@@ -143,7 +143,7 @@ onUnmounted(() => {
               <font-awesome-icon icon="fa-solid fa-heart" />
               <span>Favoritos</span>
             </router-link>
-            
+
             <router-link :to="profileRoute" class="mobile-action-item" @click="isMobileMenuOpen = false">
               <font-awesome-icon :icon="profileIcon" />
               <span>{{ profileLabel }}</span>
@@ -155,20 +155,13 @@ onUnmounted(() => {
           <router-link to="/favorites" class="icon-btn" aria-label="Favoritos">
             <font-awesome-icon icon="fa-solid fa-heart" style="color: #11508e" size="lg" />
           </router-link>
-          
+
           <router-link :to="profileRoute" class="profile-btn" :aria-label="profileLabel">
             <font-awesome-icon :icon="profileIcon" />
             <span class="profile-text">{{ profileLabel }}</span>
           </router-link>
         </div>
       </div>
-
-      <form class="search-line" @submit.prevent="onSubmit">
-        <div class="search">
-          <span class="icon" aria-hidden="true">🔍</span>
-          <input v-model="q" type="text" placeholder="Encontre eventos, shows, festivais" />
-        </div>
-      </form>
     </div>
   </header>
 </template>
@@ -406,12 +399,12 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .mobile-menu-btn {
     display: flex;
     order: 2;
   }
-  
+
   .main-nav {
     position: fixed;
     top: 0;
@@ -425,27 +418,27 @@ onUnmounted(() => {
     padding-top: 80px;
     overflow-y: auto;
   }
-  
+
   .main-nav.mobile-open {
     left: 0;
   }
-  
+
   .main-nav ul {
     flex-direction: column;
     padding: 20px;
     gap: 0;
   }
-  
+
   .main-nav li {
     border-bottom: 1px solid #f0f0f0;
   }
-  
+
   .main-nav a {
     display: block;
     padding: 15px 0;
     font-size: 1rem;
   }
-  
+
   .mobile-actions {
     display: flex;
     flex-direction: column;
@@ -453,7 +446,7 @@ onUnmounted(() => {
     border-top: 2px solid #f0f0f0;
     gap: 15px;
   }
-  
+
   .mobile-action-item {
     display: flex;
     align-items: center;
@@ -465,11 +458,11 @@ onUnmounted(() => {
     color: #11508e;
     font-weight: 500;
   }
-  
+
   .actions {
     display: none;
   }
-  
+
   .search {
     width: 90%;
     max-width: 400px;
@@ -481,15 +474,15 @@ onUnmounted(() => {
     font-size: 0.85rem;
     padding: 0.5rem 0.5rem;
   }
-  
+
   .search-line {
     padding: 4px 16px 18px;
   }
-  
+
   .brand img {
     height: 30px;
   }
-  
+
   .main-nav {
     width: 250px;
   }

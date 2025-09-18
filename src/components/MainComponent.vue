@@ -27,25 +27,19 @@
 
         <!-- Mostrar apenas categorias que têm eventos quando filtros estão aplicados -->
         <section
-          v-for="category in categories"
-          :key="category.id"
+          v-for="category in visibleCategories"
+          :key="category"
           class="events-section"
         >
           <div class="section-header">
             <h2>{{ category }} <span class="category-count">({{ getEventsForCategory(category).length }})</span></h2>
             <div class="section-actions">
-              <button @click="toggleFilterSidebar" class="filter-link">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
-                </svg>
-                Filtrar
-              </button>
               <router-link :to="{ name: 'CategoryPage', params: { categoryName: category } }" class="view-all">Ver Tudo</router-link>
             </div>
           </div>
           <div class="events-grid">
             <div
-              v-for="event in getEventsForCategory(category)"
+              v-for="event in getEventsForCategory(category).slice(0, 4)"
               :key="event.id"
               class="event-card"
             >
@@ -184,9 +178,6 @@ export default {
           eventService.getEventCategories()
         ]);
 
-        console.log('Exemplo de evento:', events[0]);
-        console.log('Exemplo de categoria:', categories[0]);
-
         console.log('Eventos carregados:', events?.length || 0);
         console.log('Categorias carregadas:', categories?.length || 0);
 
@@ -248,7 +239,6 @@ export default {
     },
 
     getEventsForCategory(category) {
-      console.log(this.sortedEvents)
       return this.sortedEvents.filter(event => event.category === category);
     },
 
@@ -320,7 +310,6 @@ export default {
       }
 
       this.sortedEvents = events;
-      console.log(this.sortedEvents, this.categories)
     },
 
     filterByDate(events) {
