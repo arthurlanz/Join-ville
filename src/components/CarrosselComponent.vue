@@ -13,7 +13,7 @@ const router = useRouter() // Inicializa o router
 
 const events = [
   {
-    id: 10,
+    id: 1,
     title: 'MATUÊ',
     subtitle: 'SHOW DE RAP NACIONAL',
     location: 'SQUARE GARDEN - JOINVILLE - SC',
@@ -22,7 +22,7 @@ const events = [
     badge: 'NOVO',
   },
   {
-    id: 6,
+    id: 9,
     title: 'FESTIVAL DE DANÇA',
     subtitle: 'MAIOR FESTIVAL DE DANÇA DO MUNDO',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
@@ -31,7 +31,7 @@ const events = [
     badge: 'CLÁSSICOS DE JOINVILLE',
   },
   {
-    id: 2,
+    id: 4,
     title: 'FESTIVAL GASTRONÔMICO',
     subtitle: 'DIVERSIDADE CULINÁRIA',
     location: 'Joinville - SC',
@@ -40,7 +40,7 @@ const events = [
     badge: 'FOOD',
   },
   {
-    id: 11,
+    id: 20,
     title: 'MENOS É MAIS + FERRUGEM',
     subtitle: 'PAGODE NACIONAL',
     location: 'SQUARE GARDEN - JOINVILLE - SC',
@@ -49,7 +49,7 @@ const events = [
     badge: 'EM BREVE',
   },
   {
-    id: 20,
+    id: 21,
     title: 'JEC KRONA X SANTO ANDRÉ',
     subtitle: 'LIGA NACIONAL DE FUTSAL',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
