@@ -40,22 +40,22 @@ const events = [
     badge: 'FOOD',
   },
   {
-    id: 20,
-    title: 'MENOS É MAIS + FERRUGEM',
-    subtitle: 'PAGODE NACIONAL',
-    location: 'SQUARE GARDEN - JOINVILLE - SC',
-    date: 'Sexta, 19 de Set às 22:00',
-    image: '/festaseshows/menosemaisbanner.png',
-    badge: 'EM BREVE',
-  },
-  {
-    id: 21,
-    title: 'JEC KRONA X SANTO ANDRÉ',
+    id: 5,
+    title: 'JEC KRONA X BLUMENAU',
     subtitle: 'LIGA NACIONAL DE FUTSAL',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
     date: 'Sexta Feira, 5 de Set às 20:00',
     image: '/esportes/jecbanner.jpeg',
     badge: 'FUTSAL',
+  },
+  {
+    id: 11,
+    title: "ARMANDINHO",
+    subtitle: 'SHOW DE REAGE NACIONAL',
+    location: 'SQUARE GARDEN',
+    date: 'Sexta, 31 de Out às 22:00',
+    image: '/festaseshows/armandinho.png',
+    badge: 'SHOW',
   },
 ]
 
