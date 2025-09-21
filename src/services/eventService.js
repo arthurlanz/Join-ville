@@ -216,7 +216,7 @@ const allEventsMock = [
     title: 'Festival Internacional de Bonecos - Animaneco',
     location: 'Joinville - SC',
     date: '14 a 24 AGO',
-    image:'/cultura/animaneco.webp',
+    image:'/cultura/animaneco.png',
   },
   {
     id: 26,
@@ -232,7 +232,7 @@ const allEventsMock = [
     title: 'VivVeneto',
     location: 'ExpoCentro Edmundo Doubrawa',
     date: '28 a 31 AGO',
-    image:'/cultura/vinveneto.webp',
+    image:'/cultura/vinveneto.png',
   },
   {
     id: 28,

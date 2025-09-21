@@ -1,7 +1,7 @@
 import { createApp } from "vue"
 import { createRouter, createWebHistory } from "vue-router"
 import App from "./App.vue"
-
+import "@/plugins/axios"
 // Importação dos componentes de página
 import MainComponent from "./components/MainComponent.vue"
 import EventDetails from "./components/EventDetails.vue"

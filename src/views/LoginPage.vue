@@ -158,16 +158,15 @@ import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api'; // Importando nosso serviço de API
 
-// --- Estado do Componente (equivalente ao 'data' da Options API) ---
 const router = useRouter();
 
 const isLogin = ref(true);
-const userType = ref('user'); // 'user' ou 'company'
+const userType = ref('user');
 const loading = ref(false);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const message = ref('');
-const messageType = ref('success'); // 'success', 'error', 'info'
+const messageType = ref('success');
 
 const formData = reactive({
   email: '',
@@ -178,8 +177,6 @@ const formData = reactive({
   cnpj: '',
   phone: '',
 });
-
-// --- Métodos do Componente (equivalente ao 'methods' da Options API) ---
 
 const closeModal = () => {
   router.push('/');
@@ -204,16 +201,13 @@ const showMessage = (text, type, duration = 5000) => {
 };
 
 const getErrorMessage = (error) => {
-    if (!error.response || !error.response.data) {
-        return 'Erro de conexão. Tente novamente mais tarde.';
-    }
-    const data = error.response.data;
-    // Pega a primeira chave de erro (ex: 'email', 'password', 'detail')
-    const firstErrorKey = Object.keys(data)[0];
-    // Retorna a primeira mensagem de erro dentro dessa chave
-    return Array.isArray(data[firstErrorKey]) ? data[firstErrorKey][0] : data[firstErrorKey];
+  if (!error.response || !error.response.data) {
+    return 'Erro de conexão. Tente novamente mais tarde.';
+  }
+  const data = error.response.data;
+  const firstErrorKey = Object.keys(data)[0];
+  return Array.isArray(data[firstErrorKey]) ? data[firstErrorKey][0] : data[firstErrorKey];
 };
-
 
 const handleSubmit = async () => {
   if (!validateForm()) return;
@@ -244,19 +238,47 @@ const validateForm = () => {
 };
 
 const handleLogin = async () => {
-  const response = await api.login({
-    email: formData.email,
-    password: formData.password,
-  });
+  try {
+    const response = await api.login({
+      email: formData.email,
+      password: formData.password,
+    });
 
-  localStorage.setItem('accessToken', response.data.access);
-  localStorage.setItem('refreshToken', response.data.refresh);
-  
-  // Idealmente, você também salvaria os dados do usuário em um state manager (Pinia)
-  // e redirecionaria para a página de perfil.
-  
-  showMessage('Login realizado com sucesso!', 'success');
-  setTimeout(() => closeModal(), 1500);
+    // --- tokens vindos do backend ---
+    const access = response.data?.access;
+    const refresh = response.data?.refresh;
+    const user = response.data?.user || {};
+
+    if (access) {
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('userToken', access); // compatibilidade
+    }
+    if (refresh) {
+      localStorage.setItem('refreshToken', refresh);
+    }
+
+    // --- normaliza e salva os dados do usuário ---
+    const userData = {
+      id: user.id || null,
+      name: user.first_name || user.username || user.nome_empresa || '',
+      email: user.email || '',
+      tipo_usuario: user.tipo_usuario || '',
+      nome_empresa: user.nome_empresa || '',
+      cnpj: user.cnpj || '',
+      telefone: user.telefone || ''
+    };
+    localStorage.setItem('userData', JSON.stringify(userData));
+
+    // --- define tipo para perfis ---
+    const tipo = user.tipo_usuario === 'EMPRESA' ? 'company' : 'user';
+    localStorage.setItem('userType', tipo);
+
+    showMessage('Login realizado com sucesso!', 'success');
+    setTimeout(() => closeModal(), 1500);
+  } catch (err) {
+    console.error('Erro de login:', err);
+    showMessage('Erro ao fazer login. Verifique email e senha.', 'error');
+  }
 };
 
 const handleRegister = async () => {
@@ -264,17 +286,17 @@ const handleRegister = async () => {
     const userData = {
       email: formData.email,
       password: formData.password,
-      username: formData.email.split('@')[0], // username é obrigatório, usamos o início do email
+      username: formData.email.split('@')[0],
       first_name: formData.name,
     };
     await api.registerUser(userData);
-  } else { // 'company'
+  } else {
     const companyData = {
       email: formData.email,
       password: formData.password,
-      username: formData.companyName.replace(/\s+/g, ''), // username sem espaços
+      username: formData.companyName.replace(/\s+/g, ''),
       nome_empresa: formData.companyName,
-      cnpj: formData.cnpj.replace(/\D/g, ''), // Envia apenas os números
+      cnpj: formData.cnpj.replace(/\D/g, ''),
       telefone: formData.phone.replace(/\D/g, ''),
     };
     await api.registerCompany(companyData);
@@ -286,7 +308,7 @@ const handleRegister = async () => {
   }, 2000);
 };
 
-// Funções de formatação (mantidas como estavam)
+// --- formatações ---
 const formatCNPJ = (event) => {
   let value = event.target.value.replace(/\D/g, '');
   value = value.slice(0, 14);

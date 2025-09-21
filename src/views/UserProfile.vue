@@ -257,234 +257,205 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'UserProfile',
-  data() {
-    return {
-      activeTab: 'profile',
-      editMode: false,
-      saving: false,
-      showLogoutModal: false,
-      historyFilter: 'all',
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
-      userProfile: {
-        name: 'João Silva',
-        email: 'joao@email.com',
-        phone: '(47) 99999-9999',
-        birthDate: '1990-05-15',
-        interests: ['Música', 'Tecnologia', 'Esportes'],
-        avatar: null
-      },
+const router = useRouter();
+const avatarInput = ref(null);
+const activeTab = ref('profile');
+const editMode = ref(false);
+const saving = ref(false);
+const showLogoutModal = ref(false);
+const historyFilter = ref('all');
 
-      editData: {},
+// Dados do perfil, usando ref para reatividade
+const userProfile = ref({
+  name: 'João Silva',
+  email: 'joao@email.com',
+  phone: '(47) 99999-9999',
+  birthDate: '1990-05-15',
+  interests: ['Música', 'Tecnologia', 'Esportes'],
+  avatar: null,
+});
 
-      userStats: {
-        favoritedEvents: 12,
-        attendedEvents: 8,
-      },
+const editData = ref({});
+const userStats = ref({
+  favoritedEvents: 12,
+  attendedEvents: 8,
+});
 
-      availableInterests: [
-        'Música',
-        'Tecnologia',
-        'Esportes',
-        'Arte',
-        'Gastronomia',
-        'Negócios',
-        'Educação',
-        'Saúde',
-        'Cultura',
-        'Entretenimento',
-      ],
+const availableInterests = [
+  'Música', 'Tecnologia', 'Esportes', 'Arte', 'Gastronomia',
+  'Negócios', 'Educação', 'Saúde', 'Cultura', 'Entretenimento',
+];
 
-      favoriteEvents: [
-        {
-          id: 1,
-          title: 'Festival de Inverno de Joinville',
-          date: '2025-07-15',
-          location: 'Centro de Joinville',
-          image: '/classicosdejoinville/festivaldancabanner.jpeg',
-        },
-        {
-          id: 2,
-          title: 'Tech Conference 2025',
-          date: '2025-08-20',
-          location: 'Centreventos Cau Hansen',
-          image: '/gastronomia/festivalgastronomicobanner.jpg',
-        },
-      ],
+const favoriteEvents = ref([
+  { id: 1, title: 'Festival de Inverno de Joinville', date: '2025-07-15', location: 'Centro de Joinville', image: '/classicosdejoinville/festivaldancabanner.jpeg' },
+  { id: 2, title: 'Tech Conference 2025', date: '2025-08-20', location: 'Centreventos Cau Hansen', image: '/gastronomia/festivalgastronomicobanner.jpg' },
+]);
 
-      eventHistory: [
-        {
-          id: 1,
-          title: 'Festival de Inverno de Joinville',
-          date: '2025-07-15',
-          location: 'Centro de Joinville',
-          image: '/classicosdejoinville/festivaldancabanner.jpeg',
-          status: 'interested',
-        },
-        {
-          id: 3,
-          title: 'Expo Joinville 2024',
-          date: '2024-10-10',
-          location: 'Expoville',
-          image: '/gastronomia/festivalgastronomicobanner.jpg',
-          status: 'attended',
-        },
-      ],
-    }
-  },
+const eventHistory = ref([
+  { id: 1, title: 'Festival de Inverno de Joinville', date: '2025-07-15', location: 'Centro de Joinville', image: '/classicosdejoinville/festivaldancabanner.jpeg', status: 'interested' },
+  { id: 3, title: 'Expo Joinville 2024', date: '2024-10-10', location: 'Expoville', image: '/gastronomia/festivalgastronomicobanner.jpg', status: 'attended' },
+]);
 
-  computed: {
-    filteredHistory() {
-      if (this.historyFilter === 'all') {
-        return this.eventHistory
-      }
-      return this.eventHistory.filter((event) => event.status === this.historyFilter)
-    },
-  },
+// Propriedades computadas
+const filteredHistory = computed(() => {
+  if (historyFilter.value === 'all') {
+    return eventHistory.value;
+  }
+  return eventHistory.value.filter((event) => event.status === historyFilter.value);
+});
 
-  created() {
-    // Carregar dados do usuário do localStorage
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-    if (userData.name) {
-      this.userProfile.name = userData.name
-      this.userProfile.email = userData.email
-    }
-
-    // Carregar avatar do localStorage se existir
-    const savedAvatar = localStorage.getItem('userAvatar')
-    if (savedAvatar) {
-      this.userProfile.avatar = savedAvatar
-    }
-
-    // Copia dados para edição
-    this.editData = { ...this.userProfile }
-
-    // Carrega estatísticas dos favoritos
-    this.loadUserStats()
-  },
-
-  methods: {
-    loadUserStats() {
-      const favorites = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-      this.userStats.favoritedEvents = favorites.length
-    },
-
-    selectAvatar() {
-      this.$refs.avatarInput.click()
-    },
-
-    handleAvatarChange(event) {
-      const file = event.target.files[0]
-      if (file) {
-        // Validar tipo de arquivo
-        if (!file.type.startsWith('image/')) {
-          alert('Por favor, selecione apenas arquivos de imagem.')
-          return
-        }
-
-        // Validar tamanho do arquivo (máximo 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          alert('A imagem deve ter no máximo 5MB.')
-          return
-        }
-
-        // Ler o arquivo e converter para base64
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          this.userProfile.avatar = e.target.result
-          // Salvar no localStorage
-          localStorage.setItem('userAvatar', e.target.result)
-          
-          // Mostrar mensagem de sucesso
-          alert('Foto alterada com sucesso!')
-        }
-        reader.onerror = () => {
-          alert('Erro ao carregar a imagem. Tente novamente.')
-        }
-        reader.readAsDataURL(file)
-      }
-    },
-
-    logout() {
-      this.showLogoutModal = true
-    },
-
-    confirmLogout() {
-      // Limpar dados de autenticação
-      localStorage.removeItem('userToken')
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userData')
-      localStorage.removeItem('userAvatar')
-
-      // Redirecionar para home
-      this.$router.push('/')
-    },
-
-    cancelEdit() {
-      this.editMode = false
-      this.editData = { ...this.userProfile }
-    },
-
-    saveProfile() {
-      this.saving = true
-
-      // TODO: Integrar com API Django
-      setTimeout(() => {
-        this.userProfile = { ...this.editData }
-
-        // Atualizar localStorage
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-        userData.name = this.userProfile.name
-        userData.email = this.userProfile.email
-        localStorage.setItem('userData', JSON.stringify(userData))
-
-        this.editMode = false
-        this.saving = false
-        alert('Perfil atualizado com sucesso!')
-      }, 1000)
-    },
-
-    formatPhone(event) {
-      let value = event.target.value.replace(/\D/g, '')
-      value = value.replace(/^(\d{2})(\d)/, '($1) $2')
-      value = value.replace(/(\d{5})(\d{4})$/, '$1-$2')
-      this.editData.phone = value
-    },
-
-    formatDate(date) {
-      if (!date) return ''
-      return new Date(date).toLocaleDateString('pt-BR')
-    },
-
-    getStatusText(status) {
-      const statusMap = {
-        attended: 'Participei',
-        interested: 'Interesse marcado',
-        cancelled: 'Cancelado',
-      }
-      return statusMap[status] || status
-    },
-
-    viewEvent(eventId) {
-      this.$router.push(`/event/${eventId}`)
-    },
-
-    removeFromFavorites(eventId) {
-      // Remover do localStorage
-      let favorites = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-      favorites = favorites.filter((id) => id !== eventId)
-      localStorage.setItem('favoriteEvents', JSON.stringify(favorites))
-
-      // Remover da lista local
-      this.favoriteEvents = this.favoriteEvents.filter((event) => event.id !== eventId)
-      this.userStats.favoritedEvents--
-    },
-  },
+// Funções
+function loadUserStats() {
+  const favorites = JSON.parse(localStorage.getItem('favoriteEvents') || '[]');
+  userStats.value.favoritedEvents = favorites.length;
 }
-</script>
 
+function selectAvatar() {
+  avatarInput.value.click();
+}
+
+function handleAvatarChange(event) {
+  const file = event.target.files[0];
+  if (file) {
+    if (!file.type.startsWith('image/')) {
+      alert('Por favor, selecione apenas arquivos de imagem.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('A imagem deve ter no máximo 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      userProfile.value.avatar = e.target.result;
+      localStorage.setItem('userAvatar', e.target.result);
+      alert('Foto alterada com sucesso!');
+    };
+    reader.onerror = () => {
+      alert('Erro ao carregar a imagem. Tente novamente.');
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function logout() {
+  showLogoutModal.value = true;
+}
+
+function confirmLogout() {
+  localStorage.removeItem('userToken');
+  localStorage.removeItem('userType');
+  localStorage.removeItem('userData');
+  localStorage.removeItem('userAvatar');
+  router.push('/');
+}
+
+function cancelEdit() {
+  editMode.value = false;
+  editData.value = { ...userProfile.value };
+}
+
+async function saveProfile() {
+  saving.value = true;
+  try {
+    const updatedData = {
+      name: editData.value.name,
+      email: editData.value.email,
+      phone: editData.value.phone,
+      birthDate: editData.value.birthDate,
+      interests: editData.value.interests,
+    };
+
+    // Fazer a chamada de API
+    const response = await fetch('http://127.0.0.1:8000/api/', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
+      },
+      body: JSON.stringify(updatedData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao salvar o perfil.');
+    }
+
+    // Atualizar dados do perfil na interface e no localStorage
+    userProfile.value = { ...userProfile.value, ...updatedData };
+    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    localStorage.setItem('userData', JSON.stringify({ ...userData, ...updatedData }));
+
+    editMode.value = false;
+    alert('Perfil atualizado com sucesso!');
+
+  } catch (error) {
+    console.error('Erro ao salvar o perfil:', error);
+    alert('Erro ao salvar o perfil. ' + error.message);
+  } finally {
+    saving.value = false;
+  }
+}
+
+function formatPhone(event) {
+  let value = event.target.value.replace(/\D/g, '');
+  value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+  value = value.replace(/(\d{5})(\d{4})$/, '$1-$2');
+  editData.value.phone = value;
+}
+
+function formatDate(date) {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('pt-BR');
+}
+
+function getStatusText(status) {
+  const statusMap = {
+    attended: 'Participei',
+    interested: 'Interesse marcado',
+    cancelled: 'Cancelado',
+  };
+  return statusMap[status] || status;
+}
+
+function viewEvent(eventId) {
+  router.push(`/event/${eventId}`);
+}
+
+function removeFromFavorites(eventId) {
+  let favorites = JSON.parse(localStorage.getItem('favoriteEvents') || '[]');
+  favorites = favorites.filter((id) => id !== eventId);
+  localStorage.setItem('favoriteEvents', JSON.stringify(favorites));
+
+  favoriteEvents.value = favoriteEvents.value.filter((event) => event.id !== eventId);
+  userStats.value.favoritedEvents--;
+}
+
+// Hook de ciclo de vida para carregar dados ao montar o componente
+onMounted(() => {
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  if (userData.name) {
+    userProfile.value.name = userData.name;
+    userProfile.value.email = userData.email;
+    userProfile.value.phone = userData.telefone || userProfile.value.phone;
+    userProfile.value.birthDate = userData.birthDate || userProfile.value.birthDate;
+    userProfile.value.interests = userData.interests || userProfile.value.interests;
+  }
+
+  const savedAvatar = localStorage.getItem('userAvatar');
+  if (savedAvatar) {
+    userProfile.value.avatar = savedAvatar;
+  }
+
+  editData.value = { ...userProfile.value };
+  loadUserStats();
+});
+</script>
 <style scoped>
 .profile-page {
   min-height: 100vh;
