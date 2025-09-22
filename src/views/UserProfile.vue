@@ -260,6 +260,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '@/services/api'; // agora usamos as funções do backend
 
 const router = useRouter();
 const avatarInput = ref(null);
@@ -269,20 +270,20 @@ const saving = ref(false);
 const showLogoutModal = ref(false);
 const historyFilter = ref('all');
 
-// Dados do perfil, usando ref para reatividade
 const userProfile = ref({
-  name: 'João Silva',
-  email: 'joao@email.com',
-  phone: '(47) 99999-9999',
-  birthDate: '1990-05-15',
-  interests: ['Música', 'Tecnologia', 'Esportes'],
+  id: null,
+  name: '',
+  email: '',
+  phone: '',
+  birthDate: '',
+  interests: [],
   avatar: null,
 });
 
 const editData = ref({});
 const userStats = ref({
-  favoritedEvents: 12,
-  attendedEvents: 8,
+  favoritedEvents: 0,
+  attendedEvents: 0,
 });
 
 const availableInterests = [
@@ -290,28 +291,68 @@ const availableInterests = [
   'Negócios', 'Educação', 'Saúde', 'Cultura', 'Entretenimento',
 ];
 
-const favoriteEvents = ref([
-  { id: 1, title: 'Festival de Inverno de Joinville', date: '2025-07-15', location: 'Centro de Joinville', image: '/classicosdejoinville/festivaldancabanner.jpeg' },
-  { id: 2, title: 'Tech Conference 2025', date: '2025-08-20', location: 'Centreventos Cau Hansen', image: '/gastronomia/festivalgastronomicobanner.jpg' },
-]);
+const favoriteEvents = ref([]);
+const eventHistory = ref([]);
 
-const eventHistory = ref([
-  { id: 1, title: 'Festival de Inverno de Joinville', date: '2025-07-15', location: 'Centro de Joinville', image: '/classicosdejoinville/festivaldancabanner.jpeg', status: 'interested' },
-  { id: 3, title: 'Expo Joinville 2024', date: '2024-10-10', location: 'Expoville', image: '/gastronomia/festivalgastronomicobanner.jpg', status: 'attended' },
-]);
-
-// Propriedades computadas
+// Computed para histórico
 const filteredHistory = computed(() => {
-  if (historyFilter.value === 'all') {
-    return eventHistory.value;
-  }
-  return eventHistory.value.filter((event) => event.status === historyFilter.value);
+  if (historyFilter.value === 'all') return eventHistory.value;
+  return eventHistory.value.filter(e => e.status === historyFilter.value);
 });
 
-// Funções
-function loadUserStats() {
-  const favorites = JSON.parse(localStorage.getItem('favoriteEvents') || '[]');
-  userStats.value.favoritedEvents = favorites.length;
+// ----------- FUNÇÕES -----------
+
+async function fetchUser() {
+  try {
+    const res = await api.getCurrentUser();
+    const u = res.data;
+    userProfile.value = {
+      id: u.id,
+      name: u.first_name || u.username || '',
+      email: u.email,
+      phone: u.telefone || '',
+      birthDate: u.data_nascimento || '',
+      interests: u.interesses || [],
+      avatar: u.avatar || null,
+    };
+    editData.value = { ...userProfile.value };
+    localStorage.setItem('userData', JSON.stringify(userProfile.value));
+  } catch (err) {
+    console.error('Erro ao buscar usuário:', err);
+  }
+}
+
+async function fetchFavorites() {
+  try {
+    const res = await api.getFavorites();
+    favoriteEvents.value = res.data.map(f => ({
+      id: f.evento.id,
+      title: f.evento.titulo,
+      date: f.evento.data,
+      location: f.evento.local,
+      image: f.evento.imagem,
+    }));
+    userStats.value.favoritedEvents = favoriteEvents.value.length;
+  } catch (err) {
+    console.error('Erro ao buscar favoritos:', err);
+  }
+}
+
+async function fetchHistory() {
+  try {
+    const res = await api.getHistory();
+    eventHistory.value = res.data.map(e => ({
+      id: e.id,
+      title: e.titulo,
+      date: e.data,
+      location: e.local,
+      image: e.imagem,
+      status: e.status, // 'attended', 'interested'...
+    }));
+    userStats.value.attendedEvents = eventHistory.value.filter(e => e.status === 'attended').length;
+  } catch (err) {
+    console.error('Erro ao buscar histórico:', err);
+  }
 }
 
 function selectAvatar() {
@@ -320,25 +361,11 @@ function selectAvatar() {
 
 function handleAvatarChange(event) {
   const file = event.target.files[0];
-  if (file) {
-    if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione apenas arquivos de imagem.');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('A imagem deve ter no máximo 5MB.');
-      return;
-    }
-
+  if (file && file.type.startsWith('image/')) {
     const reader = new FileReader();
     reader.onload = (e) => {
       userProfile.value.avatar = e.target.result;
       localStorage.setItem('userAvatar', e.target.result);
-      alert('Foto alterada com sucesso!');
-    };
-    reader.onerror = () => {
-      alert('Erro ao carregar a imagem. Tente novamente.');
     };
     reader.readAsDataURL(file);
   }
@@ -349,10 +376,7 @@ function logout() {
 }
 
 function confirmLogout() {
-  localStorage.removeItem('userToken');
-  localStorage.removeItem('userType');
-  localStorage.removeItem('userData');
-  localStorage.removeItem('userAvatar');
+  localStorage.clear();
   router.push('/');
 }
 
@@ -364,39 +388,28 @@ function cancelEdit() {
 async function saveProfile() {
   saving.value = true;
   try {
-    const updatedData = {
-      name: editData.value.name,
-      email: editData.value.email,
-      phone: editData.value.phone,
-      birthDate: editData.value.birthDate,
-      interests: editData.value.interests,
+    const payload = {
+      first_name: editData.value.name,
+      telefone: editData.value.phone,
+      data_nascimento: editData.value.birthDate,
+      interesses: editData.value.interests,
     };
+    const res = await api.updateUser(userProfile.value.id, payload);
 
-    // Fazer a chamada de API
-    const response = await fetch('http://127.0.0.1:8000/api/', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('userToken')}`
-      },
-      body: JSON.stringify(updatedData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erro ao salvar o perfil.');
-    }
-
-    // Atualizar dados do perfil na interface e no localStorage
-    userProfile.value = { ...userProfile.value, ...updatedData };
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    localStorage.setItem('userData', JSON.stringify({ ...userData, ...updatedData }));
+    userProfile.value = {
+      ...userProfile.value,
+      name: res.data.first_name || res.data.username,
+      phone: res.data.telefone,
+      birthDate: res.data.data_nascimento,
+      interests: res.data.interesses || [],
+    };
+    localStorage.setItem('userData', JSON.stringify(userProfile.value));
 
     editMode.value = false;
     alert('Perfil atualizado com sucesso!');
-
-  } catch (error) {
-    console.error('Erro ao salvar o perfil:', error);
-    alert('Erro ao salvar o perfil. ' + error.message);
+  } catch (err) {
+    console.error('Erro ao salvar perfil:', err);
+    alert('Erro ao salvar perfil.');
   } finally {
     saving.value = false;
   }
@@ -415,47 +428,35 @@ function formatDate(date) {
 }
 
 function getStatusText(status) {
-  const statusMap = {
-    attended: 'Participei',
-    interested: 'Interesse marcado',
-    cancelled: 'Cancelado',
-  };
-  return statusMap[status] || status;
+  return { attended: 'Participei', interested: 'Interesse marcado', cancelled: 'Cancelado' }[status] || status;
 }
 
-function viewEvent(eventId) {
-  router.push(`/event/${eventId}`);
+function viewEvent(id) {
+  router.push(`/event/${id}`);
 }
 
-function removeFromFavorites(eventId) {
-  let favorites = JSON.parse(localStorage.getItem('favoriteEvents') || '[]');
-  favorites = favorites.filter((id) => id !== eventId);
-  localStorage.setItem('favoriteEvents', JSON.stringify(favorites));
-
-  favoriteEvents.value = favoriteEvents.value.filter((event) => event.id !== eventId);
-  userStats.value.favoritedEvents--;
-}
-
-// Hook de ciclo de vida para carregar dados ao montar o componente
-onMounted(() => {
-  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-  if (userData.name) {
-    userProfile.value.name = userData.name;
-    userProfile.value.email = userData.email;
-    userProfile.value.phone = userData.telefone || userProfile.value.phone;
-    userProfile.value.birthDate = userData.birthDate || userProfile.value.birthDate;
-    userProfile.value.interests = userData.interests || userProfile.value.interests;
+async function removeFromFavorites(eventId) {
+  try {
+    const fav = favoriteEvents.value.find(f => f.id === eventId);
+    if (!fav) return;
+    await api.removeFavorite(fav.id);
+    favoriteEvents.value = favoriteEvents.value.filter(e => e.id !== eventId);
+    userStats.value.favoritedEvents--;
+  } catch (err) {
+    console.error('Erro ao remover favorito:', err);
   }
+}
 
+// ----------- HOOKS -----------
+onMounted(async () => {
+  await fetchUser();
+  await fetchFavorites();
+  await fetchHistory();
   const savedAvatar = localStorage.getItem('userAvatar');
-  if (savedAvatar) {
-    userProfile.value.avatar = savedAvatar;
-  }
-
-  editData.value = { ...userProfile.value };
-  loadUserStats();
+  if (savedAvatar) userProfile.value.avatar = savedAvatar;
 });
 </script>
+
 <style scoped>
 .profile-page {
   min-height: 100vh;
