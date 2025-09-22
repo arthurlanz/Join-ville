@@ -50,6 +50,7 @@
 import { eventService } from '@/services/eventService.js'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faTrash, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
+import { useToastStore } from '@/stores/toast.js' // import do Pinia toast
 
 library.add(faTrash, faCheckCircle)
 
@@ -65,12 +66,14 @@ export default {
   created() {
     this.loadFavoriteEvents()
   },
+  setup() {
+    const toastStore = useToastStore()
+    return { toastStore }
+  },
   methods: {
     async loadFavoriteEvents() {
       const favoriteIds = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-
       const allEvents = await eventService.getAllEvents()
-
       this.favoriteEventsDetails = allEvents.filter(event => favoriteIds.includes(event.id))
     },
     openEvent(event) {
@@ -78,7 +81,6 @@ export default {
     },
     toggleSelectionMode() {
       this.isSelectionModeActive = !this.isSelectionModeActive
-      // Limpa a seleção ao sair do modo de seleção
       if (!this.isSelectionModeActive) {
         this.selectedFavorites = []
       }
@@ -102,25 +104,22 @@ export default {
       return this.selectedFavorites.includes(eventId)
     },
     deleteSelectedFavorites() {
-      // Pega os favoritos atuais do localStorage
+      if (this.selectedFavorites.length === 0) return
+
       let favoriteIds = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-
-      // Filtra, mantendo apenas os que NÃO foram selecionados para exclusão
       const newFavoriteIds = favoriteIds.filter((id) => !this.selectedFavorites.includes(id))
-
-      // Salva a nova lista no localStorage
       localStorage.setItem('favoriteEvents', JSON.stringify(newFavoriteIds))
-
-      // Atualiza a lista de eventos na tela
       this.loadFavoriteEvents()
 
-      // Sai do modo de seleção
+      this.toastStore.success(`${this.selectedFavorites.length} evento(s) removido(s) dos favoritos!`)
+
       this.isSelectionModeActive = false
       this.selectedFavorites = []
     },
   },
 }
 </script>
+
 
 <style scoped>
 .favorites-page {

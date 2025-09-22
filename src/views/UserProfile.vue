@@ -8,11 +8,11 @@
               <img v-if="userProfile.avatar" :src="userProfile.avatar" :alt="userProfile.name" />
               <font-awesome-icon v-else icon="user" />
             </div>
-            <input 
-              ref="avatarInput" 
-              type="file" 
-              accept="image/*" 
-              @change="handleAvatarChange" 
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              @change="handleAvatarChange"
               style="display: none"
             />
             <button @click="selectAvatar" class="change-avatar-btn">Alterar foto</button>
@@ -260,7 +260,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/services/api'; // agora usamos as funções do backend
+import api from '@/services/api';
+import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
 const avatarInput = ref(null);
@@ -294,13 +295,12 @@ const availableInterests = [
 const favoriteEvents = ref([]);
 const eventHistory = ref([]);
 
-// Computed para histórico
+const toastStore = useToastStore();
+
 const filteredHistory = computed(() => {
   if (historyFilter.value === 'all') return eventHistory.value;
   return eventHistory.value.filter(e => e.status === historyFilter.value);
 });
-
-// ----------- FUNÇÕES -----------
 
 async function fetchUser() {
   try {
@@ -319,6 +319,7 @@ async function fetchUser() {
     localStorage.setItem('userData', JSON.stringify(userProfile.value));
   } catch (err) {
     console.error('Erro ao buscar usuário:', err);
+    toastStore.error('Não foi possível carregar os dados do usuário.');
   }
 }
 
@@ -335,6 +336,7 @@ async function fetchFavorites() {
     userStats.value.favoritedEvents = favoriteEvents.value.length;
   } catch (err) {
     console.error('Erro ao buscar favoritos:', err);
+    toastStore.error('Não foi possível carregar os favoritos.');
   }
 }
 
@@ -347,11 +349,12 @@ async function fetchHistory() {
       date: e.data,
       location: e.local,
       image: e.imagem,
-      status: e.status, // 'attended', 'interested'...
+      status: e.status,
     }));
     userStats.value.attendedEvents = eventHistory.value.filter(e => e.status === 'attended').length;
   } catch (err) {
     console.error('Erro ao buscar histórico:', err);
+    toastStore.error('Não foi possível carregar o histórico.');
   }
 }
 
@@ -366,6 +369,7 @@ function handleAvatarChange(event) {
     reader.onload = (e) => {
       userProfile.value.avatar = e.target.result;
       localStorage.setItem('userAvatar', e.target.result);
+      toastStore.success('Avatar atualizado localmente.');
     };
     reader.readAsDataURL(file);
   }
@@ -378,6 +382,7 @@ function logout() {
 function confirmLogout() {
   localStorage.clear();
   router.push('/');
+  toastStore.info('Você saiu da conta.');
 }
 
 function cancelEdit() {
@@ -406,10 +411,10 @@ async function saveProfile() {
     localStorage.setItem('userData', JSON.stringify(userProfile.value));
 
     editMode.value = false;
-    alert('Perfil atualizado com sucesso!');
+    toastStore.success('Perfil atualizado com sucesso!');
   } catch (err) {
     console.error('Erro ao salvar perfil:', err);
-    alert('Erro ao salvar perfil.');
+    toastStore.error('Erro ao salvar perfil.');
   } finally {
     saving.value = false;
   }
@@ -442,12 +447,13 @@ async function removeFromFavorites(eventId) {
     await api.removeFavorite(fav.id);
     favoriteEvents.value = favoriteEvents.value.filter(e => e.id !== eventId);
     userStats.value.favoritedEvents--;
+    toastStore.info('Evento removido dos favoritos.');
   } catch (err) {
     console.error('Erro ao remover favorito:', err);
+    toastStore.error('Não foi possível remover o evento.');
   }
 }
 
-// ----------- HOOKS -----------
 onMounted(async () => {
   await fetchUser();
   await fetchFavorites();
@@ -456,6 +462,7 @@ onMounted(async () => {
   if (savedAvatar) userProfile.value.avatar = savedAvatar;
 });
 </script>
+
 
 <style scoped>
 .profile-page {

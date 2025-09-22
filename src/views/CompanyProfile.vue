@@ -8,16 +8,16 @@
               <img v-if="companyProfile.avatar" :src="companyProfile.avatar" :alt="companyProfile.name" />
               <font-awesome-icon icon="building" v-else />
             </div>
-            <input 
-              ref="avatarInput" 
-              type="file" 
-              accept="image/*" 
-              @change="handleAvatarChange" 
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              @change="handleAvatarChange"
               style="display: none"
             />
             <button @click="selectAvatar" class="change-logo-btn">Alterar foto</button>
           </div>
-          
+
           <div class="company-info">
             <h1>{{ companyProfile.name }}</h1>
             <p>{{ companyProfile.cnpj }}</p>
@@ -37,7 +37,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="profile-actions">
             <button @click="editMode = !editMode" class="btn-edit">
               <font-awesome-icon icon="edit" />
@@ -187,8 +187,11 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api'; // Importe seu arquivo de API
+import { useToastStore } from '@/stores/toast'; // Importando a store do toast
 
 const router = useRouter();
+const toastStore = useToastStore(); // Instanciando a store
+
 const avatarInput = ref(null);
 const activeTab = ref('profile');
 const editMode = ref(false);
@@ -231,6 +234,7 @@ async function fetchCompany() {
     localStorage.setItem('userData', JSON.stringify(companyProfile.value));
   } catch (err) {
     console.error('Erro ao buscar dados da empresa:', err);
+    toastStore.error('Erro ao carregar perfil da empresa.');
   }
 }
 
@@ -240,6 +244,7 @@ async function fetchCompanyStats() {
     companyStats.value = res.data;
   } catch (err) {
     console.error('Erro ao buscar estatísticas da empresa:', err);
+    toastStore.error('Erro ao carregar estatísticas da empresa.');
   }
 }
 
@@ -255,6 +260,7 @@ async function fetchCompanyEvents() {
     }));
   } catch (err) {
     console.error('Erro ao buscar eventos da empresa:', err);
+    toastStore.error('Erro ao carregar eventos da empresa.');
   }
 }
 
@@ -270,6 +276,7 @@ function handleAvatarChange(event) {
     reader.onload = (e) => {
       companyProfile.value.avatar = e.target.result;
       localStorage.setItem('userAvatar', e.target.result);
+      toastStore.success('Avatar atualizado com sucesso!');
     };
     reader.readAsDataURL(file);
   }
@@ -282,6 +289,7 @@ function logout() {
 function confirmLogout() {
   localStorage.clear();
   router.push('/');
+  toastStore.info('Logout realizado com sucesso.');
 }
 
 function cancelEdit() {
@@ -313,10 +321,10 @@ async function saveProfile() {
     localStorage.setItem('userData', JSON.stringify(companyProfile.value));
 
     editMode.value = false;
-    alert('Perfil da empresa atualizado com sucesso!');
+    toastStore.success('Perfil da empresa atualizado com sucesso!');
   } catch (err) {
     console.error('Erro ao salvar perfil da empresa:', err);
-    alert('Erro ao salvar perfil da empresa.');
+    toastStore.error('Erro ao salvar perfil da empresa.');
   } finally {
     saving.value = false;
   }
@@ -353,10 +361,10 @@ async function deleteEvent(eventId) {
     try {
       await api.deleteEvent(eventId);
       events.value = events.value.filter(e => e.id !== eventId);
-      alert('Evento excluído com sucesso!');
+      toastStore.success('Evento excluído com sucesso!');
     } catch (err) {
       console.error('Erro ao excluir evento:', err);
-      alert('Erro ao excluir evento.');
+      toastStore.error('Erro ao excluir evento.');
     }
   }
 }
@@ -370,6 +378,7 @@ onMounted(async () => {
   if (savedAvatar) companyProfile.value.avatar = savedAvatar;
 });
 </script>
+
 
 <style scoped>
 .company-profile-page {
@@ -1023,23 +1032,23 @@ input:checked + .slider:before {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .profile-tabs {
     flex-direction: column;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .events-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .metrics-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .company-stats {
     justify-content: center;
   }

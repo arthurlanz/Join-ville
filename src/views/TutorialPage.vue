@@ -13,7 +13,7 @@
         <!-- Passos principais -->
         <section class="steps-section">
           <h2>Divulgue seu evento em 4 passos simples</h2>
-          
+
           <div class="steps-grid">
             <div class="step-card">
               <div class="step-number">1</div>
@@ -21,21 +21,21 @@
               <h3>Cadastre sua empresa</h3>
               <p>Crie uma conta gratuita com CNPJ válido para começar a divulgar seus eventos em Joinville.</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-number">2</div>
               <div class="step-icon">📸</div>
               <h3>Crie seu evento</h3>
               <p>Adicione informações, fotos, data, local e descrição do seu evento. Tudo de forma intuitiva.</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-number">3</div>
               <div class="step-icon">🌟</div>
               <h3>Publique gratuitamente</h3>
               <p>Seu evento será publicado na plataforma sem nenhum custo. Sem taxas ocultas ou mensalidades.</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-number">4</div>
               <div class="step-icon">👥</div>
@@ -48,38 +48,38 @@
         <!-- Recursos -->
         <section class="features-section">
           <h2>O que você pode fazer</h2>
-          
+
           <div class="steps-grid2">
             <div class="step-card">
               <div class="step-icon">🎯</div>
               <h3>Público segmentado</h3>
               <p>Seus eventos chegam diretamente às pessoas interessadas em atividades em Joinville</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-icon">📊</div>
               <h3>Acompanhe o desempenho</h3>
               <p>Veja quantas pessoas visualizaram e demonstraram interesse nos seus eventos</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-icon">📱</div>
               <h3>Responsivo</h3>
               <p>Seus eventos ficam acessíveis em computadores, tablets e celulares</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-icon">🔄</div>
               <h3>Fácil atualização</h3>
               <p>Edite as informações dos seus eventos a qualquer momento</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-icon">🏆</div>
               <h3>Destaque para empresas locais</h3>
               <p>Priorizamos empresas com CNPJ de Joinville para fortalecer a economia local</p>
             </div>
-            
+
             <div class="step-card">
               <div class="step-icon">💬</div>
               <h3>Suporte dedicado</h3>
@@ -91,7 +91,7 @@
         <!-- FAQ -->
         <section class="faq-section">
           <h2>Perguntas Frequentes</h2>
-          
+
           <div class="faq-list">
             <div class="faq-item" v-for="(faq, index) in faqs" :key="index">
               <div class="faq-question" @click="toggleFaq(index)">
@@ -108,20 +108,20 @@
         <!-- Requisitos -->
         <section class="requirements-section">
           <h2>Requisitos para cadastro</h2>
-          
+
           <div class="requirements-content">
             <div class="requirement-card">
               <div class="requirement-icon">🏢</div>
               <h3>CNPJ Válido</h3>
               <p>Sua empresa precisa ter um CNPJ ativo para garantir a confiabilidade dos eventos publicados.</p>
             </div>
-            
+
             <div class="requirement-card">
               <div class="requirement-icon">📍</div>
               <h3>Localização em Joinville</h3>
               <p>Priorizamos empresas sediadas em Joinville-SC para fortalecer a economia local.</p>
             </div>
-            
+
             <div class="requirement-card">
               <div class="requirement-icon">📧</div>
               <h3>Email Válido</h3>
@@ -135,15 +135,16 @@
           <div class="cta-content">
             <h2>Pronto para começar?</h2>
             <p>Cadastre sua empresa agora e comece a divulgar seus eventos gratuitamente!</p>
-            
+
             <div class="cta-buttons">
-              <router-link to="/login" class="btn-primary">
-                Criar conta gratuita
-              </router-link>
-              <router-link to="/" class="btn-secondary">
-                Ver eventos
-              </router-link>
-            </div>
+  <button class="btn-primary" @click="handleCTAClick('register')">
+    Criar conta gratuita
+  </button>
+  <button class="btn-secondary" @click="handleCTAClick('view-events')">
+    Ver eventos
+  </button>
+</div>
+
           </div>
         </section>
       </div>
@@ -151,55 +152,65 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'TutorialPage',
-  data() {
-    return {
-      openFaq: null,
-      faqs: [
-        {
-          question: 'É realmente gratuito?',
-          answer: 'Sim! Não cobramos taxa de adesão, mensalidade ou comissão. Nossa plataforma é 100% gratuita para empresas que queiram divulgar eventos em Joinville.'
-        },
-        {
-          question: 'Preciso ter CNPJ para cadastrar eventos?',
-          answer: 'Sim, é obrigatório ter CNPJ válido para garantir a confiabilidade e segurança dos eventos publicados na plataforma.'
-        },
-        {
-          question: 'Posso editar meu evento depois de publicado?',
-          answer: 'Claro! Você pode editar informações do seu evento a qualquer momento através do seu painel de controle.'
-        },
-        {
-          question: 'Como as pessoas encontram meus eventos?',
-          answer: 'Seus eventos aparecem na página inicial, nas categorias específicas e nos resultados de busca. Também podem ser favoritados pelos usuários.'
-        },
-        {
-          question: 'Existe limite de eventos que posso cadastrar?',
-          answer: 'Não há limite! Você pode cadastrar quantos eventos quiser, todos gratuitamente.'
-        },
-        {
-          question: 'Como faço para entrar em contato se precisar de ajuda?',
-          answer: 'Você pode nos contatar pelo email joinvilleventos@gmail.com ou WhatsApp (47) 99951-8848.'
-        },
-        {
-          question: 'Minha empresa não é de Joinville, posso me cadastrar?',
-          answer: 'Aceitamos empresas de toda região, mas priorizamos empresas sediadas em Joinville para fortalecer a economia local.'
-        },
-        {
-          question: 'Como funciona a moderação dos eventos?',
-          answer: 'Todos os eventos passam por uma verificação para garantir que estão de acordo com nossas diretrizes antes de serem publicados.'
-        }
-      ]
-    }
+<script setup>
+import { ref } from 'vue';
+import { useToastStore } from '@/stores/toast'; // importando a store do toast
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+const toastStore = useToastStore();
+
+const openFaq = ref(null);
+const faqs = ref([
+  {
+    question: 'É realmente gratuito?',
+    answer: 'Sim! Não cobramos taxa de adesão, mensalidade ou comissão. Nossa plataforma é 100% gratuita para empresas que queiram divulgar eventos em Joinville.'
   },
-  methods: {
-    toggleFaq(index) {
-      this.openFaq = this.openFaq === index ? null : index
-    }
+  {
+    question: 'Preciso ter CNPJ para cadastrar eventos?',
+    answer: 'Sim, é obrigatório ter CNPJ válido para garantir a confiabilidade e segurança dos eventos publicados na plataforma.'
+  },
+  {
+    question: 'Posso editar meu evento depois de publicado?',
+    answer: 'Claro! Você pode editar informações do seu evento a qualquer momento através do seu painel de controle.'
+  },
+  {
+    question: 'Como as pessoas encontram meus eventos?',
+    answer: 'Seus eventos aparecem na página inicial, nas categorias específicas e nos resultados de busca. Também podem ser favoritados pelos usuários.'
+  },
+  {
+    question: 'Existe limite de eventos que posso cadastrar?',
+    answer: 'Não há limite! Você pode cadastrar quantos eventos quiser, todos gratuitamente.'
+  },
+  {
+    question: 'Como faço para entrar em contato se precisar de ajuda?',
+    answer: 'Você pode nos contatar pelo email joinvilleventos@gmail.com ou WhatsApp (47) 99951-8848.'
+  },
+  {
+    question: 'Minha empresa não é de Joinville, posso me cadastrar?',
+    answer: 'Aceitamos empresas de toda região, mas priorizamos empresas sediadas em Joinville para fortalecer a economia local.'
+  },
+  {
+    question: 'Como funciona a moderação dos eventos?',
+    answer: 'Todos os eventos passam por uma verificação para garantir que estão de acordo com nossas diretrizes antes de serem publicados.'
   }
-}
+]);
+
+const toggleFaq = (index) => {
+  openFaq.value = openFaq.value === index ? null : index;
+};
+
+const handleCTAClick = (action) => {
+  if (action === 'register') {
+    toastStore.info('Você será redirecionado para criar uma conta');
+    router.push('/login');
+  } else if (action === 'view-events') {
+    toastStore.info('Você será redirecionado para ver os eventos');
+    router.push('/');
+  }
+};
 </script>
+
 
 <style scoped>
 .tutorial-page {
@@ -474,33 +485,33 @@ export default {
   .tutorial-hero h1 {
     font-size: 2rem;
   }
-  
+
   .tutorial-hero p {
     font-size: 1rem;
   }
-  
+
   .steps-section h2, .features-section h2, .faq-section h2, .requirements-section h2 {
     font-size: 2rem;
   }
-  
+
   .steps-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .features-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .feature-item {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .cta-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .btn-primary, .btn-secondary {
     width: 100%;
     max-width: 300px;

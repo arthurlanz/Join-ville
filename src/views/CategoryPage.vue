@@ -2,24 +2,26 @@
   <div class="category-page">
     <div class="container">
       <h1 class="page-title">{{ categoryName }}</h1>
+
       <div v-if="events.length > 0" class="events-grid">
-         <div
-            v-for="event in events"
-            :key="event.id"
-            class="event-card"
-            @click="openEvent(event)"
-          >
-            <div class="event-image">
-              <img :src="event.image" :alt="event.title" />
-              <div class="event-date-badge">{{ event.date }}</div>
-            </div>
-            <div class="event-info">
-              <h3>{{ event.title }}</h3>
-              <p class="event-location">{{ event.location }}</p>
-              <div class="event-price" v-if="event.price">{{ event.price }}</div>
-            </div>
+        <div
+          v-for="event in events"
+          :key="event.id"
+          class="event-card"
+          @click="openEvent(event)"
+        >
+          <div class="event-image">
+            <img :src="event.image" :alt="event.title" />
+            <div class="event-date-badge">{{ event.date }}</div>
           </div>
+          <div class="event-info">
+            <h3>{{ event.title }}</h3>
+            <p class="event-location">{{ event.location }}</p>
+            <div class="event-price" v-if="event.price">{{ event.price }}</div>
+          </div>
+        </div>
       </div>
+
       <div v-else class="no-events">
         <p>Não há eventos nesta categoria no momento.</p>
       </div>
@@ -28,10 +30,11 @@
 </template>
 
 <script>
-import { eventService } from '@/services/eventService.js'
+import { eventService } from "@/services/eventService.js"
+import { useToastStore } from "@/stores/toast"
 
 export default {
-  name: 'CategoryPage',
+  name: "CategoryPage",
   props: {
     categoryName: {
       type: String,
@@ -49,11 +52,20 @@ export default {
       immediate: true,
       async handler(newCategoryName) {
         this.isLoading = true
+        const toast = useToastStore()
+
         try {
           this.events = await eventService.getEventsByCategory(newCategoryName)
+
+          if (this.events.length > 0) {
+            toast.info(`Eventos da categoria "${newCategoryName}" carregados!`)
+          } else {
+            toast.info(`Nenhum evento encontrado em "${newCategoryName}".`)
+          }
         } catch (error) {
           console.error(error)
           this.events = []
+          toast.error("Erro ao carregar eventos. Tente novamente mais tarde.")
         } finally {
           this.isLoading = false
         }
@@ -62,7 +74,6 @@ export default {
   },
   methods: {
     openEvent(event) {
-      // Se a tua rota for /evento/:id
       this.$router.push(`/evento/${event.id}`)
     },
   },
@@ -89,7 +100,6 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
-/* Estilos do Event Card (copiados do MainComponent para consistência) */
 .event-card {
   background: white;
   border-radius: 12px;
@@ -150,9 +160,9 @@ export default {
   font-size: 16px;
 }
 .no-events {
-    text-align: center;
-    padding: 50px;
-    font-size: 18px;
-    color: #555;
+  text-align: center;
+  padding: 50px;
+  font-size: 18px;
+  color: #555;
 }
 </style>

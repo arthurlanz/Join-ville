@@ -1,7 +1,12 @@
 import { createApp } from "vue"
 import { createRouter, createWebHistory } from "vue-router"
+import { createPinia } from "pinia"  // ← Importa Pinia
 import App from "./App.vue"
 import "@/plugins/axios"
+
+
+import Toast, { POSITION } from "vue-toastification";
+import "vue-toastification/dist/index.css";
 // Importação dos componentes de página
 import MainComponent from "./components/MainComponent.vue"
 import EventDetails from "./components/EventDetails.vue"
@@ -111,5 +116,18 @@ const router = createRouter({
 const app = createApp(App)
 
 app.component("font-awesome-icon", FontAwesomeIcon)
+app.use(createPinia()) // ← Ativa Pinia antes de usar stores
 app.use(router)
+  // Configuração global do Toast
+  app.use(Toast, {
+    transition: "Vue-Toastification__bounce",
+    maxToasts: 20,
+    newestOnTop: true,
+    position: POSITION.TOP_RIGHT,
+    closeOnClick: true,
+    pauseOnFocusLoss: true,
+    pauseOnHover: false,
+    draggable: false,
+    hideProgressBar: true,
+  });
 app.mount("#app")
