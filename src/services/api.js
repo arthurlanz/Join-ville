@@ -23,18 +23,23 @@ export default {
 
   // ---------- USUÁRIO ----------
   getCurrentUser: () => apiClient.get('usuarios/me/'),
-  updateUser: (id, data) => apiClient.put(`usuarios/${id}/`, data),
+    // ATUALIZADO: Não precisa mais do ID, a API sabe quem você é pelo token.
+  updateUser: (data) => apiClient.patch('usuarios/me/', data),
+  // ADICIONADO: Função específica para upload de foto.
+  updateUserAvatar: (formData) => apiClient.patch('usuarios/me/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
 
   // ---------- EVENTOS ----------
+  createEvent: (data) => apiClient.post('eventos/', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
   getEvents: () => apiClient.get('eventos/'),
   getEvent: (id) => apiClient.get(`eventos/${id}/`),
+  getCategories: () => apiClient.get('categorias/'),
 
   // ---------- FAVORITOS ----------
   getFavorites: () => apiClient.get('favoritos/'),
   addFavorite: (data) => apiClient.post('favoritos/', data),
   removeFavorite: (id) => apiClient.delete(`favoritos/${id}/`),
-
-  // ---------- HISTÓRICO (se existir no back) ----------
-  getHistory: () => apiClient.get('historico/'), // <- ajuste se a sua rota for diferente
 };
-

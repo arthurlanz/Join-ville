@@ -39,7 +39,7 @@
           </div>
 
           <div class="profile-actions">
-            <button @click="editMode = !editMode" class="btn-edit">
+            <button @click="toggleEditMode" class="btn-edit">
               <font-awesome-icon icon="edit" />
               {{ editMode ? 'Cancelar' : 'Editar perfil' }}
             </button>
@@ -80,7 +80,7 @@
                 </div>
                 <div class="form-group">
                   <label>Email de Contato</label>
-                  <input type="email" v-model="editData.email" required />
+                  <input type="email" v-model="editData.email" required disabled />
                 </div>
               </div>
               <div class="form-row">
@@ -110,7 +110,7 @@
                 <button type="submit" class="btn-save" :disabled="saving">
                   {{ saving ? 'Salvando...' : 'Salvar alterações' }}
                 </button>
-                <button type="button" @click="cancelEdit" class="btn-cancel">
+                <button type="button" @click="toggleEditMode" class="btn-cancel">
                   Cancelar
                 </button>
               </div>
@@ -143,8 +143,8 @@
         </div>
         <div v-if="activeTab === 'events'" class="tab-content">
           <div class="events-section">
-            <h2>Meus Eventos</h2>
-            <div class="button-container">
+            <div class="section-header">
+                <h2>Meus Eventos</h2>
                 <button @click="navigateToCreateEvent" class="btn-create-event">Criar Novo Evento</button>
             </div>
             <div v-if="events.length" class="events-list">
@@ -186,17 +186,18 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/services/api'; // Importe seu arquivo de API
-import { useToastStore } from '@/stores/toast'; // Importando a store do toast
+import api from '@/services/api';
+import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
-const toastStore = useToastStore(); // Instanciando a store
+const toastStore = useToastStore();
 
 const avatarInput = ref(null);
 const activeTab = ref('profile');
 const editMode = ref(false);
 const saving = ref(false);
 const showLogoutModal = ref(false);
+const newAvatarFile = ref(null);
 
 const companyProfile = ref({
   id: null,
@@ -216,69 +217,95 @@ const companyStats = ref({
 });
 const events = ref([]);
 
-// Funções para carregar dados do backend
 async function fetchCompany() {
   try {
-    const res = await api.getCurrentCompany();
+    const res = await api.getCurrentUser(); // Reutiliza a mesma chamada de API
     const c = res.data;
     companyProfile.value = {
       id: c.id,
-      name: c.nome_empresa,
-      email: c.email_contato,
-      cnpj: c.cnpj,
-      phone: c.telefone,
-      description: c.descricao,
-      avatar: c.logo || null,
+      name: c.nome_empresa || '',
+      email: c.email,
+      cnpj: c.cnpj || '',
+      phone: c.telefone || '',
+      description: c.descricao || '',
+      avatar: c.avatar || null,
     };
     editData.value = { ...companyProfile.value };
-    localStorage.setItem('userData', JSON.stringify(companyProfile.value));
   } catch (err) {
     console.error('Erro ao buscar dados da empresa:', err);
     toastStore.error('Erro ao carregar perfil da empresa.');
   }
 }
 
-async function fetchCompanyStats() {
-  try {
-    const res = await api.getCompanyStats();
-    companyStats.value = res.data;
-  } catch (err) {
-    console.error('Erro ao buscar estatísticas da empresa:', err);
-    toastStore.error('Erro ao carregar estatísticas da empresa.');
-  }
-}
-
 async function fetchCompanyEvents() {
   try {
+    // Esta API precisaria ser criada no seu backend.
+    // Ex: uma rota /api/eventos/meus-eventos/ que filtra eventos pelo 'empresa' logado.
     const res = await api.getCompanyEvents();
-    events.value = res.data.map(e => ({
-      id: e.id,
-      title: e.titulo,
-      date: e.data,
-      location: e.local,
-      image: e.imagem,
-    }));
+    events.value = res.data;
+    companyStats.value.totalEvents = events.value.length;
   } catch (err) {
     console.error('Erro ao buscar eventos da empresa:', err);
-    toastStore.error('Erro ao carregar eventos da empresa.');
+    // toastStore.error('Erro ao carregar eventos da empresa.');
   }
 }
 
-// Funções utilitárias
 function selectAvatar() {
   avatarInput.value.click();
 }
 
 function handleAvatarChange(event) {
   const file = event.target.files[0];
-  if (file && file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      companyProfile.value.avatar = e.target.result;
-      localStorage.setItem('userAvatar', e.target.result);
-      toastStore.success('Avatar atualizado com sucesso!');
+  if (!file) return;
+  newAvatarFile.value = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    companyProfile.value.avatar = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleEditMode() {
+  editMode.value = !editMode.value;
+  if (!editMode.value) {
+    newAvatarFile.value = null;
+    fetchCompany(); // Recarrega os dados originais do servidor
+  }
+}
+
+async function saveProfile() {
+  saving.value = true;
+  const formData = new FormData();
+
+  formData.append('nome_empresa', editData.value.name);
+  formData.append('cnpj', (editData.value.cnpj || '').replace(/\D/g, ''));
+  formData.append('telefone', editData.value.phone || '');
+  formData.append('descricao', editData.value.description || '');
+
+  if (newAvatarFile.value) {
+    formData.append('avatar', newAvatarFile.value);
+  }
+
+  try {
+    const res = await api.updateCurrentUser(formData);
+    const c = res.data;
+    companyProfile.value = {
+      id: c.id,
+      name: c.nome_empresa || '',
+      email: c.email,
+      cnpj: c.cnpj || '',
+      phone: c.telefone || '',
+      description: c.descricao || '',
+      avatar: c.avatar || null,
     };
-    reader.readAsDataURL(file);
+    editMode.value = false;
+    newAvatarFile.value = null;
+    toastStore.success('Perfil da empresa atualizado com sucesso!');
+  } catch (err) {
+    console.error('Erro ao salvar perfil da empresa:', err);
+    toastStore.error('Erro ao salvar perfil da empresa.');
+  } finally {
+    saving.value = false;
   }
 }
 
@@ -292,60 +319,34 @@ function confirmLogout() {
   toastStore.info('Logout realizado com sucesso.');
 }
 
-function cancelEdit() {
-  editMode.value = false;
-  editData.value = { ...companyProfile.value };
-}
-
-async function saveProfile() {
-  saving.value = true;
-  try {
-    const payload = {
-      nome_empresa: editData.value.name,
-      email_contato: editData.value.email,
-      cnpj: editData.value.cnpj,
-      telefone: editData.value.phone,
-      descricao: editData.value.description,
-    };
-
-    const res = await api.updateCompany(companyProfile.value.id, payload);
-
-    companyProfile.value = {
-      ...companyProfile.value,
-      name: res.data.nome_empresa,
-      email: res.data.email_contato,
-      cnpj: res.data.cnpj,
-      phone: res.data.telefone,
-      description: res.data.descricao,
-    };
-    localStorage.setItem('userData', JSON.stringify(companyProfile.value));
-
-    editMode.value = false;
-    toastStore.success('Perfil da empresa atualizado com sucesso!');
-  } catch (err) {
-    console.error('Erro ao salvar perfil da empresa:', err);
-    toastStore.error('Erro ao salvar perfil da empresa.');
-  } finally {
-    saving.value = false;
-  }
-}
-
 function formatCnpj(event) {
-  let value = event.target.value.replace(/\D/g, '');
-  value = value.replace(/^(\d{2})(\d{3})?(\d{3})?(\d{4})?(\d{2})?/, '$1.$2.$3/$4-$5');
-  editData.value.cnpj = value;
+    let value = event.target.value.replace(/\D/g, '');
+    value = value.substring(0, 14);
+    value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    value = value.replace(/(\d{4})(\d)/, '$1-$2');
+    editData.value.cnpj = value;
 }
 
 function formatPhone(event) {
-  let value = event.target.value.replace(/\D/g, '');
-  value = value.replace(/^(\d{2})(\d)/, '($1) $2');
-  value = value.replace(/(\d{5})(\d{4})$/, '$1-$2');
-  editData.value.phone = value;
+    let value = event.target.value.replace(/\D/g, '');
+    value = value.substring(0, 11);
+    if (value.length > 10) {
+        value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 5) {
+        value = value.replace(/^(\d\d)(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+        value = value.replace(/^(\d\d)(\d{0,5}).*/, '($1) $2');
+    } else {
+        value = value.replace(/^(\d*)/, '($1');
+    }
+    editData.value.phone = value;
 }
 
 function formatDate(date) {
   if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR');
+  return new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 }
 
 function navigateToCreateEvent() {
@@ -369,13 +370,9 @@ async function deleteEvent(eventId) {
   }
 }
 
-// Hook de ciclo de vida para carregar dados ao montar
 onMounted(async () => {
   await fetchCompany();
-  await fetchCompanyStats();
   await fetchCompanyEvents();
-  const savedAvatar = localStorage.getItem('userAvatar');
-  if (savedAvatar) companyProfile.value.avatar = savedAvatar;
 });
 </script>
 

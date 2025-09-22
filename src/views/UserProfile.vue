@@ -34,7 +34,7 @@
           </div>
 
           <div class="profile-actions">
-            <button @click="editMode = !editMode" class="btn-edit">
+            <button @click="toggleEditMode" class="btn-edit">
               <font-awesome-icon icon="edit" />
               {{ editMode ? 'Cancelar' : 'Editar perfil' }}
             </button>
@@ -73,7 +73,6 @@
           </button>
         </div>
 
-        <!-- Aba Perfil -->
         <div v-if="activeTab === 'profile'" class="tab-content">
           <div class="profile-section">
             <h2>Informações Pessoais</h2>
@@ -87,7 +86,7 @@
 
                 <div class="form-group">
                   <label>Email</label>
-                  <input type="email" v-model="editData.email" required />
+                  <input type="email" v-model="editData.email" required disabled/>
                 </div>
               </div>
 
@@ -126,7 +125,7 @@
                 <button type="submit" class="btn-save" :disabled="saving">
                   {{ saving ? 'Salvando...' : 'Salvar alterações' }}
                 </button>
-                <button type="button" @click="cancelEdit" class="btn-cancel">Cancelar</button>
+                <button type="button" @click="toggleEditMode" class="btn-cancel">Cancelar</button>
               </div>
             </form>
 
@@ -163,7 +162,7 @@
                   >
                     {{ interest }}
                   </span>
-                  <span v-if="!userProfile.interests.length" class="no-interests">
+                  <span v-if="!userProfile.interests || !userProfile.interests.length" class="no-interests">
                     Nenhum interesse cadastrado
                   </span>
                 </div>
@@ -172,20 +171,18 @@
           </div>
         </div>
 
-        <!-- Aba Favoritos -->
         <div v-if="activeTab === 'favorites'" class="tab-content">
           <div class="favorites-section">
             <h2>Eventos Favoritados</h2>
-
             <div v-if="favoriteEvents.length" class="events-grid">
               <div v-for="event in favoriteEvents" :key="event.id" class="event-card">
                 <div class="event-image" @click="viewEvent(event.id)">
-                  <img :src="event.image" :alt="event.title" />
+                  <img :src="event.foto" :alt="event.nome" />
                 </div>
                 <div class="event-info">
-                  <h3 @click="viewEvent(event.id)">{{ event.title }}</h3>
-                  <p class="event-date">📅 {{ formatDate(event.date) }}</p>
-                  <p class="event-location">📍 {{ event.location }}</p>
+                  <h3 @click="viewEvent(event.id)">{{ event.nome }}</h3>
+                  <p class="event-date">📅 {{ formatDate(event.data_inicio) }}</p>
+                  <p class="event-location">📍 {{ event.endereco }}</p>
                   <div class="event-actions">
                     <button @click="viewEvent(event.id)" class="btn-view">
                       <font-awesome-icon icon="eye" />
@@ -198,7 +195,6 @@
                 </div>
               </div>
             </div>
-
             <div v-else class="empty-state">
               <p>Você ainda não favoritou nenhum evento.</p>
               <button @click="$router.push('/')" class="btn-explore">Explorar eventos</button>
@@ -206,54 +202,13 @@
           </div>
         </div>
 
-        <!-- Aba Histórico -->
         <div v-if="activeTab === 'history'" class="tab-content">
-          <div class="history-section">
-            <h2>Histórico de Eventos</h2>
-
-            <div class="filter-options">
-              <select v-model="historyFilter">
-                <option value="all">Todos os eventos</option>
-                <option value="attended">Participei</option>
-                <option value="interested">Interesse marcado</option>
-              </select>
-            </div>
-
-            <div v-if="filteredHistory.length" class="history-list">
-              <div v-for="event in filteredHistory" :key="event.id" class="history-item">
-                <div class="event-thumbnail">
-                  <img :src="event.image" :alt="event.title" />
-                </div>
-                <div class="event-details">
-                  <h4>{{ event.title }}</h4>
-                  <p>{{ formatDate(event.date) }} - {{ event.location }}</p>
-                  <span :class="['status', event.status]">{{ getStatusText(event.status) }}</span>
-                </div>
-                <div class="history-actions">
-                  <button @click="viewEvent(event.id)" class="btn-view-small">Ver</button>
-                </div>
-              </div>
-            </div>
-
-            <div v-else class="empty-state">
-              <p>Nenhum evento encontrado no histórico.</p>
-            </div>
           </div>
-        </div>
       </div>
     </div>
 
-    <!-- Modal de confirmação de logout -->
     <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal = false">
-      <div class="modal" @click.stop>
-        <h3>Confirmar logout</h3>
-        <p>Tem certeza que deseja sair da sua conta?</p>
-        <div class="modal-actions">
-          <button @click="confirmLogout" class="btn-confirm">Sim, sair</button>
-          <button @click="showLogoutModal = false" class="btn-cancel">Cancelar</button>
         </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -264,6 +219,7 @@ import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
+const toastStore = useToastStore();
 const avatarInput = ref(null);
 const activeTab = ref('profile');
 const editMode = ref(false);
@@ -282,6 +238,8 @@ const userProfile = ref({
 });
 
 const editData = ref({});
+const newAvatarFile = ref(null); // Para armazenar o novo arquivo de avatar
+
 const userStats = ref({
   favoritedEvents: 0,
   attendedEvents: 0,
@@ -295,16 +253,9 @@ const availableInterests = [
 const favoriteEvents = ref([]);
 const eventHistory = ref([]);
 
-const toastStore = useToastStore();
-
-const filteredHistory = computed(() => {
-  if (historyFilter.value === 'all') return eventHistory.value;
-  return eventHistory.value.filter(e => e.status === historyFilter.value);
-});
-
 async function fetchUser() {
   try {
-    const res = await api.getCurrentUser();
+    const res = await api.getCurrentUser(); // Supondo que chame /api/usuarios/me/
     const u = res.data;
     userProfile.value = {
       id: u.id,
@@ -316,7 +267,6 @@ async function fetchUser() {
       avatar: u.avatar || null,
     };
     editData.value = { ...userProfile.value };
-    localStorage.setItem('userData', JSON.stringify(userProfile.value));
   } catch (err) {
     console.error('Erro ao buscar usuário:', err);
     toastStore.error('Não foi possível carregar os dados do usuário.');
@@ -326,35 +276,12 @@ async function fetchUser() {
 async function fetchFavorites() {
   try {
     const res = await api.getFavorites();
-    favoriteEvents.value = res.data.map(f => ({
-      id: f.evento.id,
-      title: f.evento.titulo,
-      date: f.evento.data,
-      location: f.evento.local,
-      image: f.evento.imagem,
-    }));
+    // CORRIGIDO: Mapeia para o objeto 'evento' que vem aninhado no favorito
+    favoriteEvents.value = res.data.map(favorito => favorito.evento);
     userStats.value.favoritedEvents = favoriteEvents.value.length;
   } catch (err) {
     console.error('Erro ao buscar favoritos:', err);
     toastStore.error('Não foi possível carregar os favoritos.');
-  }
-}
-
-async function fetchHistory() {
-  try {
-    const res = await api.getHistory();
-    eventHistory.value = res.data.map(e => ({
-      id: e.id,
-      title: e.titulo,
-      date: e.data,
-      location: e.local,
-      image: e.imagem,
-      status: e.status,
-    }));
-    userStats.value.attendedEvents = eventHistory.value.filter(e => e.status === 'attended').length;
-  } catch (err) {
-    console.error('Erro ao buscar histórico:', err);
-    toastStore.error('Não foi possível carregar o histórico.');
   }
 }
 
@@ -364,14 +291,61 @@ function selectAvatar() {
 
 function handleAvatarChange(event) {
   const file = event.target.files[0];
-  if (file && file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      userProfile.value.avatar = e.target.result;
-      localStorage.setItem('userAvatar', e.target.result);
-      toastStore.success('Avatar atualizado localmente.');
+  if (!file) return;
+
+  newAvatarFile.value = file; // Armazena o arquivo para ser enviado depois
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    userProfile.value.avatar = e.target.result; // Atualiza a pré-visualização
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleEditMode() {
+  editMode.value = !editMode.value;
+  if (!editMode.value) {
+    // Se cancelar, reverte quaisquer mudanças e recarrega dados do servidor
+    newAvatarFile.value = null;
+    fetchUser();
+  }
+}
+
+async function saveProfile() {
+  saving.value = true;
+
+  const formData = new FormData();
+
+  formData.append('first_name', editData.value.name);
+  formData.append('telefone', editData.value.phone || '');
+  formData.append('data_nascimento', editData.value.birthDate || '');
+  formData.append('interesses', JSON.stringify(editData.value.interests || []));
+
+  if (newAvatarFile.value) {
+    formData.append('avatar', newAvatarFile.value);
+  }
+
+  try {
+    const res = await api.updateCurrentUser(formData); // Supondo que api.updateCurrentUser faça PATCH em /api/usuarios/me/
+    const u = res.data;
+    userProfile.value = {
+      id: u.id,
+      name: u.first_name || u.username,
+      email: u.email,
+      phone: u.telefone,
+      birthDate: u.data_nascimento,
+      interests: u.interesses || [],
+      avatar: u.avatar,
     };
-    reader.readAsDataURL(file);
+
+    editMode.value = false;
+    newAvatarFile.value = null;
+    toastStore.success('Perfil atualizado com sucesso!');
+  } catch (err) {
+    console.error('Erro ao salvar perfil:', err);
+    toastStore.error('Erro ao salvar perfil.');
+  } finally {
+    saving.value = false;
   }
 }
 
@@ -385,41 +359,6 @@ function confirmLogout() {
   toastStore.info('Você saiu da conta.');
 }
 
-function cancelEdit() {
-  editMode.value = false;
-  editData.value = { ...userProfile.value };
-}
-
-async function saveProfile() {
-  saving.value = true;
-  try {
-    const payload = {
-      first_name: editData.value.name,
-      telefone: editData.value.phone,
-      data_nascimento: editData.value.birthDate,
-      interesses: editData.value.interests,
-    };
-    const res = await api.updateUser(userProfile.value.id, payload);
-
-    userProfile.value = {
-      ...userProfile.value,
-      name: res.data.first_name || res.data.username,
-      phone: res.data.telefone,
-      birthDate: res.data.data_nascimento,
-      interests: res.data.interesses || [],
-    };
-    localStorage.setItem('userData', JSON.stringify(userProfile.value));
-
-    editMode.value = false;
-    toastStore.success('Perfil atualizado com sucesso!');
-  } catch (err) {
-    console.error('Erro ao salvar perfil:', err);
-    toastStore.error('Erro ao salvar perfil.');
-  } finally {
-    saving.value = false;
-  }
-}
-
 function formatPhone(event) {
   let value = event.target.value.replace(/\D/g, '');
   value = value.replace(/^(\d{2})(\d)/, '($1) $2');
@@ -429,37 +368,37 @@ function formatPhone(event) {
 
 function formatDate(date) {
   if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR');
-}
-
-function getStatusText(status) {
-  return { attended: 'Participei', interested: 'Interesse marcado', cancelled: 'Cancelado' }[status] || status;
+  return new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 }
 
 function viewEvent(id) {
   router.push(`/event/${id}`);
 }
 
-async function removeFromFavorites(eventId) {
+async function removeFromFavorites(eventoId) {
   try {
-    const fav = favoriteEvents.value.find(f => f.id === eventId);
-    if (!fav) return;
-    await api.removeFavorite(fav.id);
-    favoriteEvents.value = favoriteEvents.value.filter(e => e.id !== eventId);
+    // A API de favoritos do DRF normalmente requer o ID do *favorito*, não do evento.
+    // Precisamos encontrar o ID do favorito que corresponde ao evento.
+    const favorito = (await api.getFavorites()).data.find(f => f.evento.id === eventoId);
+    if (!favorito) {
+        toastStore.error('Favorito não encontrado para remoção.');
+        return;
+    }
+
+    await api.removeFavorite(favorito.id); // Supondo que api.removeFavorite faça DELETE em /api/favoritos/{id}/
+    favoriteEvents.value = favoriteEvents.value.filter(e => e.id !== eventoId);
     userStats.value.favoritedEvents--;
     toastStore.info('Evento removido dos favoritos.');
   } catch (err) {
     console.error('Erro ao remover favorito:', err);
-    toastStore.error('Não foi possível remover o evento.');
+    toastStore.error('Não foi possível remover o evento dos favoritos.');
   }
 }
 
 onMounted(async () => {
   await fetchUser();
   await fetchFavorites();
-  await fetchHistory();
-  const savedAvatar = localStorage.getItem('userAvatar');
-  if (savedAvatar) userProfile.value.avatar = savedAvatar;
+  // await fetchHistory();
 });
 </script>
 
