@@ -24,7 +24,6 @@ export default {
   // ---------- USUÁRIO ----------
   getCurrentUser: () => apiClient.get('usuarios/me/'),
   updateUser: (id, data) => apiClient.put(`usuarios/${id}/`, data),
-  changePassword: (data) => apiClient.post('usuarios/change_password/', data),
 
   // ---------- EVENTOS ----------
   getEvents: () => apiClient.get('eventos/'),
@@ -38,3 +37,4 @@ export default {
   // ---------- HISTÓRICO (se existir no back) ----------
   getHistory: () => apiClient.get('historico/'), // <- ajuste se a sua rota for diferente
 };
+

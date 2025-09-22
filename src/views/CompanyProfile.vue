@@ -39,10 +39,6 @@
           </div>
           
           <div class="profile-actions">
-            <button @click="createEvent" class="btn-create">
-              <font-awesome-icon icon="plus" />
-              Criar evento
-            </button>
             <button @click="editMode = !editMode" class="btn-edit">
               <font-awesome-icon icon="edit" />
               {{ editMode ? 'Cancelar' : 'Editar perfil' }}
@@ -55,116 +51,61 @@
         </div>
       </div>
     </div>
-
     <div class="profile-content">
       <div class="container">
         <div class="profile-tabs">
-          <button 
-            :class="{ active: activeTab === 'company' }" 
-            @click="activeTab = 'company'"
+          <button
+            :class="{ active: activeTab === 'profile' }"
+            @click="activeTab = 'profile'"
             class="tab-btn"
           >
-            🏢 Empresa
+            🏢 Perfil da Empresa
           </button>
-          <button 
-            :class="{ active: activeTab === 'events' }" 
+          <button
+            :class="{ active: activeTab === 'events' }"
             @click="activeTab = 'events'"
             class="tab-btn"
           >
-            📅 Meus Eventos
-          </button>
-          <button 
-            :class="{ active: activeTab === 'analytics' }" 
-            @click="activeTab = 'analytics'"
-            class="tab-btn"
-          >
-            📊 Estatísticas
-          </button>
-          <button 
-            :class="{ active: activeTab === 'settings' }" 
-            @click="activeTab = 'settings'"
-            class="tab-btn"
-          >
-            ⚙️ Configurações
+            🎉 Meus Eventos
           </button>
         </div>
-
-        <!-- Aba Empresa -->
-        <div v-if="activeTab === 'company'" class="tab-content">
-          <div class="company-section">
+        <div v-if="activeTab === 'profile'" class="tab-content">
+          <div class="profile-section">
             <h2>Informações da Empresa</h2>
-            
             <form v-if="editMode" @submit.prevent="saveProfile" class="edit-form">
               <div class="form-row">
                 <div class="form-group">
-                  <label>Nome da empresa</label>
-                  <input 
-                    type="text" 
-                    v-model="editData.name" 
-                    required 
-                  />
+                  <label>Nome da Empresa</label>
+                  <input type="text" v-model="editData.name" required />
                 </div>
-                
                 <div class="form-group">
-                  <label>Email</label>
-                  <input 
-                    type="email" 
-                    v-model="editData.email" 
-                    required 
-                  />
+                  <label>Email de Contato</label>
+                  <input type="email" v-model="editData.email" required />
                 </div>
               </div>
-              
               <div class="form-row">
                 <div class="form-group">
                   <label>CNPJ</label>
-                  <input 
-                    type="text" 
-                    v-model="editData.cnpj" 
-                    required 
-                    disabled
+                  <input
+                    type="text"
+                    v-model="editData.cnpj"
+                    required
+                    @input="formatCnpj"
                   />
-                  <small>CNPJ não pode ser alterado</small>
                 </div>
-                
                 <div class="form-group">
                   <label>Telefone</label>
-                  <input 
-                    type="text" 
-                    v-model="editData.phone" 
-                    placeholder="(47) 99999-9999"
+                  <input
+                    type="text"
+                    v-model="editData.phone"
                     @input="formatPhone"
                   />
                 </div>
               </div>
-              
               <div class="form-group">
-                <label>Endereço</label>
-                <input 
-                  type="text" 
-                  v-model="editData.address" 
-                  placeholder="Endereço completo"
-                />
+                <label>Descrição</label>
+                <textarea v-model="editData.description" rows="4"></textarea>
               </div>
-              
-              <div class="form-group">
-                <label>Descrição da empresa</label>
-                <textarea 
-                  v-model="editData.description" 
-                  rows="4"
-                  placeholder="Conte mais sobre sua empresa..."
-                ></textarea>
-              </div>
-              
-              <div class="form-group">
-                <label>Website</label>
-                <input 
-                  type="url" 
-                  v-model="editData.website" 
-                  placeholder="https://www.suaempresa.com.br"
-                />
-              </div>
-              
               <div class="form-actions">
                 <button type="submit" class="btn-save" :disabled="saving">
                   {{ saving ? 'Salvando...' : 'Salvar alterações' }}
@@ -174,224 +115,61 @@
                 </button>
               </div>
             </form>
-            
-            <div v-else class="company-info-display">
+            <div v-else class="profile-info">
               <div class="info-grid">
                 <div class="info-item">
-                  <label>Nome da empresa</label>
+                  <label>Nome da Empresa</label>
                   <p>{{ companyProfile.name }}</p>
                 </div>
-                
                 <div class="info-item">
-                  <label>Email</label>
+                  <label>Email de Contato</label>
                   <p>{{ companyProfile.email }}</p>
                 </div>
-                
                 <div class="info-item">
                   <label>CNPJ</label>
-                  <p>{{ companyProfile.cnpj }}</p>
+                  <p>{{ companyProfile.cnpj || 'Não informado' }}</p>
                 </div>
-                
                 <div class="info-item">
                   <label>Telefone</label>
                   <p>{{ companyProfile.phone || 'Não informado' }}</p>
                 </div>
               </div>
-              
               <div class="description-section">
                 <label>Descrição</label>
-                <p class="description-text">
-                  {{ companyProfile.description || 'Nenhuma descrição cadastrada.' }}
-                </p>
-              </div>
-              
-              <div class="contact-info" v-if="companyProfile.website || companyProfile.address">
-                <div v-if="companyProfile.address" class="contact-item">
-                  <strong>Endereço:</strong> {{ companyProfile.address }}
-                </div>
-                <div v-if="companyProfile.website" class="contact-item">
-                  <strong>Website:</strong> 
-                  <a :href="companyProfile.website" target="_blank">{{ companyProfile.website }}</a>
-                </div>
+                <p>{{ companyProfile.description || 'Nenhuma descrição informada.' }}</p>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Aba Eventos -->
         <div v-if="activeTab === 'events'" class="tab-content">
           <div class="events-section">
-            <div class="section-header">
-              <h2>Meus Eventos</h2>
-              <button @click="createEvent" class="btn-create-small">
-                <font-awesome-icon icon="plus" />
-                Criar novo evento
-              </button>
+            <h2>Meus Eventos</h2>
+            <div class="button-container">
+                <button @click="navigateToCreateEvent" class="btn-create-event">Criar Novo Evento</button>
             </div>
-            
-            <div class="events-filter">
-              <select v-model="eventsFilter">
-                <option value="all">Todos os eventos</option>
-                <option value="active">Ativos</option>
-                <option value="draft">Rascunhos</option>
-                <option value="ended">Finalizados</option>
-              </select>
-            </div>
-            
-            <div v-if="filteredEvents.length" class="events-grid">
-              <div v-for="event in filteredEvents" :key="event.id" class="event-card-company">
-                <div class="event-image">
+            <div v-if="events.length" class="events-list">
+              <div v-for="event in events" :key="event.id" class="event-item">
+                <div class="event-thumbnail">
                   <img :src="event.image" :alt="event.title" />
-                  <div :class="['event-status', event.status]">
-                    {{ getStatusText(event.status) }}
-                  </div>
                 </div>
-                <div class="event-info">
-                  <h3>{{ event.title }}</h3>
-                  <p class="event-date">📅 {{ formatDate(event.date) }}</p>
-                  <p class="event-location">📍 {{ event.location }}</p>
-                  <div class="event-metrics">
-                    <span><font-awesome-icon icon="eye" /> {{ event.views }} visualizações</span>
-                    <span><font-awesome-icon icon="users" /> {{ event.interested }} interessados</span>
-                  </div>
-                  <div class="event-actions">
-                    <button @click="editEvent(event.id)" class="btn-edit-event">
-                      <font-awesome-icon icon="edit" />
-                      Editar
-                    </button>
-                    <button @click="viewEvent(event.id)" class="btn-view-event">
-                      <font-awesome-icon icon="eye" />
-                      Ver
-                    </button>
-                    <button @click="deleteEvent(event.id)" class="btn-delete-event">
-                      <font-awesome-icon icon="trash" />
-                    </button>
-                  </div>
+                <div class="event-details">
+                  <h4>{{ event.title }}</h4>
+                  <p>{{ formatDate(event.date) }} - {{ event.location }}</p>
+                </div>
+                <div class="event-actions">
+                  <button @click="editEvent(event.id)" class="btn-edit-event">Editar</button>
+                  <button @click="deleteEvent(event.id)" class="btn-delete-event">Excluir</button>
                 </div>
               </div>
             </div>
-            
             <div v-else class="empty-state">
-              <h3>Nenhum evento encontrado</h3>
-              <p>Você ainda não criou nenhum evento. Comece agora!</p>
-              <button @click="createEvent" class="btn-create-first">
-                <font-awesome-icon icon="plus" />
-                Criar meu primeiro evento
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aba Estatísticas -->
-        <div v-if="activeTab === 'analytics'" class="tab-content">
-          <div class="analytics-section">
-            <h2>Estatísticas dos Eventos</h2>
-            
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <div class="metric-icon">👥</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.totalViews }}</h3>
-                  <p>Visualizações totais</p>
-                </div>
-              </div>
-              
-              <div class="metric-card">
-                <div class="metric-icon">❤️</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.totalInterested }}</h3>
-                  <p>Total de interessados</p>
-                </div>
-              </div>
-              
-              <div class="metric-card">
-                <div class="metric-icon">📈</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.avgRating }}</h3>
-                  <p>Avaliação média</p>
-                </div>
-              </div>
-              
-              <div class="metric-card">
-                <div class="metric-icon">🎯</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.conversionRate }}%</h3>
-                  <p>Taxa de interesse</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="chart-placeholder">
-              <h3>Desempenho dos Eventos</h3>
-              <div class="chart-info">
-                <p>📊 Gráficos e estatísticas detalhadas serão implementados aqui</p>
-                <p>• Visualizações por período</p>
-                <p>• Eventos mais populares</p>
-                <p>• Análise de público-alvo</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aba Configurações -->
-        <div v-if="activeTab === 'settings'" class="tab-content">
-          <div class="settings-section">
-            <h2>Configurações</h2>
-            
-            <div class="setting-group">
-              <h3>Notificações</h3>
-              <div class="setting-item">
-                <label class="switch">
-                  <input type="checkbox" v-model="settings.emailNotifications">
-                  <span class="slider"></span>
-                </label>
-                <div class="setting-text">
-                  <strong>Notificações por email</strong>
-                  <p>Receba atualizações sobre seus eventos</p>
-                </div>
-              </div>
-              
-              <div class="setting-item">
-                <label class="switch">
-                  <input type="checkbox" v-model="settings.eventReminders">
-                  <span class="slider"></span>
-                </label>
-                <div class="setting-text">
-                  <strong>Lembretes de eventos</strong>
-                  <p>Receba lembretes antes dos seus eventos</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="setting-group">
-              <h3>Privacidade</h3>
-              <div class="setting-item">
-                <label class="switch">
-                  <input type="checkbox" v-model="settings.publicProfile">
-                  <span class="slider"></span>
-                </label>
-                <div class="setting-text">
-                  <strong>Perfil público</strong>
-                  <p>Permitir que outros usuários vejam informações da empresa</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="setting-group danger-zone">
-              <h3>Zona de Perigo</h3>
-              <div class="danger-actions">
-                <button class="btn-danger" @click="showDeleteModal = true">
-                  Excluir conta da empresa
-                </button>
-                <p>Esta ação não pode ser desfeita. Todos os eventos serão removidos.</p>
-              </div>
+              <p>Você ainda não criou nenhum evento.</p>
+              <button @click="navigateToCreateEvent" class="btn-explore">Criar meu primeiro evento</button>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Modal de confirmação de logout -->
     <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal = false">
       <div class="modal" @click.stop>
         <h3>Confirmar logout</h3>
@@ -402,250 +180,195 @@
         </div>
       </div>
     </div>
-
-    <!-- Modal de exclusão de conta -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
-      <div class="modal" @click.stop>
-        <h3>Excluir conta da empresa</h3>
-        <p>Esta ação é irreversível. Todos os seus eventos serão removidos permanentemente.</p>
-        <div class="modal-actions">
-          <button @click="confirmDelete" class="btn-danger">Sim, excluir</button>
-          <button @click="showDeleteModal = false" class="btn-cancel">Cancelar</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'CompanyProfile',
-  data() {
-    return {
-      activeTab: 'company',
-      editMode: false,
-      saving: false,
-      showLogoutModal: false,
-      showDeleteModal: false,
-      eventsFilter: 'all',
-      
-      companyProfile: {
-        name: 'Empresa Exemplo Ltda',
-        email: 'contato@empresaexemplo.com.br',
-        cnpj: '12.345.678/0001-90',
-        phone: '(47) 3333-4444',
-        address: 'Rua das Empresas, 123 - Centro, Joinville - SC',
-        description: 'Somos uma empresa especializada em eventos corporativos e culturais em Joinville.',
-        website: 'https://www.empresaexemplo.com.br',
-        avatar: null
-      },
-      
-      editData: {},
-      
-      companyStats: {
-        totalEvents: 15,
-        activeEvents: 8,
-        totalViews: 12500,
-        totalInterested: 850,
-        avgRating: 4.7,
-        conversionRate: 6.8
-      },
-      
-      companyEvents: [
-        {
-          id: 1,
-          title: 'Workshop de Marketing Digital',
-          date: '2025-10-15',
-          location: 'Centro de Convenções',
-          image: '/gastronomia/festivalgastronomicobanner.jpg',
-          status: 'active',
-          views: 1250,
-          interested: 85
-        },
-        {
-          id: 2,
-          title: 'Feira de Empreendedorismo',
-          date: '2025-11-20',
-          location: 'Expoville',
-          image: '/classicosdejoinville/festivaldancabanner.jpeg',
-          status: 'draft',
-          views: 320,
-          interested: 12
-        },
-        {
-          id: 3,
-          title: 'Conferência Tech Joinville',
-          date: '2024-08-10',
-          location: 'Centreventos Cau Hansen',
-          image: '/festaseshows/matuebanner.png',
-          status: 'ended',
-          views: 3200,
-          interested: 280
-        }
-      ],
-      
-      settings: {
-        emailNotifications: true,
-        eventReminders: true,
-        publicProfile: true
-      }
-    }
-  },
-  
-  computed: {
-    filteredEvents() {
-      if (this.eventsFilter === 'all') {
-        return this.companyEvents
-      }
-      return this.companyEvents.filter(event => event.status === this.eventsFilter)
-    }
-  },
-  
-  created() {
-    // Carregar dados da empresa do localStorage
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-    if (userData.name) {
-      this.companyProfile.name = userData.name
-      this.companyProfile.email = userData.email
-    }
-    const savedAvatar = localStorage.getItem('userAvatar')
-    if (savedAvatar) {
-      this.companyProfiler.avatar = savedAvatar
-    }
-    
-    // Copia dados para edição
-    this.editData = { ...this.companyProfile }
-  },
-  
-  methods: {
-        selectAvatar() {
-      this.$refs.avatarInput.click()
-    },
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import api from '@/services/api'; // Importe seu arquivo de API
 
-    handleAvatarChange(event) {
-      const file = event.target.files[0]
-      if (file) {
-        // Validar tipo de arquivo
-        if (!file.type.startsWith('image/')) {
-          alert('Por favor, selecione apenas arquivos de imagem.')
-          return
-        }
+const router = useRouter();
+const avatarInput = ref(null);
+const activeTab = ref('profile');
+const editMode = ref(false);
+const saving = ref(false);
+const showLogoutModal = ref(false);
 
-        // Validar tamanho do arquivo (máximo 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          alert('A imagem deve ter no máximo 5MB.')
-          return
-        }
+const companyProfile = ref({
+  id: null,
+  name: '',
+  email: '',
+  cnpj: '',
+  phone: '',
+  description: '',
+  avatar: null,
+});
 
-        // Ler o arquivo e converter para base64
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          this.companyProfile.avatar = e.target.result
-          // Salvar no localStorage
-          localStorage.setItem('userAvatar', e.target.result)
-          
-          // Mostrar mensagem de sucesso
-          alert('Foto alterada com sucesso!')
-        }
-        reader.onerror = () => {
-          alert('Erro ao carregar a imagem. Tente novamente.')
-        }
-        reader.readAsDataURL(file)
-      }
-    },
+const editData = ref({});
+const companyStats = ref({
+  totalEvents: 0,
+  activeEvents: 0,
+  totalViews: 0,
+});
+const events = ref([]);
 
-    logout() {
-      this.showLogoutModal = true
-    },
-    
-    confirmLogout() {
-      // Limpar dados de autenticação
-      localStorage.removeItem('userToken')
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userData')
-      
-      // Redirecionar para home
-      this.$router.push('/')
-    },
-    
-    confirmDelete() {
-      // TODO: Implementar exclusão da conta via API
-      localStorage.removeItem('userToken')
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userData')
-      
-      this.$router.push('/')
-    },
-    
-    cancelEdit() {
-      this.editMode = false
-      this.editData = { ...this.companyProfile }
-    },
-    
-    saveProfile() {
-      this.saving = true
-      
-      // TODO: Integrar com API Django
-      setTimeout(() => {
-        this.companyProfile = { ...this.editData }
-        
-        // Atualizar localStorage
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-        userData.name = this.companyProfile.name
-        userData.email = this.companyProfile.email
-        localStorage.setItem('userData', JSON.stringify(userData))
-        
-        this.editMode = false
-        this.saving = false
-      }, 1000)
-    },
-    
-    formatPhone(event) {
-      let value = event.target.value.replace(/\D/g, '')
-      value = value.replace(/^(\d{2})(\d)/, '($1) $2')
-      value = value.replace(/(\d{4})(\d{4})$/, '$1-$2')
-      this.editData.phone = value
-    },
-    
-    formatDate(date) {
-      if (!date) return ''
-      return new Date(date).toLocaleDateString('pt-BR')
-    },
-    
-    getStatusText(status) {
-      const statusMap = {
-        active: 'Ativo',
-        draft: 'Rascunho',
-        ended: 'Finalizado'
-      }
-      return statusMap[status] || status
-    },
-    
-    createEvent() {
-      // TODO: Implementar criação de evento
-      alert('Funcionalidade de criação de eventos será implementada em breve!')
-    },
-    
-    editEvent(eventId) {
-      // TODO: Implementar edição de evento
-      console.log('Editar evento:', eventId)
-    },
-    
-    viewEvent(eventId) {
-      this.$router.push(`/event/${eventId}`)
-    },
-    
-    deleteEvent(eventId) {
-      if (confirm('Tem certeza que deseja excluir este evento?')) {
-        this.companyEvents = this.companyEvents.filter(event => event.id !== eventId)
-        this.companyStats.totalEvents--
-        if (this.companyEvents.find(e => e.id === eventId)?.status === 'active') {
-          this.companyStats.activeEvents--
-        }
-      }
+// Funções para carregar dados do backend
+async function fetchCompany() {
+  try {
+    const res = await api.getCurrentCompany();
+    const c = res.data;
+    companyProfile.value = {
+      id: c.id,
+      name: c.nome_empresa,
+      email: c.email_contato,
+      cnpj: c.cnpj,
+      phone: c.telefone,
+      description: c.descricao,
+      avatar: c.logo || null,
+    };
+    editData.value = { ...companyProfile.value };
+    localStorage.setItem('userData', JSON.stringify(companyProfile.value));
+  } catch (err) {
+    console.error('Erro ao buscar dados da empresa:', err);
+  }
+}
+
+async function fetchCompanyStats() {
+  try {
+    const res = await api.getCompanyStats();
+    companyStats.value = res.data;
+  } catch (err) {
+    console.error('Erro ao buscar estatísticas da empresa:', err);
+  }
+}
+
+async function fetchCompanyEvents() {
+  try {
+    const res = await api.getCompanyEvents();
+    events.value = res.data.map(e => ({
+      id: e.id,
+      title: e.titulo,
+      date: e.data,
+      location: e.local,
+      image: e.imagem,
+    }));
+  } catch (err) {
+    console.error('Erro ao buscar eventos da empresa:', err);
+  }
+}
+
+// Funções utilitárias
+function selectAvatar() {
+  avatarInput.value.click();
+}
+
+function handleAvatarChange(event) {
+  const file = event.target.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      companyProfile.value.avatar = e.target.result;
+      localStorage.setItem('userAvatar', e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function logout() {
+  showLogoutModal.value = true;
+}
+
+function confirmLogout() {
+  localStorage.clear();
+  router.push('/');
+}
+
+function cancelEdit() {
+  editMode.value = false;
+  editData.value = { ...companyProfile.value };
+}
+
+async function saveProfile() {
+  saving.value = true;
+  try {
+    const payload = {
+      nome_empresa: editData.value.name,
+      email_contato: editData.value.email,
+      cnpj: editData.value.cnpj,
+      telefone: editData.value.phone,
+      descricao: editData.value.description,
+    };
+
+    const res = await api.updateCompany(companyProfile.value.id, payload);
+
+    companyProfile.value = {
+      ...companyProfile.value,
+      name: res.data.nome_empresa,
+      email: res.data.email_contato,
+      cnpj: res.data.cnpj,
+      phone: res.data.telefone,
+      description: res.data.descricao,
+    };
+    localStorage.setItem('userData', JSON.stringify(companyProfile.value));
+
+    editMode.value = false;
+    alert('Perfil da empresa atualizado com sucesso!');
+  } catch (err) {
+    console.error('Erro ao salvar perfil da empresa:', err);
+    alert('Erro ao salvar perfil da empresa.');
+  } finally {
+    saving.value = false;
+  }
+}
+
+function formatCnpj(event) {
+  let value = event.target.value.replace(/\D/g, '');
+  value = value.replace(/^(\d{2})(\d{3})?(\d{3})?(\d{4})?(\d{2})?/, '$1.$2.$3/$4-$5');
+  editData.value.cnpj = value;
+}
+
+function formatPhone(event) {
+  let value = event.target.value.replace(/\D/g, '');
+  value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+  value = value.replace(/(\d{5})(\d{4})$/, '$1-$2');
+  editData.value.phone = value;
+}
+
+function formatDate(date) {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('pt-BR');
+}
+
+function navigateToCreateEvent() {
+  router.push('/create-event');
+}
+
+async function editEvent(eventId) {
+  router.push(`/edit-event/${eventId}`);
+}
+
+async function deleteEvent(eventId) {
+  if (confirm('Tem certeza que deseja excluir este evento?')) {
+    try {
+      await api.deleteEvent(eventId);
+      events.value = events.value.filter(e => e.id !== eventId);
+      alert('Evento excluído com sucesso!');
+    } catch (err) {
+      console.error('Erro ao excluir evento:', err);
+      alert('Erro ao excluir evento.');
     }
   }
 }
+
+// Hook de ciclo de vida para carregar dados ao montar
+onMounted(async () => {
+  await fetchCompany();
+  await fetchCompanyStats();
+  await fetchCompanyEvents();
+  const savedAvatar = localStorage.getItem('userAvatar');
+  if (savedAvatar) companyProfile.value.avatar = savedAvatar;
+});
 </script>
 
 <style scoped>
