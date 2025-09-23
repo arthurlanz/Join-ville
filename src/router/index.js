@@ -21,6 +21,11 @@ const router = createRouter({
       props: true, // passa o ID como prop
     },
     {
+      path: 'create-event',
+      name: 'CreateEvent', // rota de criação de evento
+      component: () => import('../views/CreateEvent.vue'),
+    },
+    {
       path: '/login',
       name: 'LoginPage',
       component: () => import('../views/LoginView.vue'),
