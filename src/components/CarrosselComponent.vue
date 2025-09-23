@@ -40,7 +40,7 @@ const events = [
     badge: 'FOOD',
   },
   {
-    id: 22,
+    id: 37,
     title: 'JEC KRONA X BLUMENAU',
     subtitle: 'LIGA NACIONAL DE FUTSAL',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
