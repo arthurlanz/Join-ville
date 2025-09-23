@@ -1,218 +1,195 @@
 <template>
-  <div class="favorites-page">
-    <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">Meus Favoritos</h1>
-        <div class="actions" v-if="favoriteEventsDetails.length > 0">
-          <button @click="toggleSelectionMode" class="select-btn">
-            {{ isSelectionModeActive ? 'Cancelar' : 'Selecionar' }}
-          </button>
-          <button
-            v-if="isSelectionModeActive && selectedFavorites.length > 0"
-            @click="deleteSelectedFavorites"
-            class="delete-btn"
-          >
-            <font-awesome-icon icon="fa-solid fa-trash" />
-          </button>
-        </div>
+  <main class="main-content">
+    <!-- Cabeçalho -->
+    <div class="page-header">
+      <h1 class="page-title">Meus Favoritos</h1>
+      <div class="underline"></div>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Carregando favoritos...</p>
+    </div>
+
+    <!-- Conteúdo -->
+    <div v-else>
+      <!-- Sem favoritos -->
+      <div v-if="favoriteEvents.length === 0" class="no-events">
+        <div class="no-events-icon">🔍</div>
+        <h3>Você ainda não tem favoritos</h3>
+        <p>Adicione eventos aos favoritos para vê-los aqui.</p>
       </div>
 
-      <div v-if="favoriteEventsDetails.length > 0" class="events-grid">
+      <!-- Grid de favoritos -->
+      <div class="events-grid" v-else>
         <div
-          v-for="event in favoriteEventsDetails"
-          :key="event.id"
+          v-for="eventId in favoriteEvents"
+          :key="eventId"
           class="event-card"
-          :class="{ 'is-selected': isSelected(event.id), 'selection-mode': isSelectionModeActive }"
-          @click="handleCardClick(event)"
         >
-          <div class="selection-indicator">
-            <font-awesome-icon v-if="isSelected(event.id)" icon="fa-solid fa-check-circle" />
-          </div>
-          <div class="event-image">
-            <img :src="event.image" :alt="event.title" />
-            <div class="event-date-badge">{{ event.date }}</div>
+          <div class="event-image" @click="openEvent(getEventById(eventId))">
+            <img
+              :src="getEventById(eventId)?.image || '/default-event.jpg'"
+              :alt="getEventById(eventId)?.title"
+              loading="lazy"
+            />
+            <div class="event-date-badge">
+              {{ formatDate(getEventById(eventId)?.date) }}
+            </div>
           </div>
           <div class="event-info">
-            <h3>{{ event.title }}</h3>
-            <p class="event-location">{{ event.location }}</p>
-            <div class="event-price" v-if="event.price">{{ event.price }}</div>
+            <div class="info-header">
+              <h3 @click="openEvent(getEventById(eventId))">
+                {{ getEventById(eventId)?.title }}
+              </h3>
+              <button
+                @click="toggleFavorite(eventId)"
+                class="favorite-btn is-favorited"
+                aria-label="Remover dos favoritos"
+              >
+                <font-awesome-icon icon="fa-solid fa-heart" />
+              </button>
+            </div>
+            <p class="event-location">
+              {{ getEventById(eventId)?.location }}
+            </p>
+            <div class="event-rating" v-if="getEventById(eventId)?.rating">
+              <span class="stars">{{ getStars(getEventById(eventId).rating) }}</span>
+              <span class="rating-value">
+                ({{ getEventById(eventId).rating.toFixed(1) }})
+              </span>
+            </div>
+            <div class="event-price" v-if="getEventById(eventId)?.price">
+              {{ getEventById(eventId).price }}
+            </div>
           </div>
         </div>
       </div>
-      <div v-else class="no-events">
-        <p>Você ainda não favoritou nenhum evento. Explore a página inicial e clique no coração!</p>
-      </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <script>
-import { eventService } from '@/services/eventService.js'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faTrash, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
-import { useToastStore } from '@/stores/toast.js' // import do Pinia toast
-
-library.add(faTrash, faCheckCircle)
+import { eventService } from '@/services/eventService.js';
 
 export default {
   name: 'FavoritesPage',
   data() {
     return {
-      favoriteEventsDetails: [],
-      isSelectionModeActive: false,
-      selectedFavorites: [],
-    }
+      allEvents: [],
+      favoriteEvents: [],
+      isLoading: true
+    };
   },
-  created() {
-    this.loadFavoriteEvents()
-  },
-  setup() {
-    const toastStore = useToastStore()
-    return { toastStore }
+  async created() {
+    await this.loadFavorites();
+    await this.loadAllEvents();
   },
   methods: {
-    async loadFavoriteEvents() {
-      const favoriteIds = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-      const allEvents = await eventService.getAllEvents()
-      this.favoriteEventsDetails = allEvents.filter(event => favoriteIds.includes(event.id))
+    async loadAllEvents() {
+      try {
+        const events = await eventService.getAllEvents();
+        this.allEvents = events || [];
+      } catch (error) {
+        console.error('Erro ao carregar eventos:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    loadFavorites() {
+      try {
+        const favorites = localStorage.getItem('favoriteEvents');
+        if (favorites) this.favoriteEvents = JSON.parse(favorites);
+      } catch (error) {
+        this.favoriteEvents = [];
+      }
+    },
+    toggleFavorite(eventId) {
+      const index = this.favoriteEvents.indexOf(eventId);
+      if (index > -1) this.favoriteEvents.splice(index, 1);
+      localStorage.setItem('favoriteEvents', JSON.stringify(this.favoriteEvents));
+    },
+    getEventById(id) {
+      return this.allEvents.find(ev => ev.id === id) || {};
     },
     openEvent(event) {
-      this.$router.push({ name: 'EventDetails', params: { id: event.id } })
+      if(event?.id) this.$router.push({ name: 'EventDetails', params: { id: event.id } });
     },
-    toggleSelectionMode() {
-      this.isSelectionModeActive = !this.isSelectionModeActive
-      if (!this.isSelectionModeActive) {
-        this.selectedFavorites = []
-      }
+    formatDate(date) {
+      if (!date) return 'Data não disponível';
+      const monthMap = { 'JAN':'01','FEV':'02','MAR':'03','ABR':'04','MAI':'05','JUN':'06','JUL':'07','AGO':'08','SET':'09','OUT':'10','NOV':'11','DEZ':'12' };
+      const m = date.match(/(\d{1,2})(?:\s+a\s+\d{1,2})?\s+([A-Z]{3})/);
+      if(m) return `${m[1].padStart(2,'0')}/${monthMap[m[2]]}`;
+      return date;
     },
-    handleCardClick(event) {
-      if (this.isSelectionModeActive) {
-        this.toggleSelection(event.id)
-      } else {
-        this.openEvent(event)
-      }
-    },
-    toggleSelection(eventId) {
-      const index = this.selectedFavorites.indexOf(eventId)
-      if (index > -1) {
-        this.selectedFavorites.splice(index, 1)
-      } else {
-        this.selectedFavorites.push(eventId)
-      }
-    },
-    isSelected(eventId) {
-      return this.selectedFavorites.includes(eventId)
-    },
-    deleteSelectedFavorites() {
-      if (this.selectedFavorites.length === 0) return
-
-      let favoriteIds = JSON.parse(localStorage.getItem('favoriteEvents') || '[]')
-      const newFavoriteIds = favoriteIds.filter((id) => !this.selectedFavorites.includes(id))
-      localStorage.setItem('favoriteEvents', JSON.stringify(newFavoriteIds))
-      this.loadFavoriteEvents()
-
-      this.toastStore.success(`${this.selectedFavorites.length} evento(s) removido(s) dos favoritos!`)
-
-      this.isSelectionModeActive = false
-      this.selectedFavorites = []
-    },
-  },
-}
+    getStars(rating) {
+      const full = Math.floor(rating);
+      const half = rating % 1 >= 0.5;
+      let s='';
+      for(let i=0;i<full;i++) s+='★';
+      if(half) s+='☆';
+      return s;
+    }
+  }
+};
 </script>
 
-
 <style scoped>
-.favorites-page {
-  padding: 40px 20px;
-}
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
+/* --- Header --- */
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-  border-bottom: 2px solid #0066cc;
-  padding-bottom: 10px;
+  max-width: 1100px;
+  margin: 0 auto 30px auto;
 }
 .page-title {
   font-size: 32px;
-  color: #1a1a1a;
   margin: 0;
+  color: #1a1a1a;
+  padding-bottom: 10px;
 }
-.actions {
-  display: flex;
-  gap: 15px;
-}
-.select-btn,
-.delete-btn {
-  background: none;
-  border: 1px solid #0066cc;
-  color: #0066cc;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.select-btn:hover {
-  background-color: #e0efff;
-}
-.delete-btn {
-  border-color: #d9534f;
-  color: #d9534f;
-}
-.delete-btn:hover {
-  background-color: #fbeae9;
+.underline {
+  border-bottom: 2px solid #0066cc;
+  width: 100%;
+  margin-top: 5px;
 }
 
+/* --- Grid de eventos --- */
 .events-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
+
+@media (max-width: 1024px) {
+  .events-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .events-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Cards --- */
 .event-card {
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  border: 2px solid transparent;
-  position: relative;
-}
-.event-card.selection-mode {
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
 }
-.event-card:not(.selection-mode):hover {
+.event-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #e0e0e0;
 }
-.event-card.is-selected {
-  border-color: #0066cc;
-  box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
-}
-
-.selection-indicator {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
-  font-size: 28px;
-  color: #0066cc;
-  background-color: white;
-  border-radius: 50%;
-  display: flex;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-.event-card.is-selected .selection-indicator {
-  opacity: 1;
-}
-
 .event-image {
   position: relative;
   height: 180px;
@@ -224,15 +201,14 @@ export default {
   object-fit: cover;
   transition: transform 0.3s ease;
 }
-.event-card:not(.selection-mode):hover .event-image img {
+.event-card:hover .event-image img {
   transform: scale(1.05);
 }
-
 .event-date-badge {
   position: absolute;
   top: 12px;
-  left: 12px;
-  background: rgba(0, 0, 0, 0.7);
+  right: 12px;
+  background: rgba(0, 0, 0, 0.8);
   color: white;
   padding: 6px 12px;
   border-radius: 20px;
@@ -241,10 +217,44 @@ export default {
 }
 .event-info {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
-.event-info h3 {
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.info-header h3 {
   font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
   margin: 0 0 8px 0;
+  line-height: 1.3;
+  cursor: pointer;
+  flex-grow: 1;
+}
+.favorite-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 20px;
+  color: #ff4d4d;
+  transition: transform 0.2s;
+}
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+.favorite-btn.is-favorited {
+  animation: heartbeat 0.6s ease-in-out;
+}
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 .event-location {
   color: #666;
@@ -255,12 +265,18 @@ export default {
   color: #0066cc;
   font-weight: 600;
   font-size: 16px;
+  margin-top: auto;
 }
 
+/* --- Sem eventos --- */
 .no-events {
   text-align: center;
   padding: 50px;
   font-size: 18px;
   color: #555;
+}
+.main-content {
+  padding-bottom: 60px; 
+  padding-top: 60px;
 }
 </style>
