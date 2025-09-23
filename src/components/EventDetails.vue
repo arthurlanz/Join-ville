@@ -127,6 +127,8 @@ export default {
     const getEventDescription = (ev) => ev.description || `Participe do evento ${ev.title || 'sem título'} em ${ev.location || 'local indefinido'}.`
 
     return { event, favoriteEvents, goBack, toggleFavorite, isFavorite, shareEvent, getEventDescription }
+
+    
   }
 }
 </script>

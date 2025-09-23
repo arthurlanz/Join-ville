@@ -15,7 +15,19 @@
             <div class="event-date-badge">{{ event.date }}</div>
           </div>
           <div class="event-info">
-            <h3>{{ event.title }}</h3>
+            <div class="info-header">
+              <h3 @click.stop="openEvent(event)">{{ event.title }}</h3>
+              <button
+                @click.stop="toggleFavorite(event.id)"
+                class="favorite-btn"
+                :class="{ 'is-favorited': isFavorite(event.id) }"
+                :aria-label="isFavorite(event.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+              >
+                <font-awesome-icon
+                  :icon="isFavorite(event.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"
+                />
+              </button>
+            </div>
             <p class="event-location">{{ event.location }}</p>
             <div class="event-price" v-if="event.price">{{ event.price }}</div>
           </div>
@@ -30,8 +42,8 @@
 </template>
 
 <script>
-import { eventService } from "@/services/eventService.js"
-import { useToastStore } from "@/stores/toast"
+import { eventService } from "@/services/eventService.js";
+import { useToastStore } from "@/stores/toast";
 
 export default {
   name: "CategoryPage",
@@ -45,42 +57,59 @@ export default {
     return {
       events: [],
       isLoading: false,
-    }
+      favoriteEvents: [],
+    };
   },
   watch: {
     categoryName: {
       immediate: true,
       async handler(newCategoryName) {
-        this.isLoading = true
-        const toast = useToastStore()
+        this.isLoading = true;
+        const toast = useToastStore();
 
         try {
-          this.events = await eventService.getEventsByCategory(newCategoryName)
+          this.events = await eventService.getEventsByCategory(newCategoryName);
 
           if (this.events.length > 0) {
-            toast.info(`Eventos da categoria "${newCategoryName}" carregados!`)
+            toast.info(`Eventos da categoria "${newCategoryName}" carregados!`);
           } else {
-            toast.info(`Nenhum evento encontrado em "${newCategoryName}".`)
+            toast.info(`Nenhum evento encontrado em "${newCategoryName}".`);
           }
+
+          this.loadFavorites();
         } catch (error) {
-          console.error(error)
-          this.events = []
-          toast.error("Erro ao carregar eventos. Tente novamente mais tarde.")
+          console.error(error);
+          this.events = [];
+          toast.error("Erro ao carregar eventos. Tente novamente mais tarde.");
         } finally {
-          this.isLoading = false
+          this.isLoading = false;
         }
       },
     },
   },
   methods: {
     openEvent(event) {
-      this.$router.push(`/evento/${event.id}`)
+      this.$router.push(`/evento/${event.id}`);
+    },
+    loadFavorites() {
+      const favorites = localStorage.getItem("favoriteEvents");
+      this.favoriteEvents = favorites ? JSON.parse(favorites) : [];
+    },
+    toggleFavorite(eventId) {
+      const index = this.favoriteEvents.indexOf(eventId);
+      if (index > -1) this.favoriteEvents.splice(index, 1);
+      else this.favoriteEvents.push(eventId);
+      localStorage.setItem("favoriteEvents", JSON.stringify(this.favoriteEvents));
+    },
+    isFavorite(eventId) {
+      return this.favoriteEvents.includes(eventId);
     },
   },
-}
+};
 </script>
 
 <style scoped>
+/* Reaproveite os estilos do event-card da página inicial */
 .category-page {
   padding: 40px 20px;
 }
@@ -108,6 +137,8 @@ export default {
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
 }
 .event-card:hover {
   transform: translateY(-4px);
@@ -141,13 +172,44 @@ export default {
 }
 .event-info {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
-.event-info h3 {
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.info-header h3 {
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 8px 0;
   line-height: 1.3;
+  cursor: pointer;
+  flex-grow: 1;
+}
+.favorite-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 20px;
+  color: #ff4d4d;
+  transition: transform 0.2s;
+}
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+.favorite-btn.is-favorited {
+  animation: heartbeat 0.6s ease-in-out;
+}
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 .event-location {
   color: #666;
@@ -158,11 +220,6 @@ export default {
   color: #0066cc;
   font-weight: 600;
   font-size: 16px;
-}
-.no-events {
-  text-align: center;
-  padding: 50px;
-  font-size: 18px;
-  color: #555;
+  margin-top: auto;
 }
 </style>
