@@ -1,23 +1,20 @@
 <template>
   <div class="profile-page">
+    <!-- Header do Perfil -->
     <div class="profile-header">
       <div class="container">
         <div class="header-content">
+          <!-- Avatar -->
           <div class="user-avatar">
             <div class="avatar-circle">
               <img v-if="userProfile.avatar" :src="userProfile.avatar" :alt="userProfile.name" />
               <font-awesome-icon v-else icon="user" />
             </div>
-            <input
-              ref="avatarInput"
-              type="file"
-              accept="image/*"
-              @change="handleAvatarChange"
-              style="display: none"
-            />
+            <input ref="avatarInput" type="file" accept="image/*" @change="handleAvatarChange" style="display:none" />
             <button @click="selectAvatar" class="change-avatar-btn">Alterar foto</button>
           </div>
 
+          <!-- Informações do usuário -->
           <div class="user-info">
             <h1>{{ userProfile.name }}</h1>
             <p>{{ userProfile.email }}</p>
@@ -33,6 +30,7 @@
             </div>
           </div>
 
+          <!-- Ações do perfil -->
           <div class="profile-actions">
             <button @click="toggleEditMode" class="btn-edit">
               <font-awesome-icon icon="edit" />
@@ -47,60 +45,39 @@
       </div>
     </div>
 
+    <!-- Conteúdo do Perfil -->
     <div class="profile-content">
       <div class="container">
+        <!-- Tabs -->
         <div class="profile-tabs">
-          <button
-            :class="{ active: activeTab === 'profile' }"
-            @click="activeTab = 'profile'"
-            class="tab-btn"
-          >
-            👤 Meu Perfil
-          </button>
-          <button
-            :class="{ active: activeTab === 'favorites' }"
-            @click="activeTab = 'favorites'"
-            class="tab-btn"
-          >
-            ❤️ Favoritos
-          </button>
-          <button
-            :class="{ active: activeTab === 'history' }"
-            @click="activeTab = 'history'"
-            class="tab-btn"
-          >
-            📅 Histórico
-          </button>
+          <button :class="{ active: activeTab === 'profile' }" @click="activeTab='profile'" class="tab-btn">👤 Meu Perfil</button>
+          <button :class="{ active: activeTab === 'favorites' }" @click="activeTab='favorites'" class="tab-btn">❤️ Favoritos</button>
+          <button :class="{ active: activeTab === 'history' }" @click="activeTab='history'" class="tab-btn">📅 Histórico</button>
         </div>
 
+        <!-- Tab Perfil -->
         <div v-if="activeTab === 'profile'" class="tab-content">
           <div class="profile-section">
             <h2>Informações Pessoais</h2>
 
+            <!-- Formulário de edição -->
             <form v-if="editMode" @submit.prevent="saveProfile" class="edit-form">
               <div class="form-row">
                 <div class="form-group">
                   <label>Nome completo</label>
                   <input type="text" v-model="editData.name" required />
                 </div>
-
                 <div class="form-group">
                   <label>Email</label>
-                  <input type="email" v-model="editData.email" required disabled/>
+                  <input type="email" v-model="editData.email" required disabled />
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label>Telefone</label>
-                  <input
-                    type="text"
-                    v-model="editData.phone"
-                    placeholder="(47) 99999-9999"
-                    @input="formatPhone"
-                  />
+                  <input type="text" v-model="editData.phone" placeholder="(47) 99999-9999" @input="formatPhone" />
                 </div>
-
                 <div class="form-group">
                   <label>Data de nascimento</label>
                   <input type="date" v-model="editData.birthDate" />
@@ -110,11 +87,7 @@
               <div class="form-group">
                 <label>Interesses</label>
                 <div class="interests-grid">
-                  <label
-                    v-for="interest in availableInterests"
-                    :key="interest"
-                    class="interest-checkbox"
-                  >
+                  <label v-for="interest in availableInterests" :key="interest" class="interest-checkbox">
                     <input type="checkbox" :value="interest" v-model="editData.interests" />
                     <span>{{ interest }}</span>
                   </label>
@@ -129,23 +102,21 @@
               </div>
             </form>
 
+            <!-- Exibição normal -->
             <div v-else class="profile-info">
               <div class="info-grid">
                 <div class="info-item">
                   <label>Nome completo</label>
                   <p>{{ userProfile.name }}</p>
                 </div>
-
                 <div class="info-item">
                   <label>Email</label>
                   <p>{{ userProfile.email }}</p>
                 </div>
-
                 <div class="info-item">
                   <label>Telefone</label>
                   <p>{{ userProfile.phone || 'Não informado' }}</p>
                 </div>
-
                 <div class="info-item">
                   <label>Data de nascimento</label>
                   <p>{{ formatDate(userProfile.birthDate) || 'Não informado' }}</p>
@@ -155,29 +126,22 @@
               <div class="interests-section">
                 <label>Interesses</label>
                 <div class="interests-tags">
-                  <span
-                    v-for="interest in userProfile.interests"
-                    :key="interest"
-                    class="interest-tag"
-                  >
-                    {{ interest }}
-                  </span>
-                  <span v-if="!userProfile.interests || !userProfile.interests.length" class="no-interests">
-                    Nenhum interesse cadastrado
-                  </span>
+                  <span v-for="interest in userProfile.interests" :key="interest" class="interest-tag">{{ interest }}</span>
+                  <span v-if="!userProfile.interests.length" class="no-interests">Nenhum interesse cadastrado</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Tab Favoritos -->
         <div v-if="activeTab === 'favorites'" class="tab-content">
           <div class="favorites-section">
             <h2>Eventos Favoritados</h2>
             <div v-if="favoriteEvents.length" class="events-grid">
               <div v-for="event in favoriteEvents" :key="event.id" class="event-card">
                 <div class="event-image" @click="viewEvent(event.id)">
-                  <img :src="event.foto" :alt="event.nome" />
+                  <img :src="event.foto || '/default-event.jpg'" :alt="event.nome" />
                 </div>
                 <div class="event-info">
                   <h3 @click="viewEvent(event.id)">{{ event.nome }}</h3>
@@ -202,30 +166,41 @@
           </div>
         </div>
 
+        <!-- Tab Histórico -->
         <div v-if="activeTab === 'history'" class="tab-content">
-          </div>
+          <p>Em construção...</p>
+        </div>
       </div>
     </div>
 
-    <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal = false">
+    <!-- Modal Logout -->
+    <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal=false">
+      <div class="modal" @click.stop>
+        <h3>Deseja realmente sair?</h3>
+        <p>Você será desconectado da sua conta.</p>
+        <div class="modal-actions">
+          <button class="btn-confirm" @click="confirmLogout">Sim, sair</button>
+          <button class="btn-cancel" @click="showLogoutModal=false">Cancelar</button>
         </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
 const toastStore = useToastStore();
+
 const avatarInput = ref(null);
 const activeTab = ref('profile');
 const editMode = ref(false);
 const saving = ref(false);
 const showLogoutModal = ref(false);
-const historyFilter = ref('all');
 
 const userProfile = ref({
   id: null,
@@ -238,28 +213,25 @@ const userProfile = ref({
 });
 
 const editData = ref({});
-const newAvatarFile = ref(null); // Para armazenar o novo arquivo de avatar
+const newAvatarFile = ref(null);
 
-const userStats = ref({
-  favoritedEvents: 0,
-  attendedEvents: 0,
-});
+const userStats = ref({ favoritedEvents: 0, attendedEvents: 0 });
 
 const availableInterests = [
-  'Música', 'Tecnologia', 'Esportes', 'Arte', 'Gastronomia',
-  'Negócios', 'Educação', 'Saúde', 'Cultura', 'Entretenimento',
+  'Música','Tecnologia','Esportes','Arte','Gastronomia',
+  'Negócios','Educação','Saúde','Cultura','Entretenimento'
 ];
 
 const favoriteEvents = ref([]);
-const eventHistory = ref([]);
 
+// Funções
 async function fetchUser() {
   try {
-    const res = await api.getCurrentUser(); // Supondo que chame /api/usuarios/me/
+    const res = await api.getCurrentUser();
     const u = res.data;
     userProfile.value = {
       id: u.id,
-      name: u.first_name || u.username || '',
+      name: u.first_name || u.username,
       email: u.email,
       phone: u.telefone || '',
       birthDate: u.data_nascimento || '',
@@ -267,8 +239,7 @@ async function fetchUser() {
       avatar: u.avatar || null,
     };
     editData.value = { ...userProfile.value };
-  } catch (err) {
-    console.error('Erro ao buscar usuário:', err);
+  } catch {
     toastStore.error('Não foi possível carregar os dados do usuário.');
   }
 }
@@ -276,36 +247,27 @@ async function fetchUser() {
 async function fetchFavorites() {
   try {
     const res = await api.getFavorites();
-    // CORRIGIDO: Mapeia para o objeto 'evento' que vem aninhado no favorito
-    favoriteEvents.value = res.data.map(favorito => favorito.evento);
+    favoriteEvents.value = res.data.map(f => f.evento);
     userStats.value.favoritedEvents = favoriteEvents.value.length;
-  } catch (err) {
-    console.error('Erro ao buscar favoritos:', err);
+  } catch {
     toastStore.error('Não foi possível carregar os favoritos.');
   }
 }
 
-function selectAvatar() {
-  avatarInput.value.click();
-}
+function selectAvatar() { avatarInput.value.click(); }
 
-function handleAvatarChange(event) {
-  const file = event.target.files[0];
+function handleAvatarChange(e) {
+  const file = e.target.files[0];
   if (!file) return;
-
-  newAvatarFile.value = file; // Armazena o arquivo para ser enviado depois
-
+  newAvatarFile.value = file;
   const reader = new FileReader();
-  reader.onload = (e) => {
-    userProfile.value.avatar = e.target.result; // Atualiza a pré-visualização
-  };
+  reader.onload = e => userProfile.value.avatar = e.target.result;
   reader.readAsDataURL(file);
 }
 
 function toggleEditMode() {
   editMode.value = !editMode.value;
   if (!editMode.value) {
-    // Se cancelar, reverte quaisquer mudanças e recarrega dados do servidor
     newAvatarFile.value = null;
     fetchUser();
   }
@@ -313,20 +275,15 @@ function toggleEditMode() {
 
 async function saveProfile() {
   saving.value = true;
-
   const formData = new FormData();
-
   formData.append('first_name', editData.value.name);
   formData.append('telefone', editData.value.phone || '');
   formData.append('data_nascimento', editData.value.birthDate || '');
   formData.append('interesses', JSON.stringify(editData.value.interests || []));
-
-  if (newAvatarFile.value) {
-    formData.append('avatar', newAvatarFile.value);
-  }
+  if (newAvatarFile.value) formData.append('avatar', newAvatarFile.value);
 
   try {
-    const res = await api.updateCurrentUser(formData); // Supondo que api.updateCurrentUser faça PATCH em /api/usuarios/me/
+    const res = await api.updateCurrentUser(formData);
     const u = res.data;
     userProfile.value = {
       id: u.id,
@@ -337,21 +294,15 @@ async function saveProfile() {
       interests: u.interesses || [],
       avatar: u.avatar,
     };
-
     editMode.value = false;
     newAvatarFile.value = null;
     toastStore.success('Perfil atualizado com sucesso!');
-  } catch (err) {
-    console.error('Erro ao salvar perfil:', err);
+  } catch {
     toastStore.error('Erro ao salvar perfil.');
-  } finally {
-    saving.value = false;
-  }
+  } finally { saving.value = false; }
 }
 
-function logout() {
-  showLogoutModal.value = true;
-}
+function logout() { showLogoutModal.value = true; }
 
 function confirmLogout() {
   localStorage.clear();
@@ -360,48 +311,35 @@ function confirmLogout() {
 }
 
 function formatPhone(event) {
-  let value = event.target.value.replace(/\D/g, '');
-  value = value.replace(/^(\d{2})(\d)/, '($1) $2');
-  value = value.replace(/(\d{5})(\d{4})$/, '$1-$2');
+  let value = event.target.value.replace(/\D/g,'');
+  value = value.replace(/^(\d{2})(\d)/,'($1) $2');
+  value = value.replace(/(\d{5})(\d{4})$/,'$1-$2');
   editData.value.phone = value;
 }
 
 function formatDate(date) {
   if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+  return new Date(date).toLocaleDateString('pt-BR',{ timeZone:'UTC' });
 }
 
-function viewEvent(id) {
-  router.push(`/event/${id}`);
-}
+function viewEvent(id) { router.push(`/event/${id}`); }
 
 async function removeFromFavorites(eventoId) {
   try {
-    // A API de favoritos do DRF normalmente requer o ID do *favorito*, não do evento.
-    // Precisamos encontrar o ID do favorito que corresponde ao evento.
-    const favorito = (await api.getFavorites()).data.find(f => f.evento.id === eventoId);
-    if (!favorito) {
-        toastStore.error('Favorito não encontrado para remoção.');
-        return;
-    }
-
-    await api.removeFavorite(favorito.id); // Supondo que api.removeFavorite faça DELETE em /api/favoritos/{id}/
+    const favorito = (await api.getFavorites()).data.find(f => f.evento.id===eventoId);
+    if(!favorito){ toastStore.error('Favorito não encontrado.'); return; }
+    await api.removeFavorite(favorito.id);
     favoriteEvents.value = favoriteEvents.value.filter(e => e.id !== eventoId);
     userStats.value.favoritedEvents--;
     toastStore.info('Evento removido dos favoritos.');
-  } catch (err) {
-    console.error('Erro ao remover favorito:', err);
-    toastStore.error('Não foi possível remover o evento dos favoritos.');
-  }
+  } catch { toastStore.error('Não foi possível remover o favorito.'); }
 }
 
 onMounted(async () => {
   await fetchUser();
   await fetchFavorites();
-  // await fetchHistory();
 });
 </script>
-
 
 <style scoped>
 .profile-page {

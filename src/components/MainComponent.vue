@@ -18,44 +18,6 @@
     <div v-else class="content-wrapper">
       <div class="events-column">
 
-        <!-- Favoritos -->
-        <section v-if="favoriteEvents.length" class="events-section">
-          <div class="section-header">
-            <h2>Meus Favoritos <span class="category-count">({{ favoriteEvents.length }})</span></h2>
-          </div>
-          <div class="events-grid">
-            <div
-              v-for="eventId in favoriteEvents"
-              :key="eventId"
-              class="event-card">
-
-
-              <div class="event-image" @click="openEvent(getEventById(eventId))">
-                <img :src="getEventById(eventId)?.image || '/default-event.jpg'" :alt="getEventById(eventId)?.title" loading="lazy" />
-                <div class="event-date-badge">{{ formatDate(getEventById(eventId)?.date) }}</div>
-              </div>
-              <div class="event-info">
-                <div class="info-header">
-                  <h3 @click="openEvent(getEventById(eventId))">{{ getEventById(eventId)?.title }}</h3>
-                  <button
-                    @click="toggleFavorite(eventId)"
-                    class="favorite-btn is-favorited"
-                    aria-label="Remover dos favoritos"
-                  >
-                    <font-awesome-icon icon="fa-solid fa-heart" />
-                  </button>
-                </div>
-                <p class="event-location">{{ getEventById(eventId)?.location }}</p>
-                <div class="event-rating" v-if="getEventById(eventId)?.rating">
-                  <span class="stars">{{ getStars(getEventById(eventId).rating) }}</span>
-                  <span class="rating-value">({{ getEventById(eventId).rating.toFixed(1) }})</span>
-                </div>
-                <div class="event-price" v-if="getEventById(eventId)?.price">{{ getEventById(eventId).price }}</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- Cabeçalho com contador de resultados -->
         <div class="results-header" v-if="hasFiltersApplied">
           <p>
@@ -129,6 +91,7 @@
     <div v-if="isFilterVisible" @click="toggleFilterSidebar" class="overlay"></div>
   </main>
 </template>
+
 
 <script>
 import { eventService } from '@/services/eventService.js';
