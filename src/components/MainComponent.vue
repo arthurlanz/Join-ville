@@ -39,7 +39,7 @@
           </div>
           <div class="events-grid">
             <div
-              v-for="event in getEventsForCategory(category).slice(0, 4)"
+              v-for="event in getEventsForCategory(category).slice(0, 3)"
               :key="event.id"
               class="event-card"
             >
