@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { eventService } from '@/services/eventService.js'
 
@@ -86,13 +86,26 @@ const route = useRoute()
 const event = ref(null)
 const favoriteEvents = ref([])
 
-onMounted(async () => {
+const loadEvent = async (id) => {
   const allEvents = await eventService.getAllEvents()
-  event.value = allEvents.find(e => e.id === parseInt(route.params.id))
+  event.value = allEvents.find(e => e.id === parseInt(id))
+}
+
+// Carrega na montagem
+onMounted(() => {
+  loadEvent(route.params.id)
 
   const favorites = localStorage.getItem('favoriteEvents')
   if (favorites) favoriteEvents.value = JSON.parse(favorites)
 })
+
+// Observa mudanças no id da rota
+watch(
+  () => route.params.id,
+  (newId) => {
+    loadEvent(newId)
+  }
+)
 
 const goBack = () => window.history.back()
 
