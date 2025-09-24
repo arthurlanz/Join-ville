@@ -70,70 +70,86 @@
   </main>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { eventService } from '@/services/eventService.js';
 
-export default {
-  name: 'FavoritesPage',
-  data() {
-    return {
-      allEvents: [],
-      favoriteEvents: [],
-      isLoading: true
-    };
-  },
-  async created() {
-    await this.loadFavorites();
-    await this.loadAllEvents();
-  },
-  methods: {
-    async loadAllEvents() {
-      try {
-        const events = await eventService.getAllEvents();
-        this.allEvents = events || [];
-      } catch (error) {
-        console.error('Erro ao carregar eventos:', error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    loadFavorites() {
-      try {
-        const favorites = localStorage.getItem('favoriteEvents');
-        if (favorites) this.favoriteEvents = JSON.parse(favorites);
-      } catch (error) {
-        this.favoriteEvents = [];
-      }
-    },
-    toggleFavorite(eventId) {
-      const index = this.favoriteEvents.indexOf(eventId);
-      if (index > -1) this.favoriteEvents.splice(index, 1);
-      localStorage.setItem('favoriteEvents', JSON.stringify(this.favoriteEvents));
-    },
-    getEventById(id) {
-      return this.allEvents.find(ev => ev.id === id) || {};
-    },
-    openEvent(event) {
-      if(event?.id) this.$router.push({ name: 'EventDetails', params: { id: event.id } });
-    },
-    formatDate(date) {
-      if (!date) return 'Data não disponível';
-      const monthMap = { 'JAN':'01','FEV':'02','MAR':'03','ABR':'04','MAI':'05','JUN':'06','JUL':'07','AGO':'08','SET':'09','OUT':'10','NOV':'11','DEZ':'12' };
-      const m = date.match(/(\d{1,2})(?:\s+a\s+\d{1,2})?\s+([A-Z]{3})/);
-      if(m) return `${m[1].padStart(2,'0')}/${monthMap[m[2]]}`;
-      return date;
-    },
-    getStars(rating) {
-      const full = Math.floor(rating);
-      const half = rating % 1 >= 0.5;
-      let s='';
-      for(let i=0;i<full;i++) s+='★';
-      if(half) s+='☆';
-      return s;
-    }
+// Refs
+const allEvents = ref([]);
+const favoriteEvents = ref([]);
+const isLoading = ref(true);
+
+// Router
+const router = useRouter();
+
+// Lifecycle
+onMounted(async () => {
+  loadFavorites();
+  await loadAllEvents();
+});
+
+// Funções
+async function loadAllEvents() {
+  try {
+    const events = await eventService.getAllEvents();
+    allEvents.value = events || [];
+  } catch (error) {
+    console.error('Erro ao carregar eventos:', error);
+  } finally {
+    isLoading.value = false;
   }
-};
+}
+
+function loadFavorites() {
+  try {
+    const favorites = localStorage.getItem('favoriteEvents');
+    if (favorites) favoriteEvents.value = JSON.parse(favorites);
+  } catch (error) {
+    favoriteEvents.value = [];
+  }
+}
+
+function toggleFavorite(eventId) {
+  const index = favoriteEvents.value.indexOf(eventId);
+  if (index > -1) {
+    favoriteEvents.value.splice(index, 1);
+  }
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value));
+}
+
+function getEventById(id) {
+  return allEvents.value.find(ev => ev.id === id) || {};
+}
+
+function openEvent(event) {
+  if (event?.id) {
+    router.push({ name: 'EventDetails', params: { id: event.id } });
+  }
+}
+
+function formatDate(date) {
+  if (!date) return 'Data não disponível';
+  const monthMap = {
+    'JAN': '01', 'FEV': '02', 'MAR': '03', 'ABR': '04',
+    'MAI': '05', 'JUN': '06', 'JUL': '07', 'AGO': '08',
+    'SET': '09', 'OUT': '10', 'NOV': '11', 'DEZ': '12'
+  };
+  const m = date.match(/(\d{1,2})(?:\s+a\s+\d{1,2})?\s+([A-Z]{3})/);
+  if (m) return `${m[1].padStart(2, '0')}/${monthMap[m[2]]}`;
+  return date;
+}
+
+function getStars(rating) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5;
+  let s = '';
+  for (let i = 0; i < full; i++) s += '★';
+  if (half) s += '☆';
+  return s;
+}
 </script>
+
 
 <style scoped>
 /* --- Header --- */

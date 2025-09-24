@@ -93,200 +93,278 @@
 </template>
 
 
-<script>
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { eventService } from '@/services/eventService.js';
 
-export default {
-  name: 'MainComponent',
-  data() {
-    return {
-      allEvents: [],
-      categories: [],
-      favoriteEvents: [],
-      isFilterVisible: false,
-      isLoading: true,
-      hasError: false,
-      errorMessage: '',
-      filters: {
-        sortBy: 'Novidades',
-        selectedCategories: [],
-        dateFilter: 'all'
-      },
-      sortedEvents: [],
-    }
-  },
+// Refs e estados reativos
+const allEvents = ref([]);
+const categories = ref([]);
+const favoriteEvents = ref([]);
+const sortedEvents = ref([]);
 
-  computed: {
-    visibleCategories() {
-      if (this.filters.selectedCategories.length > 0) {
-        return this.filters.selectedCategories.filter(category => this.getEventsForCategory(category).length > 0);
-      }
-      return this.categories.filter(category => this.getEventsForCategory(category).length > 0);
-    },
-    totalFilteredEvents() {
-      return this.sortedEvents.length;
-    },
-    hasFiltersApplied() {
-      return this.filters.sortBy !== 'Novidades' ||
-             this.filters.selectedCategories.length > 0 ||
-             this.filters.dateFilter !== 'all';
-    }
-  },
+const isFilterVisible = ref(false);
+const isLoading = ref(true);
+const hasError = ref(false);
+const errorMessage = ref('');
 
-  async created() {
-    await this.loadInitialData();
-  },
+const filters = reactive({
+  sortBy: 'Novidades',
+  selectedCategories: [],
+  dateFilter: 'all',
+});
 
-  methods: {
-    async loadInitialData() {
-      try {
-        this.isLoading = true;
-        this.hasError = false;
+// Router
+const router = useRouter();
 
-        console.log('Iniciando carregamento dos dados...');
+// Computed
+const visibleCategories = computed(() => {
+  if (filters.selectedCategories.length > 0) {
+    return filters.selectedCategories.filter(category =>
+      getEventsForCategory(category).length > 0
+    );
+  }
+  return categories.value.filter(category => getEventsForCategory(category).length > 0);
+});
 
-        if (eventService.testConnection) {
-          const connectionTest = await eventService.testConnection();
-          console.log('Teste de conectividade:', connectionTest);
-        }
+const totalFilteredEvents = computed(() => sortedEvents.value.length);
 
-        const [events, categories] = await Promise.all([
-          eventService.getAllEvents(),
-          eventService.getEventCategories()
-        ]);
+const hasFiltersApplied = computed(() =>
+  filters.sortBy !== 'Novidades' ||
+  filters.selectedCategories.length > 0 ||
+  filters.dateFilter !== 'all'
+);
 
-        this.allEvents = events || [];
-        this.categories = categories || [];
+// Lifecycle
+onMounted(async () => {
+  await loadInitialData();
+});
 
-        this.loadFavorites();
-        this.applySorting();
+// Métodos
+async function loadInitialData() {
+  try {
+    isLoading.value = true;
+    hasError.value = false;
 
-      } catch (error) {
-        console.error('Erro ao carregar dados iniciais:', error);
-        this.hasError = true;
-        this.errorMessage = error.message || 'Erro desconhecido ao carregar eventos';
-      } finally {
-        this.isLoading = false;
-      }
-    },
+    console.log('Iniciando carregamento dos dados...');
 
-    retryLoad() { this.loadInitialData(); },
-
-    handleImageError(event) { event.target.src = '/default-event.jpg'; },
-
-    openEvent(event) { this.$router.push({ name: 'EventDetails', params: { id: event.id } }); },
-
-    loadFavorites() {
-      try {
-        const favorites = localStorage.getItem('favoriteEvents');
-        if (favorites) this.favoriteEvents = JSON.parse(favorites);
-      } catch (error) { this.favoriteEvents = []; }
-    },
-
-    toggleFavorite(eventId) {
-      const index = this.favoriteEvents.indexOf(eventId);
-      if (index > -1) this.favoriteEvents.splice(index, 1);
-      else this.favoriteEvents.push(eventId);
-      localStorage.setItem('favoriteEvents', JSON.stringify(this.favoriteEvents));
-    },
-
-    isFavorite(eventId) { return this.favoriteEvents.includes(eventId); },
-
-    getEventById(id) { return this.allEvents.find(ev => ev.id === id) || {}; },
-
-    getEventsForCategory(category) { return this.sortedEvents.filter(event => event.category === category); },
-
-    toggleFilterSidebar() { this.isFilterVisible = !this.isFilterVisible; },
-
-    applySorting() {
-      let events = [...this.allEvents];
-
-      if (this.filters.selectedCategories.length) {
-        events = events.filter(ev => this.filters.selectedCategories.includes(ev.category));
-      }
-
-      if (this.filters.dateFilter !== 'all') {
-        events = this.filterByDate(events);
-      }
-
-      switch (this.filters.sortBy) {
-        case 'A-Z': events.sort((a,b)=>a.title.localeCompare(b.title)); break;
-        case 'Z-A': events.sort((a,b)=>b.title.localeCompare(a.title)); break;
-        case 'Melhor avaliado':
-          events.sort((a,b)=>{
-            const ratingB = b.rating||0; const ratingA = a.rating||0;
-            if(ratingB!==ratingA) return ratingB-ratingA;
-            const reviewsB=b.reviewCount||0; const reviewsA=a.reviewCount||0;
-            return reviewsB-reviewsA;
-          }); break;
-        default: break;
-      }
-
-      this.sortedEvents = events;
-    },
-
-    filterByDate(events) {
-      const today = new Date();
-      const dayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-      return events.filter(ev => {
-        const dates = this.parseEventDate(ev.date);
-        if(!dates) return true;
-
-        switch(this.filters.dateFilter){
-          case 'today': return this.isToday(dates, dayZero);
-          case 'week': return this.isThisWeek(dates, dayZero);
-          case 'month': return this.isThisMonth(dates, dayZero);
-          case 'future': return this.isFutureEvent(dates, dayZero);
-          default: return true;
-        }
-      });
-    },
-
-    parseEventDate(dateStr) {
-      if(!dateStr || dateStr.toLowerCase().includes('permanente')) return null;
-      const year = new Date().getFullYear();
-      const monthMap = { 'JAN':0,'FEV':1,'MAR':2,'ABR':3,'MAI':4,'JUN':5,'JUL':6,'AGO':7,'SET':8,'OUT':9,'NOV':10,'DEZ':11 };
-      const rangeMatch = dateStr.match(/(\d{1,2})\s+a\s+(\d{1,2})\s+([A-Z]{3})/);
-      if(rangeMatch){
-        const start=new Date(year, monthMap[rangeMatch[3]], parseInt(rangeMatch[1]));
-        const end=new Date(year, monthMap[rangeMatch[3]], parseInt(rangeMatch[2]));
-        return {start,end,isRange:true};
-      }
-      const singleMatch = dateStr.match(/(\d{1,2})\s+([A-Z]{3})/);
-      if(singleMatch){
-        const d=new Date(year, monthMap[singleMatch[2]], parseInt(singleMatch[1]));
-        return {start:d,end:d,isRange:false};
-      }
-      return null;
-    },
-
-    isToday(dates,today){return today.getTime()>=dates.start.getTime() && today.getTime()<=dates.end.getTime();},
-    isThisWeek(dates,today){const s=new Date(today); s.setDate(today.getDate()-today.getDay()); const e=new Date(s); e.setDate(s.getDate()+6); return this.dateRangesOverlap(dates,{start:s,end:e});},
-    isThisMonth(dates,today){const s=new Date(today.getFullYear(),today.getMonth(),1); const e=new Date(today.getFullYear(),today.getMonth()+1,0); return this.dateRangesOverlap(dates,{start:s,end:e});},
-    isFutureEvent(dates,today){return dates.start.getTime()>today.getTime();},
-    dateRangesOverlap(r1,r2){return r1.start<=r2.end && r2.start<=r1.end;},
-
-    applyFiltersAndClose(){this.applySorting(); this.toggleFilterSidebar();},
-    clearFilters(){ this.filters.sortBy='Novidades'; this.filters.selectedCategories=[]; this.filters.dateFilter='all'; this.applySorting(); },
-
-    formatDate(date){
-      if(!date) return 'Data não disponível';
-      const monthMap = {'JAN':'01','FEV':'02','MAR':'03','ABR':'04','MAI':'05','JUN':'06','JUL':'07','AGO':'08','SET':'09','OUT':'10','NOV':'11','DEZ':'12'};
-      if(date.toLowerCase().includes('permanente')) return '∞';
-      const m=date.match(/(\d{1,2})(?:\s+a\s+\d{1,2})?\s+([A-Z]{3})/);
-      if(m) return `${m[1].padStart(2,'0')}/${monthMap[m[2]]}`;
-      return date;
-    },
-
-    getStars(rating){
-      const full=Math.floor(rating); const half=rating%1>=0.5; let s=''; for(let i=0;i<full;i++) s+='★'; if(half) s+='☆'; return s;
+    if (eventService.testConnection) {
+      const connectionTest = await eventService.testConnection();
+      console.log('Teste de conectividade:', connectionTest);
     }
 
+    const [events, cats] = await Promise.all([
+      eventService.getAllEvents(),
+      eventService.getEventCategories()
+    ]);
+
+    allEvents.value = events || [];
+    categories.value = cats || [];
+
+    loadFavorites();
+    applySorting();
+
+  } catch (error) {
+    console.error('Erro ao carregar dados iniciais:', error);
+    hasError.value = true;
+    errorMessage.value = error.message || 'Erro desconhecido ao carregar eventos';
+  } finally {
+    isLoading.value = false;
   }
 }
-</script>
 
+function retryLoad() {
+  loadInitialData();
+}
+
+function handleImageError(event) {
+  event.target.src = '/default-event.jpg';
+}
+
+function openEvent(event) {
+  router.push({ name: 'EventDetails', params: { id: event.id } });
+}
+
+function loadFavorites() {
+  try {
+    const favorites = localStorage.getItem('favoriteEvents');
+    if (favorites) favoriteEvents.value = JSON.parse(favorites);
+  } catch (error) {
+    favoriteEvents.value = [];
+  }
+}
+
+function toggleFavorite(eventId) {
+  const index = favoriteEvents.value.indexOf(eventId);
+  if (index > -1) {
+    favoriteEvents.value.splice(index, 1);
+  } else {
+    favoriteEvents.value.push(eventId);
+  }
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value));
+}
+
+function isFavorite(eventId) {
+  return favoriteEvents.value.includes(eventId);
+}
+
+function getEventById(id) {
+  return allEvents.value.find(ev => ev.id === id) || {};
+}
+
+function getEventsForCategory(category) {
+  return sortedEvents.value.filter(event => event.category === category);
+}
+
+function toggleFilterSidebar() {
+  isFilterVisible.value = !isFilterVisible.value;
+}
+
+function applySorting() {
+  let events = [...allEvents.value];
+
+  if (filters.selectedCategories.length) {
+    events = events.filter(ev => filters.selectedCategories.includes(ev.category));
+  }
+
+  if (filters.dateFilter !== 'all') {
+    events = filterByDate(events);
+  }
+
+  switch (filters.sortBy) {
+    case 'A-Z':
+      events.sort((a, b) => a.title.localeCompare(b.title));
+      break;
+    case 'Z-A':
+      events.sort((a, b) => b.title.localeCompare(a.title));
+      break;
+    case 'Melhor avaliado':
+      events.sort((a, b) => {
+        const ratingB = b.rating || 0;
+        const ratingA = a.rating || 0;
+        if (ratingB !== ratingA) return ratingB - ratingA;
+
+        const reviewsB = b.reviewCount || 0;
+        const reviewsA = a.reviewCount || 0;
+        return reviewsB - reviewsA;
+      });
+      break;
+    default:
+      break;
+  }
+
+  sortedEvents.value = events;
+}
+
+function filterByDate(events) {
+  const today = new Date();
+  const dayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  return events.filter(ev => {
+    const dates = parseEventDate(ev.date);
+    if (!dates) return true;
+
+    switch (filters.dateFilter) {
+      case 'today':
+        return isToday(dates, dayZero);
+      case 'week':
+        return isThisWeek(dates, dayZero);
+      case 'month':
+        return isThisMonth(dates, dayZero);
+      case 'future':
+        return isFutureEvent(dates, dayZero);
+      default:
+        return true;
+    }
+  });
+}
+
+function parseEventDate(dateStr) {
+  if (!dateStr || dateStr.toLowerCase().includes('permanente')) return null;
+
+  const year = new Date().getFullYear();
+  const monthMap = {
+    'JAN': 0, 'FEV': 1, 'MAR': 2, 'ABR': 3, 'MAI': 4, 'JUN': 5,
+    'JUL': 6, 'AGO': 7, 'SET': 8, 'OUT': 9, 'NOV': 10, 'DEZ': 11
+  };
+
+  const rangeMatch = dateStr.match(/(\d{1,2})\s+a\s+(\d{1,2})\s+([A-Z]{3})/);
+  if (rangeMatch) {
+    const start = new Date(year, monthMap[rangeMatch[3]], parseInt(rangeMatch[1]));
+    const end = new Date(year, monthMap[rangeMatch[3]], parseInt(rangeMatch[2]));
+    return { start, end, isRange: true };
+  }
+
+  const singleMatch = dateStr.match(/(\d{1,2})\s+([A-Z]{3})/);
+  if (singleMatch) {
+    const d = new Date(year, monthMap[singleMatch[2]], parseInt(singleMatch[1]));
+    return { start: d, end: d, isRange: false };
+  }
+
+  return null;
+}
+
+function isToday(dates, today) {
+  return today.getTime() >= dates.start.getTime() && today.getTime() <= dates.end.getTime();
+}
+
+function isThisWeek(dates, today) {
+  const s = new Date(today);
+  s.setDate(today.getDate() - today.getDay());
+  const e = new Date(s);
+  e.setDate(s.getDate() + 6);
+  return dateRangesOverlap(dates, { start: s, end: e });
+}
+
+function isThisMonth(dates, today) {
+  const s = new Date(today.getFullYear(), today.getMonth(), 1);
+  const e = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+  return dateRangesOverlap(dates, { start: s, end: e });
+}
+
+function isFutureEvent(dates, today) {
+  return dates.start.getTime() > today.getTime();
+}
+
+function dateRangesOverlap(r1, r2) {
+  return r1.start <= r2.end && r2.start <= r1.end;
+}
+
+function applyFiltersAndClose() {
+  applySorting();
+  toggleFilterSidebar();
+}
+
+function clearFilters() {
+  filters.sortBy = 'Novidades';
+  filters.selectedCategories = [];
+  filters.dateFilter = 'all';
+  applySorting();
+}
+
+function formatDate(date) {
+  if (!date) return 'Data não disponível';
+  const monthMap = {
+    'JAN': '01', 'FEV': '02', 'MAR': '03', 'ABR': '04',
+    'MAI': '05', 'JUN': '06', 'JUL': '07', 'AGO': '08',
+    'SET': '09', 'OUT': '10', 'NOV': '11', 'DEZ': '12'
+  };
+  if (date.toLowerCase().includes('permanente')) return '∞';
+  const m = date.match(/(\d{1,2})(?:\s+a\s+\d{1,2})?\s+([A-Z]{3})/);
+  if (m) return `${m[1].padStart(2, '0')}/${monthMap[m[2]]}`;
+  return date;
+}
+
+function getStars(rating) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5;
+  let s = '';
+  for (let i = 0; i < full; i++) s += '★';
+  if (half) s += '☆';
+  return s;
+}
+</script>
 
 <style scoped>
 /* Estados de loading e erro */

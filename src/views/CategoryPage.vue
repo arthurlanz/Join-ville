@@ -41,71 +41,81 @@
   </div>
 </template>
 
-<script>
-import { eventService } from "@/services/eventService.js";
-import { useToastStore } from "@/stores/toast";
+<script setup>
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { eventService } from '@/services/eventService.js';
+import { useToastStore } from '@/stores/toast';
 
-export default {
-  name: "CategoryPage",
-  props: {
-    categoryName: {
-      type: String,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      events: [],
-      isLoading: false,
-      favoriteEvents: [],
-    };
-  },
-  watch: {
-    categoryName: {
-      immediate: true,
-      async handler(newCategoryName) {
-        this.isLoading = true;
-        const toast = useToastStore();
+// Props
+const props = defineProps({
+  categoryName: {
+    type: String,
+    required: true,
+  }
+});
 
-        try {
-          this.events = await eventService.getEventsByCategory(newCategoryName);
+// Router
+const router = useRouter();
 
-          if (this.events.length > 0) {
-            toast.info(`Eventos da categoria "${newCategoryName}" carregados!`);
-          } else {
-            toast.info(`Nenhum evento encontrado em "${newCategoryName}".`);
-          }
+// Toast store
+const toast = useToastStore();
 
-          this.loadFavorites();
-        } catch (error) {
-          console.error(error);
-          this.events = [];
-          toast.error("Erro ao carregar eventos. Tente novamente mais tarde.");
-        } finally {
-          this.isLoading = false;
-        }
-      },
-    },
+// Refs
+const events = ref([]);
+const isLoading = ref(false);
+const favoriteEvents = ref([]);
+
+// Watcher para categoria (executa imediatamente ao montar)
+watch(
+  () => props.categoryName,
+  async (newCategoryName) => {
+    isLoading.value = true;
+
+    try {
+      events.value = await eventService.getEventsByCategory(newCategoryName);
+
+      if (events.value.length > 0) {
+        toast.info(`Eventos da categoria "${newCategoryName}" carregados!`);
+      } else {
+        toast.info(`Nenhum evento encontrado em "${newCategoryName}".`);
+      }
+
+      loadFavorites();
+    } catch (error) {
+      console.error(error);
+      events.value = [];
+      toast.error("Erro ao carregar eventos. Tente novamente mais tarde.");
+    } finally {
+      isLoading.value = false;
+    }
   },
-  methods: {
-    openEvent(event) {
-      this.$router.push(`/evento/${event.id}`);
-    },
-    loadFavorites() {
-      const favorites = localStorage.getItem("favoriteEvents");
-      this.favoriteEvents = favorites ? JSON.parse(favorites) : [];
-    },
-    toggleFavorite(eventId) {
-      const index = this.favoriteEvents.indexOf(eventId);
-      if (index > -1) this.favoriteEvents.splice(index, 1);
-      else this.favoriteEvents.push(eventId);
-      localStorage.setItem("favoriteEvents", JSON.stringify(this.favoriteEvents));
-    },
-    isFavorite(eventId) {
-      return this.favoriteEvents.includes(eventId);
-    },
-  },
-};
+  { immediate: true }
+);
+
+// Métodos
+function openEvent(event) {
+  router.push(`/evento/${event.id}`);
+}
+
+function loadFavorites() {
+  const favorites = localStorage.getItem('favoriteEvents');
+  favoriteEvents.value = favorites ? JSON.parse(favorites) : [];
+}
+
+function toggleFavorite(eventId) {
+  const index = favoriteEvents.value.indexOf(eventId);
+  if (index > -1) {
+    favoriteEvents.value.splice(index, 1);
+  } else {
+    favoriteEvents.value.push(eventId);
+  }
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value));
+}
+
+function isFavorite(eventId) {
+  return favoriteEvents.value.includes(eventId);
+}
 </script>
 
 <style scoped>
