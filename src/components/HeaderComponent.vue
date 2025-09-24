@@ -14,6 +14,19 @@ const userType = ref('')
 const userName = ref('')
 const isMobileMenuOpen = ref(false)
 
+const favoriteEvents = ref([]);
+
+function loadFavorites() {
+  try {
+    const favorites = localStorage.getItem('favoriteEvents');
+    if (favorites) favoriteEvents.value = JSON.parse(favorites);
+  } catch (error) {
+    favoriteEvents.value = [];
+  }
+}
+
+const quantidade = computed(() => favoriteEvents.value.length);
+
 // Verificar estado de login
 const checkLoginStatus = () => {
   const token = localStorage.getItem('userToken')
@@ -75,6 +88,7 @@ onMounted(() => {
 
   // Verificar login periodicamente para mudanças na mesma aba
   intervalId = setInterval(checkLoginStatus, 1000)
+  loadFavorites();
 })
 
 onUnmounted(() => {
@@ -86,6 +100,7 @@ onUnmounted(() => {
     clearInterval(intervalId)
   }
 })
+
 </script>
 
 <template>
@@ -154,6 +169,7 @@ onUnmounted(() => {
         <div class="actions">
           <router-link to="/favorites" class="icon-btn" aria-label="Favoritos">
             <font-awesome-icon icon="fa-solid fa-heart" style="color: #11508e" size="lg" />
+            <span v-if="quantidade > 0" class="badge">{{ quantidade }}</span>
           </router-link>
 
           <router-link :to="profileRoute" class="profile-btn" :aria-label="profileLabel">
@@ -283,15 +299,11 @@ onUnmounted(() => {
 .icon-btn {
   background: transparent;
   border: 0;
-  padding: 8px;
+  padding: 5px 10px;
+  border-radius: 5px;
   cursor: pointer;
   text-decoration: none;
-  border-radius: 50%;
   transition: background-color 0.3s ease;
-}
-
-.icon-btn:hover {
-  background-color: rgba(17, 80, 142, 0.1);
 }
 
 .profile-btn {
@@ -369,6 +381,19 @@ onUnmounted(() => {
 
 .search input::placeholder {
   color: rgba(17, 80, 142, 0.6);
+}
+
+.badge{
+  position: relative;
+  top: -10px;
+  right: 8px;
+  border: 1px solid #11508e;
+  color: #11508e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 12px;
+  line-height: 1;
 }
 
 /* Responsividade */
