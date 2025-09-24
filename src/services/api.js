@@ -23,9 +23,7 @@ export default {
 
   // ---------- USUÁRIO ----------
   getCurrentUser: () => apiClient.get('usuarios/me/'),
-    // ATUALIZADO: Não precisa mais do ID, a API sabe quem você é pelo token.
   updateUser: (data) => apiClient.patch('usuarios/me/', data),
-  // ADICIONADO: Função específica para upload de foto.
   updateUserAvatar: (formData) => apiClient.patch('usuarios/me/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
@@ -37,6 +35,12 @@ export default {
   getEvents: () => apiClient.get('eventos/'),
   getEvent: (id) => apiClient.get(`eventos/${id}/`),
   getCategories: () => apiClient.get('categorias/'),
+  // ADICIONADO: Função para buscar os eventos da empresa logada
+  getCompanyEvents: () => apiClient.get('eventos/my_events/'),
+   updateEvent: (id, data) => apiClient.patch(`eventos/${id}/`, data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteEvent: (id) => apiClient.delete(`eventos/${id}/`),
 
   // ---------- FAVORITOS ----------
   getFavorites: () => apiClient.get('favoritos/'),

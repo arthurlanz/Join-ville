@@ -141,20 +141,24 @@
             </div>
           </div>
         </div>
-        <div v-if="activeTab === 'events'" class="tab-content">
+         <div v-if="activeTab === 'events'" class="tab-content">
           <div class="events-section">
             <div class="section-header">
                 <h2>Meus Eventos</h2>
-                <button @click="navigateToCreateEvent" class="btn-create-event">Criar Novo Evento</button>
+                <button @click="navigateToCreateEvent" class="btn-create-event">
+                  <font-awesome-icon icon="plus" /> Criar Novo Evento
+                </button>
             </div>
+
             <div v-if="events.length" class="events-list">
               <div v-for="event in events" :key="event.id" class="event-item">
                 <div class="event-thumbnail">
-                  <img :src="event.image" :alt="event.title" />
+                  <img :src="event.foto" :alt="event.nome" v-if="event.foto" />
+                  <div v-else class="placeholder-image">🎉</div>
                 </div>
                 <div class="event-details">
-                  <h4>{{ event.title }}</h4>
-                  <p>{{ formatDate(event.date) }} - {{ event.location }}</p>
+                  <h4>{{ event.nome }}</h4>
+                  <p>{{ formatDate(event.data_inicio) }} - {{ event.endereco }}</p>
                 </div>
                 <div class="event-actions">
                   <button @click="editEvent(event.id)" class="btn-edit-event">Editar</button>
@@ -162,6 +166,7 @@
                 </div>
               </div>
             </div>
+
             <div v-else class="empty-state">
               <p>Você ainda não criou nenhum evento.</p>
               <button @click="navigateToCreateEvent" class="btn-explore">Criar meu primeiro evento</button>
@@ -239,17 +244,19 @@ async function fetchCompany() {
 
 async function fetchCompanyEvents() {
   try {
-    // Esta API precisaria ser criada no seu backend.
-    // Ex: uma rota /api/eventos/meus-eventos/ que filtra eventos pelo 'empresa' logado.
+    // ATUALIZADO: Chamando a função correta da API
     const res = await api.getCompanyEvents();
+    // O backend já filtra, então o frontend só precisa exibir os dados
     events.value = res.data;
     companyStats.value.totalEvents = events.value.length;
+    // Lógica para contar eventos ativos pode ser adicionada aqui
+    companyStats.value.activeEvents = events.value.filter(e => e.ativo).length;
+
   } catch (err) {
     console.error('Erro ao buscar eventos da empresa:', err);
-    // toastStore.error('Erro ao carregar eventos da empresa.');
+    toastStore.error('Não foi possível carregar os eventos da empresa.');
   }
 }
-
 function selectAvatar() {
   avatarInput.value.click();
 }
@@ -287,7 +294,7 @@ async function saveProfile() {
   }
 
   try {
-    const res = await api.updateCurrentUser(formData);
+    const res = await api.updateUser(formData);
     const c = res.data;
     companyProfile.value = {
       id: c.id,
@@ -504,7 +511,90 @@ onMounted(async () => {
 .btn-logout:hover {
   background: rgba(220, 53, 69, 0.8);
 }
-
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+.event-thumbnail {
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.event-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.placeholder-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9ecef;
+  font-size: 2rem;
+}
+.event-details {
+  flex: 1;
+}
+.event-details h4 {
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+.event-details p {
+  color: #666;
+  font-size: 0.9rem;
+}
+.event-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn-edit-event, .btn-delete-event {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-edit-event {
+  background-color: #e3f2fd;
+  color: #1e4d8b;
+}
+.btn-delete-event {
+  background-color: #fbeae9;
+  color: #d9534f;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+.btn-create-event {
+    background: #1e4d8b;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 .profile-content {
   padding: 2rem 0;
 }

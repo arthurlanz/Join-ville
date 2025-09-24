@@ -18,7 +18,8 @@ import LoginPage from "./views/LoginPage.vue"
 import UserProfile from "./views/UserProfile.vue"
 import CompanyProfile from "./views/CompanyProfile.vue"
 import TutorialPage from "./views/TutorialPage.vue"
-
+import CreateEvent from "./views/CreateEvent.vue"
+import EditEvent from "./views/EditEvent.vue"
 // Font Awesome
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
@@ -103,6 +104,19 @@ const routes = [
     name: "TutorialPage",
     component: TutorialPage,
   },
+  {
+     path: "/create-event",
+    name: "CreateEvent",
+    component: CreateEvent,
+    beforeEnter: requiresCompany,
+  },
+  {
+    path: "/edit-event/:id",
+    name: "EditEvent",
+    component: EditEvent,
+    props: true,
+    beforeEnter: requiresCompany,
+  }
 ]
 
 const router = createRouter({

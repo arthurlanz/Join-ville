@@ -283,7 +283,7 @@ async function saveProfile() {
   if (newAvatarFile.value) formData.append('avatar', newAvatarFile.value);
 
   try {
-    const res = await api.updateCurrentUser(formData);
+    const res = await api.updateUser(formData);
     const u = res.data;
     userProfile.value = {
       id: u.id,
