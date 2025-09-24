@@ -20,16 +20,16 @@ const shouldShowLayout = computed(() => !noLayoutRoutes.includes(route.name));
   <div id="app">
     <!-- Header e Footer só aparecem em páginas que precisam -->
     <HeaderComponent v-if="shouldShowLayout" />
-    
+
     <!-- Carrossel só na home -->
     <CarrosselComponent v-if="isHomePage" />
-    
+
     <!-- Área principal do conteúdo -->
     <router-view />
-    
+
     <!-- Componente de cadastro só na home -->
     <CadastroComponent v-if="isHomePage" />
-    
+
     <!-- Footer em todas as páginas exceto login -->
     <FooterComponent v-if="shouldShowLayout" />
   </div>

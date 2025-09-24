@@ -11,7 +11,7 @@
               <font-awesome-icon v-else icon="user" />
             </div>
             <input ref="avatarInput" type="file" accept="image/*" @change="handleAvatarChange" style="display:none" />
-            <button @click="selectAvatar" class="change-avatar-btn">Alterar foto</button>
+            <button v-if="editMode" @click="selectAvatar" class="change-logo-btn">Alterar foto</button>
           </div>
 
           <!-- Informações do usuário -->
@@ -388,7 +388,7 @@ onMounted(async () => {
   object-fit: cover;
 }
 
-.change-avatar-btn {
+.change-logo-btn {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -398,12 +398,10 @@ onMounted(async () => {
   font-size: 0.9rem;
   transition: all 0.3s ease;
 }
-
-.change-avatar-btn:hover {
+.change-logo-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
-
 .user-info {
   flex: 1;
 }

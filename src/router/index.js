@@ -15,6 +15,11 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue'),
     },
     {
+      path: '/search',
+      name: 'SearchResultsView',
+      component: () => import('../views/SearchResultsView.vue'),
+    },
+    {
       path: '/evento/:id',
       name: 'EventDetails', // rota de detalhe de evento
       component: () => import('../views/EventDetails.vue'),
@@ -30,6 +35,7 @@ const router = createRouter({
       name: 'LoginPage',
       component: () => import('../views/LoginView.vue'),
     },
+
   ],
 })
 

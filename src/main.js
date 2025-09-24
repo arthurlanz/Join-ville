@@ -116,6 +116,11 @@ const routes = [
     component: EditEvent,
     props: true,
     beforeEnter: requiresCompany,
+  },
+  {
+  path: "/search",
+  name: "SearchResultsView",
+  component: () => import("./views/SearchResultsView.vue"),
   }
 ]
 

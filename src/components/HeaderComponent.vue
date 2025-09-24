@@ -1,11 +1,30 @@
 <script setup>
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { apiService } from '@/services/apiService'
+import SearchBar from '@/components/SearchBarComponent.vue'
+
 
 const router = useRouter()
 const q = ref('')
-const onSubmit = () => {
-  // ação de busca
+const selectedCategory = ref('')
+const selectedDate = ref('')
+const events = ref([])
+
+const onSubmit = async () => {
+  try {
+    const response = await api.get('/events/', {
+      params: {
+        search: q.value,
+        category: selectedCategory.value,
+        date: selectedDate.value
+      }
+    })
+    events.value = response.data
+    router.push({ name: 'SearchResults', query: { q: q.value, category: selectedCategory.value, date: selectedDate.value } })
+  } catch (error) {
+    console.error('Erro na busca:', error)
+  }
 }
 
 const isScrolled = ref(false)
@@ -27,7 +46,6 @@ function loadFavorites() {
 
 const quantidade = computed(() => favoriteEvents.value.length);
 
-// Verificar estado de login
 const checkLoginStatus = () => {
   const token = localStorage.getItem('userToken')
   const type = localStorage.getItem('userType')
@@ -39,7 +57,6 @@ const checkLoginStatus = () => {
 
     if (userData) {
       const user = JSON.parse(userData)
-      // Para empresas, usar companyName se disponível
       userName.value = type === 'company' ? (user.companyName || user.name) : user.name
     }
   } else {
@@ -56,7 +73,6 @@ const profileRoute = computed(() => {
 
 const profileLabel = computed(() => {
   if (!isLoggedIn.value) return 'Entrar'
-  // Trunca o nome se for muito longo
   const name = userName.value || (userType.value === 'company' ? 'Empresa' : 'Usuário')
   return name.length > 15 ? name.substring(0, 15) + '...' : name
 })
@@ -79,111 +95,69 @@ onMounted(() => {
   }
 
   window.addEventListener('scroll', scrollHandler)
-
-  // Verificar login no carregamento
   checkLoginStatus()
-
-  // Escutar mudanças no localStorage
   window.addEventListener('storage', checkLoginStatus)
-
-  // Verificar login periodicamente para mudanças na mesma aba
   intervalId = setInterval(checkLoginStatus, 1000)
   loadFavorites();
 })
 
 onUnmounted(() => {
-  if (scrollHandler) {
-    window.removeEventListener('scroll', scrollHandler)
-  }
+  if (scrollHandler) window.removeEventListener('scroll', scrollHandler)
   window.removeEventListener('storage', checkLoginStatus)
-  if (intervalId) {
-    clearInterval(intervalId)
-  }
+  if (intervalId) clearInterval(intervalId)
 })
-
 </script>
 
 <template>
+
   <header :class="['site-header', { scrolled: isScrolled }]">
     <div class="slogan-bar">
       <span>Explore, Avalie e Viva Joinville de Verdade</span>
     </div>
+
     <div class="nav-area">
       <div class="container">
         <router-link to="/" class="brand">
           <img src="/logotipo.png" alt="JoinVille" />
         </router-link>
 
-        <!-- Menu Hamburger Mobile -->
+        <!-- Botão Mobile -->
         <button class="mobile-menu-btn" @click="toggleMobileMenu">
-          <span></span>
-          <span></span>
-          <span></span>
+          <span></span><span></span><span></span>
         </button>
 
-        <nav class="main-nav" :class="{ 'mobile-open': isMobileMenuOpen }" aria-label="Categorias">
+        <!-- Menu -->
+        <nav class="main-nav" :class="{ 'mobile-open': isMobileMenuOpen }">
           <ul>
-            <li>
-              <router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Gastronomia' } }"
-                @click="isMobileMenuOpen = false">Gastronomia</router-link>
-            </li>
-            <li>
-              <router-link
-                :to="{ name: 'CategoryPage', params: { categoryName: 'Clássicos de Joinville' } }"
-                @click="isMobileMenuOpen = false">Clássicos de Joinville</router-link>
-            </li>
-            <li>
-              <router-link
-                :to="{ name: 'CategoryPage', params: { categoryName: 'Festas e Shows' } }"
-                @click="isMobileMenuOpen = false">Festas e shows</router-link>
-            </li>
-            <li>
-              <router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Esportes' } }"
-                @click="isMobileMenuOpen = false">Esportes</router-link>
-            </li>
-            <li>
-              <router-link
-                :to="{ name: 'CategoryPage', params: { categoryName: 'Atividades ao Ar Livre' } }"
-                @click="isMobileMenuOpen = false">Atividades ao ar livre</router-link>
-            </li>
-            <li>
-              <router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Cultura' } }"
-                @click="isMobileMenuOpen = false">Cultura</router-link>
-            </li>
+            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Gastronomia' } }">Gastronomia</router-link></li>
+            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Clássicos de Joinville' } }">Clássicos de Joinville</router-link></li>
+            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Festas e Shows' } }">Festas e shows</router-link></li>
+            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Esportes' } }">Esportes</router-link></li>
+            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Atividades ao Ar Livre' } }">Atividades ao ar livre</router-link></li>
+            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Cultura' } }">Cultura</router-link></li>
           </ul>
-
-          <!-- Ações Mobile dentro do menu -->
-          <div class="mobile-actions">
-            <router-link to="/favorites" class="mobile-action-item" @click="isMobileMenuOpen = false">
-              <font-awesome-icon icon="fa-solid fa-heart" />
-              <span>Favoritos</span>
-            </router-link>
-
-            <router-link :to="profileRoute" class="mobile-action-item" @click="isMobileMenuOpen = false">
-              <font-awesome-icon :icon="profileIcon" />
-              <span>{{ profileLabel }}</span>
-            </router-link>
-          </div>
         </nav>
 
+        <!-- Ações -->
         <div class="actions">
-          <router-link to="/favorites" class="icon-btn" aria-label="Favoritos">
+          <router-link to="/favorites" class="icon-btn">
             <font-awesome-icon icon="fa-solid fa-heart" style="color: #11508e" size="lg" />
             <span v-if="quantidade > 0" class="badge">{{ quantidade }}</span>
           </router-link>
 
-          <router-link :to="profileRoute" class="profile-btn" :aria-label="profileLabel">
+          <router-link :to="profileRoute" class="profile-btn">
             <font-awesome-icon :icon="profileIcon" />
             <span class="profile-text">{{ profileLabel }}</span>
           </router-link>
         </div>
       </div>
     </div>
+  <search-bar></search-bar>
   </header>
 </template>
 
 <style scoped>
-/* HEADER FIXO */
+
 .site-header {
   position: sticky;
   top: 0;
@@ -195,12 +169,12 @@ onUnmounted(() => {
   background-color: white;
 }
 
-/* sombra suave quando scroll > 10px */
+
 .site-header.scrolled {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* slogan-bar */
+
 .slogan-bar {
   background: #11508e;
   color: #fff;
@@ -210,14 +184,14 @@ onUnmounted(() => {
   text-align: center;
 }
 
-/* nav-area */
+
 .nav-area {
   background: #f7f7f7;
   color: #11508e;
   margin: 0;
 }
 
-/* container */
+
 .container {
   max-width: 1200px;
   padding: 0.6rem 24px;
@@ -228,13 +202,13 @@ onUnmounted(() => {
   gap: 20px;
 }
 
-/* logo */
+
 .brand img {
   height: 36px;
   display: block;
 }
 
-/* Mobile Menu Button */
+
 .mobile-menu-btn {
   display: none;
   flex-direction: column;
@@ -257,7 +231,7 @@ onUnmounted(() => {
   transition: all 0.3s ease;
 }
 
-/* menu central */
+
 .main-nav ul {
   display: flex;
   gap: 20px;
@@ -283,12 +257,12 @@ onUnmounted(() => {
   color: #0066cc;
 }
 
-/* Mobile actions (hidden on desktop) */
+
 .mobile-actions {
   display: none;
 }
 
-/* actions */
+
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -338,7 +312,7 @@ onUnmounted(() => {
   text-overflow: ellipsis;
 }
 
-/* busca */
+
 .search-line {
   max-width: 1200px;
   margin: 0 auto;
@@ -396,7 +370,7 @@ onUnmounted(() => {
   line-height: 1;
 }
 
-/* Responsividade */
+
 @media (max-width: 1200px) {
   .main-nav ul {
     gap: 15px;
@@ -511,5 +485,15 @@ onUnmounted(() => {
   .main-nav {
     width: 250px;
   }
+}
+
+.search .filter {
+  margin-left: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(17, 80, 142, 0.25);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: #11508e;
+  background: #fff;
 }
 </style>

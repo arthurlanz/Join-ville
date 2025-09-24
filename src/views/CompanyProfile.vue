@@ -19,7 +19,7 @@
               @change="handleAvatarChange"
               style="display: none"
             />
-            <button @click="selectAvatar" class="change-logo-btn">Alterar foto</button>
+            <button v-if="editMode" @click="selectAvatar" class="change-logo-btn">Alterar foto</button>
           </div>
 
           <div class="company-info">
