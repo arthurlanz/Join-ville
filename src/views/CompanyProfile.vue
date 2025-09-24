@@ -5,7 +5,11 @@
         <div class="header-content">
           <div class="company-logo">
             <div class="logo-circle">
-              <img v-if="companyProfile.avatar" :src="companyProfile.avatar" :alt="companyProfile.name" />
+              <img
+                v-if="companyProfile.avatar"
+                :src="companyProfile.avatar"
+                :alt="companyProfile.name"
+              />
               <font-awesome-icon icon="building" v-else />
             </div>
             <input
@@ -51,6 +55,7 @@
         </div>
       </div>
     </div>
+
     <div class="profile-content">
       <div class="container">
         <div class="profile-tabs">
@@ -69,6 +74,8 @@
             🎉 Meus Eventos
           </button>
         </div>
+
+        <!-- Aba Perfil -->
         <div v-if="activeTab === 'profile'" class="tab-content">
           <div class="profile-section">
             <h2>Informações da Empresa</h2>
@@ -86,20 +93,11 @@
               <div class="form-row">
                 <div class="form-group">
                   <label>CNPJ</label>
-                  <input
-                    type="text"
-                    v-model="editData.cnpj"
-                    required
-                    @input="formatCnpj"
-                  />
+                  <input type="text" v-model="editData.cnpj" required @input="formatCnpj" />
                 </div>
                 <div class="form-group">
                   <label>Telefone</label>
-                  <input
-                    type="text"
-                    v-model="editData.phone"
-                    @input="formatPhone"
-                  />
+                  <input type="text" v-model="editData.phone" @input="formatPhone" />
                 </div>
               </div>
               <div class="form-group">
@@ -110,11 +108,10 @@
                 <button type="submit" class="btn-save" :disabled="saving">
                   {{ saving ? 'Salvando...' : 'Salvar alterações' }}
                 </button>
-                <button type="button" @click="toggleEditMode" class="btn-cancel">
-                  Cancelar
-                </button>
+                <button type="button" @click="toggleEditMode" class="btn-cancel">Cancelar</button>
               </div>
             </form>
+
             <div v-else class="profile-info">
               <div class="info-grid">
                 <div class="info-item">
@@ -141,13 +138,15 @@
             </div>
           </div>
         </div>
-         <div v-if="activeTab === 'events'" class="tab-content">
+
+        <!-- Aba Eventos -->
+        <div v-if="activeTab === 'events'" class="tab-content">
           <div class="events-section">
             <div class="section-header">
-                <h2>Meus Eventos</h2>
-                <button @click="navigateToCreateEvent" class="btn-create-event">
-                  <font-awesome-icon icon="plus" /> Criar Novo Evento
-                </button>
+              <h2>Meus Eventos</h2>
+              <button @click="navigateToCreateEvent" class="btn-create-event">
+                <font-awesome-icon icon="plus" /> Criar Novo Evento
+              </button>
             </div>
 
             <div v-if="events.length" class="events-list">
@@ -162,19 +161,25 @@
                 </div>
                 <div class="event-actions">
                   <button @click="editEvent(event.id)" class="btn-edit-event">Editar</button>
-                  <button @click="deleteEvent(event.id)" class="btn-delete-event">Excluir</button>
+                  <button @click="confirmDeleteEvent(event.id)" class="btn-delete-event">
+                    🗑️ Excluir
+                  </button>
                 </div>
               </div>
             </div>
 
             <div v-else class="empty-state">
               <p>Você ainda não criou nenhum evento.</p>
-              <button @click="navigateToCreateEvent" class="btn-explore">Criar meu primeiro evento</button>
+              <button @click="navigateToCreateEvent" class="btn-explore">
+                Criar meu primeiro evento
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Modal Logout -->
     <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal = false">
       <div class="modal" @click.stop>
         <h3>Confirmar logout</h3>
@@ -185,24 +190,36 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Exclusão de Evento -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click="closeDeleteModal">
+      <div class="modal" @click.stop>
+        <h3>Confirmar Exclusão</h3>
+        <p>Tem certeza que deseja excluir este evento?</p>
+        <div class="modal-actions">
+          <button @click="performDeleteEvent" class="btn-confirm">Sim, excluir</button>
+          <button @click="closeDeleteModal" class="btn-cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import api from '@/services/api';
-import { useToastStore } from '@/stores/toast';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/services/api'
+import { useToastStore } from '@/stores/toast'
 
-const router = useRouter();
-const toastStore = useToastStore();
+const router = useRouter()
+const toastStore = useToastStore()
 
-const avatarInput = ref(null);
-const activeTab = ref('profile');
-const editMode = ref(false);
-const saving = ref(false);
-const showLogoutModal = ref(false);
-const newAvatarFile = ref(null);
+const avatarInput = ref(null)
+const activeTab = ref('profile')
+const editMode = ref(false)
+const saving = ref(false)
+const showLogoutModal = ref(false)
+const newAvatarFile = ref(null)
 
 const companyProfile = ref({
   id: null,
@@ -212,20 +229,49 @@ const companyProfile = ref({
   phone: '',
   description: '',
   avatar: null,
-});
-
-const editData = ref({});
+})
+const editData = ref({})
 const companyStats = ref({
   totalEvents: 0,
   activeEvents: 0,
   totalViews: 0,
-});
-const events = ref([]);
+})
+const events = ref([])
 
+// Modal de exclusão
+const showDeleteModal = ref(false)
+const eventToDelete = ref(null)
+
+function confirmDeleteEvent(eventId) {
+  eventToDelete.value = eventId
+  showDeleteModal.value = true
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  eventToDelete.value = null
+}
+
+async function performDeleteEvent() {
+  if (!eventToDelete.value) return
+
+  try {
+    await api.deleteEvent(eventToDelete.value)
+    events.value = events.value.filter((e) => e.id !== eventToDelete.value)
+    toastStore.success('Evento excluído com sucesso!')
+  } catch (err) {
+    console.error('Erro ao excluir evento:', err)
+    toastStore.error('Erro ao excluir evento.')
+  } finally {
+    closeDeleteModal()
+  }
+}
+
+// --- Funções de perfil ---
 async function fetchCompany() {
   try {
-    const res = await api.getCurrentUser(); // Reutiliza a mesma chamada de API
-    const c = res.data;
+    const res = await api.getCurrentUser()
+    const c = res.data
     companyProfile.value = {
       id: c.id,
       name: c.nome_empresa || '',
@@ -234,68 +280,61 @@ async function fetchCompany() {
       phone: c.telefone || '',
       description: c.descricao || '',
       avatar: c.avatar || null,
-    };
-    editData.value = { ...companyProfile.value };
+    }
+    editData.value = { ...companyProfile.value }
   } catch (err) {
-    console.error('Erro ao buscar dados da empresa:', err);
-    toastStore.error('Erro ao carregar perfil da empresa.');
+    console.error('Erro ao buscar dados da empresa:', err)
+    toastStore.error('Erro ao carregar perfil da empresa.')
   }
 }
 
 async function fetchCompanyEvents() {
   try {
-    // ATUALIZADO: Chamando a função correta da API
-    const res = await api.getCompanyEvents();
-    // O backend já filtra, então o frontend só precisa exibir os dados
-    events.value = res.data;
-    companyStats.value.totalEvents = events.value.length;
-    // Lógica para contar eventos ativos pode ser adicionada aqui
-    companyStats.value.activeEvents = events.value.filter(e => e.ativo).length;
-
+    const res = await api.getCompanyEvents()
+    events.value = res.data
+    companyStats.value.totalEvents = events.value.length
+    companyStats.value.activeEvents = events.value.filter((e) => e.ativo).length
   } catch (err) {
-    console.error('Erro ao buscar eventos da empresa:', err);
-    toastStore.error('Não foi possível carregar os eventos da empresa.');
+    console.error('Erro ao buscar eventos da empresa:', err)
+    toastStore.error('Não foi possível carregar os eventos da empresa.')
   }
 }
+
 function selectAvatar() {
-  avatarInput.value.click();
+  avatarInput.value.click()
 }
 
 function handleAvatarChange(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  newAvatarFile.value = file;
-  const reader = new FileReader();
+  const file = event.target.files[0]
+  if (!file) return
+  newAvatarFile.value = file
+  const reader = new FileReader()
   reader.onload = (e) => {
-    companyProfile.value.avatar = e.target.result;
-  };
-  reader.readAsDataURL(file);
+    companyProfile.value.avatar = e.target.result
+  }
+  reader.readAsDataURL(file)
 }
 
 function toggleEditMode() {
-  editMode.value = !editMode.value;
+  editMode.value = !editMode.value
   if (!editMode.value) {
-    newAvatarFile.value = null;
-    fetchCompany(); // Recarrega os dados originais do servidor
+    newAvatarFile.value = null
+    fetchCompany()
   }
 }
 
 async function saveProfile() {
-  saving.value = true;
-  const formData = new FormData();
-
-  formData.append('nome_empresa', editData.value.name);
-  formData.append('cnpj', (editData.value.cnpj || '').replace(/\D/g, ''));
-  formData.append('telefone', editData.value.phone || '');
-  formData.append('descricao', editData.value.description || '');
-
-  if (newAvatarFile.value) {
-    formData.append('avatar', newAvatarFile.value);
-  }
+  saving.value = true
+  const formData = new FormData()
+  formData.append('nome_empresa', editData.value.name)
+  formData.append('cnpj', (editData.value.cnpj || '').replace(/\D/g, ''))
+  formData.append('telefone', editData.value.phone || '')
+  formData.append('descricao', editData.value.description || '')
+  if (newAvatarFile.value) formData.append('avatar', newAvatarFile.value)
 
   try {
-    const res = await api.updateUser(formData);
-    const c = res.data;
+    const res = await api.updateUser(formData)
+    const c = res.data
     companyProfile.value = {
       id: c.id,
       name: c.nome_empresa || '',
@@ -304,87 +343,138 @@ async function saveProfile() {
       phone: c.telefone || '',
       description: c.descricao || '',
       avatar: c.avatar || null,
-    };
-    editMode.value = false;
-    newAvatarFile.value = null;
-    toastStore.success('Perfil da empresa atualizado com sucesso!');
+    }
+    editMode.value = false
+    newAvatarFile.value = null
+    toastStore.success('Perfil da empresa atualizado com sucesso!')
   } catch (err) {
-    console.error('Erro ao salvar perfil da empresa:', err);
-    toastStore.error('Erro ao salvar perfil da empresa.');
+    console.error('Erro ao salvar perfil da empresa:', err)
+    toastStore.error('Erro ao salvar perfil da empresa.')
   } finally {
-    saving.value = false;
+    saving.value = false
   }
 }
 
 function logout() {
-  showLogoutModal.value = true;
+  showLogoutModal.value = true
 }
 
 function confirmLogout() {
-  localStorage.clear();
-  router.push('/');
-  toastStore.info('Logout realizado com sucesso.');
+  localStorage.clear()
+  router.push('/')
+  toastStore.info('Logout realizado com sucesso.')
 }
 
 function formatCnpj(event) {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.substring(0, 14);
-    value = value.replace(/^(\d{2})(\d)/, '$1.$2');
-    value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-    value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-    value = value.replace(/(\d{4})(\d)/, '$1-$2');
-    editData.value.cnpj = value;
+  let value = event.target.value.replace(/\D/g, '')
+  value = value.substring(0, 14)
+  value = value.replace(/^(\d{2})(\d)/, '$1.$2')
+  value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+  value = value.replace(/\.(\d{3})(\d)/, '.$1/$2')
+  value = value.replace(/(\d{4})(\d)/, '$1-$2')
+  editData.value.cnpj = value
 }
 
 function formatPhone(event) {
-    let value = event.target.value.replace(/\D/g, '');
-    value = value.substring(0, 11);
-    if (value.length > 10) {
-        value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3');
-    } else if (value.length > 5) {
-        value = value.replace(/^(\d\d)(\d{4})(\d{0,4}).*/, '($1) $2-$3');
-    } else if (value.length > 2) {
-        value = value.replace(/^(\d\d)(\d{0,5}).*/, '($1) $2');
-    } else {
-        value = value.replace(/^(\d*)/, '($1');
-    }
-    editData.value.phone = value;
+  let value = event.target.value.replace(/\D/g, '')
+  value = value.substring(0, 11)
+  if (value.length > 10) value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3')
+  else if (value.length > 5) value = value.replace(/^(\d\d)(\d{4})(\d{0,4}).*/, '($1) $2-$3')
+  else if (value.length > 2) value = value.replace(/^(\d\d)(\d{0,5}).*/, '($1) $2')
+  else value = value.replace(/^(\d*)/, '($1')
+  editData.value.phone = value
 }
 
 function formatDate(date) {
-  if (!date) return '';
-  return new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
 }
 
 function navigateToCreateEvent() {
-  router.push('/create-event');
+  router.push('/create-event')
 }
 
 async function editEvent(eventId) {
-  router.push(`/edit-event/${eventId}`);
-}
-
-async function deleteEvent(eventId) {
-  if (confirm('Tem certeza que deseja excluir este evento?')) {
-    try {
-      await api.deleteEvent(eventId);
-      events.value = events.value.filter(e => e.id !== eventId);
-      toastStore.success('Evento excluído com sucesso!');
-    } catch (err) {
-      console.error('Erro ao excluir evento:', err);
-      toastStore.error('Erro ao excluir evento.');
-    }
-  }
+  router.push(`/edit-event/${eventId}`)
 }
 
 onMounted(async () => {
-  await fetchCompany();
-  await fetchCompanyEvents();
-});
+  await fetchCompany()
+  await fetchCompanyEvents()
+})
 </script>
 
-
 <style scoped>
+.btn-delete-event {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-delete-event:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+.modal h3 {
+  margin-bottom: 1rem;
+  color: #e74c3c;
+}
+.modal p {
+  margin-bottom: 2rem;
+  color: #333;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+}
+.btn-confirm {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-cancel {
+  background-color: #ccc;
+  color: #333;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-confirm:hover {
+  background-color: #c0392b;
+}
+.btn-cancel:hover {
+  background-color: #999;
+}
+
 .company-profile-page {
   min-height: 100vh;
   background: #f8f9fa;
@@ -486,7 +576,9 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-.btn-create, .btn-edit, .btn-logout {
+.btn-create,
+.btn-edit,
+.btn-logout {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -561,7 +653,8 @@ onMounted(async () => {
   display: flex;
   gap: 0.5rem;
 }
-.btn-edit-event, .btn-delete-event {
+.btn-edit-event,
+.btn-delete-event {
   padding: 0.5rem 1rem;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -584,16 +677,16 @@ onMounted(async () => {
   padding-bottom: 1rem;
 }
 .btn-create-event {
-    background: #1e4d8b;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
+  background: #1e4d8b;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .profile-content {
   padding: 2rem 0;
@@ -629,7 +722,10 @@ onMounted(async () => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
 }
 
-.company-section h2, .events-section h2, .analytics-section h2, .settings-section h2 {
+.company-section h2,
+.events-section h2,
+.analytics-section h2,
+.settings-section h2 {
   color: #1a1a1a;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
@@ -654,7 +750,9 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.form-group input, .form-group textarea, .form-group select {
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
@@ -662,7 +760,8 @@ onMounted(async () => {
   font-size: 1rem;
 }
 
-.form-group input:focus, .form-group textarea:focus {
+.form-group input:focus,
+.form-group textarea:focus {
   outline: none;
   border-color: #1e4d8b;
 }
@@ -685,7 +784,8 @@ onMounted(async () => {
   margin-top: 2rem;
 }
 
-.btn-save, .btn-cancel {
+.btn-save,
+.btn-cancel {
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
   cursor: pointer;
@@ -843,7 +943,8 @@ onMounted(async () => {
   color: #1a1a1a;
 }
 
-.event-date, .event-location {
+.event-date,
+.event-location {
   color: #666;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
@@ -863,7 +964,9 @@ onMounted(async () => {
   margin-top: 1rem;
 }
 
-.btn-edit-event, .btn-view-event, .btn-delete-event {
+.btn-edit-event,
+.btn-view-event,
+.btn-delete-event {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
@@ -1000,19 +1103,19 @@ onMounted(async () => {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 34px;
 }
 
 .slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 26px;
   width: 26px;
   left: 4px;
   bottom: 4px;
   background-color: white;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 

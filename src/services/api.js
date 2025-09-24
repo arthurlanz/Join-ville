@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const apiClient = axios.create({
   baseURL: 'http://127.0.0.1:8000/api/',
-  headers: { 'Content-Type': 'application/json' },
+  // Não definir Content-Type global
 });
 
 apiClient.interceptors.request.use(
@@ -29,15 +29,14 @@ export default {
   }),
 
   // ---------- EVENTOS ----------
-  createEvent: (data) => apiClient.post('eventos/', data, {
+  createEvent: (formData) => apiClient.post('eventos/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   getEvents: () => apiClient.get('eventos/'),
   getEvent: (id) => apiClient.get(`eventos/${id}/`),
   getCategories: () => apiClient.get('categorias/'),
-  // ADICIONADO: Função para buscar os eventos da empresa logada
   getCompanyEvents: () => apiClient.get('eventos/my_events/'),
-   updateEvent: (id, data) => apiClient.patch(`eventos/${id}/`, data, {
+  updateEvent: (id, formData) => apiClient.patch(`eventos/${id}/`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   deleteEvent: (id) => apiClient.delete(`eventos/${id}/`),

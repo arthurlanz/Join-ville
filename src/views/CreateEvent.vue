@@ -42,7 +42,7 @@
               <label for="horario_inicio">Horário de Início</label>
               <input type="time" id="horario_inicio" v-model="eventData.horario_inicio" required />
             </div>
-             <div class="form-group">
+            <div class="form-group">
               <label for="horario_fim">Horário de Fim</label>
               <input type="time" id="horario_fim" v-model="eventData.horario_fim" required />
             </div>
@@ -73,10 +73,8 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
-// import { useToastStore } from '@/stores/toast';
 
 const router = useRouter();
-// const toastStore = useToastStore();
 const loading = ref(false);
 const categories = ref([]);
 
@@ -98,7 +96,6 @@ async function fetchCategories() {
     categories.value = response.data;
   } catch (error) {
     console.error("Erro ao buscar categorias:", error);
-    // toastStore.error("Não foi possível carregar as categorias.");
   }
 }
 
@@ -110,22 +107,24 @@ async function submitEvent() {
   loading.value = true;
 
   const formData = new FormData();
-  // O backend espera o ID da empresa, mas não precisamos enviar,
-  // pois a API vai associar ao usuário logado.
+  formData.append('nome', eventData.nome);
+  formData.append('descricao', eventData.descricao);
+  formData.append('endereco', eventData.endereco);
+  formData.append('categoria', eventData.categoria);
+  formData.append('data_inicio', eventData.data_inicio);
+  formData.append('data_fim', eventData.data_fim);
+  formData.append('horario_inicio', eventData.horario_inicio + ":00");
+  formData.append('horario_fim', eventData.horario_fim + ":00");
 
-  Object.keys(eventData).forEach(key => {
-    if (eventData[key]) {
-      formData.append(key, eventData[key]);
-    }
-  });
+  if (eventData.foto) formData.append('foto', eventData.foto);
 
   try {
-    await api.createEvent(formData); // A API de eventos deve aceitar multipart/form-data
-    // toastStore.success("Evento criado com sucesso!");
-    router.push('/company-profile'); // Redireciona para o perfil da empresa
+    const response = await api.createEvent(formData);
+    console.log("Evento criado:", response.data);
+    router.push('/company-profile');
   } catch (error) {
-    console.error("Erro ao criar evento:", error);
-    // toastStore.error("Erro ao criar evento. Verifique os dados.");
+    console.error("Erro ao criar evento:", error.response?.data || error.message);
+    alert("Erro ao criar evento. Confira os dados.");
   } finally {
     loading.value = false;
   }
