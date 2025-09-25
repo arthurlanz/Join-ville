@@ -15,16 +15,27 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue'),
     },
     {
+      path: '/search',
+      name: 'SearchResultsView',
+      component: () => import('../views/SearchResultsView.vue'),
+    },
+    {
       path: '/evento/:id',
       name: 'EventDetails', // rota de detalhe de evento
       component: () => import('../views/EventDetails.vue'),
       props: true, // passa o ID como prop
     },
     {
+      path: 'create-event',
+      name: 'CreateEvent', // rota de criação de evento
+      component: () => import('../views/CreateEvent.vue'),
+    },
+    {
       path: '/login',
       name: 'LoginPage',
       component: () => import('../views/LoginView.vue'),
     },
+
   ],
 })
 

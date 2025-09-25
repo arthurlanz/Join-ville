@@ -13,14 +13,12 @@
               <font-awesome-icon icon="fa-solid fa-calendar-days" class="info-icon" />
               <p>
                 <strong>{{ event.date }}</strong>
-                <br />
               </p>
             </div>
             <div class="info-block">
               <font-awesome-icon icon="fa-solid fa-location-dot" class="info-icon" />
               <p>
-                <strong>{{ event.location }}</strong
-                ><br />
+                <strong>{{ event.location }}</strong><br />
                 <span>Joinville - SC</span>
               </p>
             </div>
@@ -79,56 +77,67 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue'
+<script setup>
+import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { eventService } from '@/services/eventService.js'
 
-export default {
-  setup() {
-    const route = useRoute()
-    const event = ref(null)
-    const favoriteEvents = ref([])
+const route = useRoute()
+const event = ref(null)
+const favoriteEvents = ref([])
 
-    onMounted(async () => {
-      const allEvents = await eventService.getAllEvents() // precisa ser async
-      event.value = allEvents.find(e => e.id === parseInt(route.params.id))
+const loadEvent = async (id) => {
+  const allEvents = await eventService.getAllEvents()
+  event.value = allEvents.find(e => e.id === parseInt(id))
+}
 
-      const favorites = localStorage.getItem('favoriteEvents')
-      if (favorites) favoriteEvents.value = JSON.parse(favorites)
+// Carrega na montagem
+onMounted(() => {
+  loadEvent(route.params.id)
+
+  const favorites = localStorage.getItem('favoriteEvents')
+  if (favorites) favoriteEvents.value = JSON.parse(favorites)
+})
+
+// Observa mudanças no id da rota
+watch(
+  () => route.params.id,
+  (newId) => {
+    loadEvent(newId)
+  }
+)
+
+const goBack = () => window.history.back()
+
+const toggleFavorite = (eventId) => {
+  const index = favoriteEvents.value.indexOf(eventId)
+  if (index > -1) {
+    favoriteEvents.value.splice(index, 1)
+  } else {
+    favoriteEvents.value.push(eventId)
+  }
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value))
+}
+
+const isFavorite = (eventId) => favoriteEvents.value.includes(eventId)
+
+const shareEvent = () => {
+  if (!event.value) return
+  if (navigator.share) {
+    navigator.share({
+      title: event.value.title,
+      text: `Confira este evento: ${event.value.title}`,
+      url: window.location.href
     })
-
-    const goBack = () => window.history.back()
-
-    const toggleFavorite = (eventId) => {
-      const index = favoriteEvents.value.indexOf(eventId)
-      if (index > -1) favoriteEvents.value.splice(index, 1)
-      else favoriteEvents.value.push(eventId)
-      localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value))
-    }
-
-    const isFavorite = (eventId) => favoriteEvents.value.includes(eventId)
-
-    const shareEvent = () => {
-      if (!event.value) return
-      if (navigator.share) {
-        navigator.share({
-          title: event.value.title,
-          text: `Confira este evento: ${event.value.title}`,
-          url: window.location.href
-        })
-      } else {
-        navigator.clipboard.writeText(window.location.href).then(() => {
-          alert('Link copiado para a área de transferência!')
-        })
-      }
-    }
-
-    const getEventDescription = (ev) => ev.description || `Participe do evento ${ev.title || 'sem título'} em ${ev.location || 'local indefinido'}.`
-
-    return { event, favoriteEvents, goBack, toggleFavorite, isFavorite, shareEvent, getEventDescription }
+  } else {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      alert('Link copiado para a área de transferência!')
+    })
   }
 }
+
+const getEventDescription = (ev) =>
+  ev.description || `Participe do evento ${ev.title || 'sem título'} em ${ev.location || 'local indefinido'}.`
 </script>
 
 <style scoped>

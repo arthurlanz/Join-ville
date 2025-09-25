@@ -2,24 +2,38 @@
   <div class="category-page">
     <div class="container">
       <h1 class="page-title">{{ categoryName }}</h1>
+
       <div v-if="events.length > 0" class="events-grid">
-         <div
-            v-for="event in events"
-            :key="event.id"
-            class="event-card"
-            @click="openEvent(event)"
-          >
-            <div class="event-image">
-              <img :src="event.image" :alt="event.title" />
-              <div class="event-date-badge">{{ event.date }}</div>
-            </div>
-            <div class="event-info">
-              <h3>{{ event.title }}</h3>
-              <p class="event-location">{{ event.location }}</p>
-              <div class="event-price" v-if="event.price">{{ event.price }}</div>
-            </div>
+        <div
+          v-for="event in events"
+          :key="event.id"
+          class="event-card"
+          @click="openEvent(event)"
+        >
+          <div class="event-image">
+            <img :src="event.image" :alt="event.title" />
+            <div class="event-date-badge">{{ event.date }}</div>
           </div>
+          <div class="event-info">
+            <div class="info-header">
+              <h3 @click.stop="openEvent(event)">{{ event.title }}</h3>
+              <button
+                @click.stop="toggleFavorite(event.id)"
+                class="favorite-btn"
+                :class="{ 'is-favorited': isFavorite(event.id) }"
+                :aria-label="isFavorite(event.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+              >
+                <font-awesome-icon
+                  :icon="isFavorite(event.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"
+                />
+              </button>
+            </div>
+            <p class="event-location">{{ event.location }}</p>
+            <div class="event-price" v-if="event.price">{{ event.price }}</div>
+          </div>
+        </div>
       </div>
+
       <div v-else class="no-events">
         <p>Não há eventos nesta categoria no momento.</p>
       </div>
@@ -27,49 +41,85 @@
   </div>
 </template>
 
-<script>
-import { eventService } from '@/services/eventService.js'
+<script setup>
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { eventService } from '@/services/eventService.js';
+import { useToastStore } from '@/stores/toast';
 
-export default {
-  name: 'CategoryPage',
-  props: {
-    categoryName: {
-      type: String,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      events: [],
-      isLoading: false,
+// Props
+const props = defineProps({
+  categoryName: {
+    type: String,
+    required: true,
+  }
+});
+
+// Router
+const router = useRouter();
+
+// Toast store
+const toast = useToastStore();
+
+// Refs
+const events = ref([]);
+const isLoading = ref(false);
+const favoriteEvents = ref([]);
+
+// Watcher para categoria (executa imediatamente ao montar)
+watch(
+  () => props.categoryName,
+  async (newCategoryName) => {
+    isLoading.value = true;
+
+    try {
+      events.value = await eventService.getEventsByCategory(newCategoryName);
+
+      if (events.value.length > 0) {
+        toast.info(`Eventos da categoria "${newCategoryName}" carregados!`);
+      } else {
+        toast.info(`Nenhum evento encontrado em "${newCategoryName}".`);
+      }
+
+      loadFavorites();
+    } catch (error) {
+      console.error(error);
+      events.value = [];
+      toast.error("Erro ao carregar eventos. Tente novamente mais tarde.");
+    } finally {
+      isLoading.value = false;
     }
   },
-  watch: {
-    categoryName: {
-      immediate: true,
-      async handler(newCategoryName) {
-        this.isLoading = true
-        try {
-          this.events = await eventService.getEventsByCategory(newCategoryName)
-        } catch (error) {
-          console.error(error)
-          this.events = []
-        } finally {
-          this.isLoading = false
-        }
-      },
-    },
-  },
-  methods: {
-    openEvent(event) {
-      // Se a tua rota for /evento/:id
-      this.$router.push(`/evento/${event.id}`)
-    },
-  },
+  { immediate: true }
+);
+
+// Métodos
+function openEvent(event) {
+  router.push(`/evento/${event.id}`);
+}
+
+function loadFavorites() {
+  const favorites = localStorage.getItem('favoriteEvents');
+  favoriteEvents.value = favorites ? JSON.parse(favorites) : [];
+}
+
+function toggleFavorite(eventId) {
+  const index = favoriteEvents.value.indexOf(eventId);
+  if (index > -1) {
+    favoriteEvents.value.splice(index, 1);
+  } else {
+    favoriteEvents.value.push(eventId);
+  }
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value));
+}
+
+function isFavorite(eventId) {
+  return favoriteEvents.value.includes(eventId);
 }
 </script>
 
 <style scoped>
+/* Reaproveite os estilos do event-card da página inicial */
 .category-page {
   padding: 40px 20px;
 }
@@ -89,7 +139,6 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
 }
-/* Estilos do Event Card (copiados do MainComponent para consistência) */
 .event-card {
   background: white;
   border-radius: 12px;
@@ -98,6 +147,8 @@ export default {
   transition: all 0.3s ease;
   cursor: pointer;
   border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
 }
 .event-card:hover {
   transform: translateY(-4px);
@@ -131,13 +182,44 @@ export default {
 }
 .event-info {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
-.event-info h3 {
+.info-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.info-header h3 {
   font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0 0 8px 0;
   line-height: 1.3;
+  cursor: pointer;
+  flex-grow: 1;
+}
+.favorite-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 20px;
+  color: #ff4d4d;
+  transition: transform 0.2s;
+}
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+.favorite-btn.is-favorited {
+  animation: heartbeat 0.6s ease-in-out;
+}
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
 }
 .event-location {
   color: #666;
@@ -148,11 +230,6 @@ export default {
   color: #0066cc;
   font-weight: 600;
   font-size: 16px;
-}
-.no-events {
-    text-align: center;
-    padding: 50px;
-    font-size: 18px;
-    color: #555;
+  margin-top: auto;
 }
 </style>

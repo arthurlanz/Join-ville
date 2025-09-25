@@ -100,10 +100,10 @@ export const apiService = {
   },
 
   // ========== EVENTOS ==========
-  async getEventos() {
-    const response = await api.get('/eventos/')
-    return response.data
-  },
+ async getEventos(params = {}) {
+  const response = await api.get('/eventos/', { params })
+  return response.data
+},
 
   async getEventoById(id) {
     const response = await api.get(`/eventos/${id}/`)
@@ -133,6 +133,8 @@ export const apiService = {
   async deleteEvento(id) {
     await api.delete(`/eventos/${id}/`)
   },
+
+
 
   // ========== FAVORITOS ==========
   async getFavoritos(usuarioId) {
@@ -259,3 +261,4 @@ export const apiService = {
     }
   }
 }
+export default api 

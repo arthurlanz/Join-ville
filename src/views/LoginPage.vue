@@ -24,7 +24,7 @@
         </button>
       </div>
 
-      <div class="auth-toggle">
+      <div class="auth-toggle" v-if="!isLogin">
         <button
           :class="{ active: userType === 'user' }"
           @click="userType = 'user'"
@@ -41,27 +41,19 @@
         </button>
       </div>
 
-      <!-- Login com Redes Sociais -->
       <div class="social-login">
-        <button @click="loginWithGoogle" class="social-btn google-btn">
-          <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20" />
-          <span>{{ isLogin ? 'Entrar' : 'Cadastrar' }} com Google</span>
-        </button>
-
-      </div>
+        </div>
 
       <div class="divider">
         <span>ou</span>
       </div>
 
       <form @submit.prevent="handleSubmit" class="login-form">
-        <!-- Campos para Cadastro de Usuário -->
         <div v-if="!isLogin && userType === 'user'" class="form-group">
           <label>Nome completo</label>
           <input type="text" v-model="formData.name" required placeholder="Seu nome completo" />
         </div>
 
-        <!-- Campos para Cadastro de Empresa -->
         <template v-if="!isLogin && userType === 'company'">
           <div class="form-group">
             <label>Nome da empresa</label>
@@ -98,7 +90,6 @@
           </div>
         </template>
 
-        <!-- Campos comuns -->
         <div class="form-group">
           <label>Email</label>
           <input type="email" v-model="formData.email" required placeholder="seu@email.com" />
@@ -119,7 +110,6 @@
           </div>
         </div>
 
-        <!-- Confirmar senha para cadastro -->
         <div v-if="!isLogin" class="form-group">
           <label>Confirmar senha</label>
           <div class="password-input-wrapper">
@@ -139,18 +129,7 @@
           </div>
         </div>
 
-        <!-- Lembrar de mim / Esqueceu senha -->
-        <div v-if="isLogin" class="form-options">
-          <label class="remember-me">
-            <input type="checkbox" v-model="rememberMe" />
-            <span>Lembrar de mim</span>
-          </label>
-          <button type="button" @click="showForgotPassword" class="forgot-link">
-            Esqueceu sua senha?
-          </button>
-        </div>
-
-        <button type="submit" class="btn-submit" :disabled="loading || (!isLogin && !acceptTerms)">
+        <button type="submit" class="btn-submit" :disabled="loading">
           <span v-if="loading" class="spinner"></span>
           {{ loading ? 'Processando...' : isLogin ? 'Entrar' : 'Criar conta' }}
         </button>
@@ -165,7 +144,6 @@
         </p>
       </div>
 
-      <!-- Mensagem de erro/sucesso -->
       <transition name="fade">
         <div v-if="message" :class="['message', messageType]">
           {{ message }}
@@ -175,248 +153,187 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LoginPage',
-  data() {
-    return {
-      isLogin: true,
-      userType: 'user',
-      loading: false,
-      showPassword: false,
-      showConfirmPassword: false,
-      acceptTerms: false,
-      rememberMe: false,
-      message: '',
-      messageType: 'success',
-      formData: {
-        email: '',
-        password: '',
-        confirmPassword: '',
-        name: '',
-        companyName: '',
-        cnpj: '',
-        phone: '',
-      },
+<script setup>
+import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+import api from '@/services/api'; // Importando nosso serviço de API
+
+const router = useRouter();
+
+const isLogin = ref(true);
+const userType = ref('user');
+const loading = ref(false);
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const message = ref('');
+const messageType = ref('success');
+
+const formData = reactive({
+  email: '',
+  password: '',
+  confirmPassword: '',
+  name: '',
+  companyName: '',
+  cnpj: '',
+  phone: '',
+});
+
+const closeModal = () => {
+  router.push('/');
+};
+
+const toggleMode = () => {
+  isLogin.value = !isLogin.value;
+  clearForm();
+  message.value = '';
+};
+
+const clearForm = () => {
+  Object.keys(formData).forEach(key => (formData[key] = ''));
+};
+
+const showMessage = (text, type, duration = 5000) => {
+  message.value = text;
+  messageType.value = type;
+  if (duration) {
+    setTimeout(() => (message.value = ''), duration);
+  }
+};
+
+const getErrorMessage = (error) => {
+  if (!error.response || !error.response.data) {
+    return 'Erro de conexão. Tente novamente mais tarde.';
+  }
+  const data = error.response.data;
+  const firstErrorKey = Object.keys(data)[0];
+  return Array.isArray(data[firstErrorKey]) ? data[firstErrorKey][0] : data[firstErrorKey];
+};
+
+const handleSubmit = async () => {
+  if (!validateForm()) return;
+
+  loading.value = true;
+  message.value = '';
+
+  try {
+    if (isLogin.value) {
+      await handleLogin();
+    } else {
+      await handleRegister();
     }
-  },
-  methods: {
-    closeModal() {
-      this.$router.push('/')
-    },
+  } catch (error) {
+    const errorMessage = getErrorMessage(error);
+    showMessage(errorMessage, 'error');
+  } finally {
+    loading.value = false;
+  }
+};
 
-    toggleMode() {
-      this.isLogin = !this.isLogin
-      this.clearForm()
-      this.message = ''
-    },
+const validateForm = () => {
+  if (!isLogin.value && formData.password !== formData.confirmPassword) {
+    showMessage('As senhas não coincidem!', 'error');
+    return false;
+  }
+  return true;
+};
 
-    clearForm() {
-      this.formData = {
-        email: '',
-        password: '',
-        confirmPassword: '',
-        name: '',
-        companyName: '',
-        cnpj: '',
-        phone: '',
-      }
-      this.acceptTerms = false
-    },
+const handleLogin = async () => {
+  try {
+    const response = await api.login({
+      email: formData.email,
+      password: formData.password,
+    });
 
-    formatCNPJ(event) {
-      let value = event.target.value.replace(/\D/g, '')
-      value = value.replace(/^(\d{2})(\d)/, '$1.$2')
-      value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
-      value = value.replace(/\.(\d{3})(\d)/, '.$1/$2')
-      value = value.replace(/(\d{4})(\d)/, '$1-$2')
-      this.formData.cnpj = value
-    },
+    // --- tokens vindos do backend ---
+    const access = response.data?.access;
+    const refresh = response.data?.refresh;
+    const user = response.data?.user || {};
 
-    formatPhone(event) {
-      let value = event.target.value.replace(/\D/g, '')
-      value = value.replace(/^(\d{2})(\d)/, '($1) $2')
-      value = value.replace(/(\d{5})(\d{4})$/, '$1-$2')
-      this.formData.phone = value
-    },
+    if (access) {
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('userToken', access); // compatibilidade
+    }
+    if (refresh) {
+      localStorage.setItem('refreshToken', refresh);
+    }
 
-    async loginWithGoogle() {
-      this.loading = true
-      this.showMessage('Conectando com Google...', 'info')
+    // --- normaliza e salva os dados do usuário ---
+    const userData = {
+      id: user.id || null,
+      name: user.first_name || user.username || user.nome_empresa || '',
+      email: user.email || '',
+      tipo_usuario: user.tipo_usuario || '',
+      nome_empresa: user.nome_empresa || '',
+      cnpj: user.cnpj || '',
+      telefone: user.telefone || ''
+    };
+    localStorage.setItem('userData', JSON.stringify(userData));
 
-      // Simulação de login com Google
-      setTimeout(() => {
-        this.showMessage('Login com Google realizado com sucesso!', 'success')
-        this.loading = false
-        setTimeout(() => {
-          this.handleSuccessfulLogin({
-            name: 'Usuário Google',
-            email: 'user@gmail.com',
-            type: this.userType,
-          })
-        }, 1000)
-      }, 1500)
-    },
+    // --- define tipo para perfis ---
+    const tipo = user.tipo_usuario === 'EMPRESA' ? 'company' : 'user';
+    localStorage.setItem('userType', tipo);
 
-    async loginWithFacebook() {
-      this.loading = true
-      this.showMessage('Conectando com Facebook...', 'info')
+    showMessage('Login realizado com sucesso!', 'success');
+    setTimeout(() => closeModal(), 1500);
+  } catch (err) {
+    console.error('Erro de login:', err);
+    showMessage('Erro ao fazer login. Verifique email e senha.', 'error');
+  }
+};
 
-      // Simulação de login com Facebook
-      setTimeout(() => {
-        this.showMessage('Login com Facebook realizado com sucesso!', 'success')
-        this.loading = false
-        setTimeout(() => {
-          this.handleSuccessfulLogin({
-            name: 'Usuário Facebook',
-            email: 'user@facebook.com',
-            type: this.userType,
-          })
-        }, 1000)
-      }, 1500)
-    },
+const handleRegister = async () => {
+  if (userType.value === 'user') {
+    const userData = {
+      email: formData.email,
+      password: formData.password,
+      username: formData.email.split('@')[0],
+      first_name: formData.name,
+    };
+    await api.registerUser(userData);
+  } else {
+    const companyData = {
+      email: formData.email,
+      password: formData.password,
+      username: formData.companyName.replace(/\s+/g, ''),
+      nome_empresa: formData.companyName,
+      cnpj: formData.cnpj.replace(/\D/g, ''),
+      telefone: formData.phone.replace(/\D/g, ''),
+    };
+    await api.registerCompany(companyData);
+  }
+  showMessage('Conta criada com sucesso! Redirecionando para o login...', 'success');
+  setTimeout(() => {
+    isLogin.value = true;
+    clearForm();
+  }, 2000);
+};
 
-    showForgotPassword() {
-      this.showMessage('Um email de recuperação foi enviado!', 'info')
-    },
+// --- formatações ---
+const formatCNPJ = (event) => {
+  let value = event.target.value.replace(/\D/g, '');
+  value = value.slice(0, 14);
+  value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+  value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+  value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+  value = value.replace(/(\d{4})(\d)/, '$1-$2');
+  formData.cnpj = value;
+};
 
-    showTerms() {
-      alert('Termos de uso serão exibidos aqui')
-    },
-
-    showPrivacy() {
-      alert('Política de privacidade será exibida aqui')
-    },
-
-    async handleSubmit() {
-      if (!this.validateForm()) return
-
-      this.loading = true
-
-      try {
-        if (this.isLogin) {
-          await this.login()
-        } else {
-          await this.register()
-        }
-      } catch (error) {
-        this.showMessage('Erro ao processar solicitação', 'error')
-      } finally {
-        this.loading = false
-      }
-    },
-
-    validateForm() {
-      if (!this.isLogin && this.formData.password !== this.formData.confirmPassword) {
-        this.showMessage('As senhas não coincidem', 'error')
-        return false
-      }
-
-      if (!this.isLogin && this.formData.password.length < 6) {
-        this.showMessage('A senha deve ter no mínimo 6 caracteres', 'error')
-        return false
-      }
-
-      if (!this.isLogin && this.userType === 'company' && this.formData.cnpj.length < 18) {
-        this.showMessage('CNPJ inválido', 'error')
-        return false
-      }
-
-      return true
-    },
-
-    async login() {
-      const loginData = {
-        email: this.formData.email,
-        password: this.formData.password,
-        userType: this.userType,
-        rememberMe: this.rememberMe,
-      }
-
-      console.log('Login:', loginData)
-
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const userData = {
-            id: 1,
-            email: this.formData.email,
-            name: this.userType === 'user' ? 'João Silva' : 'Empresa Exemplo',
-            type: this.userType,
-            token: 'fake-jwt-token-123',
-          }
-
-          this.handleSuccessfulLogin(userData)
-          resolve(userData)
-        }, 1000)
-      })
-    },
-
-    async register() {
-      const registerData = {
-        email: this.formData.email,
-        password: this.formData.password,
-        userType: this.userType,
-        ...(this.userType === 'user'
-          ? { name: this.formData.name }
-          : {
-              companyName: this.formData.companyName,
-              cnpj: this.formData.cnpj,
-              phone: this.formData.phone,
-            }),
-      }
-
-      console.log('Register:', registerData)
-
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const userData = {
-            id: 1,
-            email: this.formData.email,
-            name: this.userType === 'user' ? this.formData.name : this.formData.companyName,
-            type: this.userType,
-            token: 'fake-jwt-token-123',
-          }
-
-          this.showMessage('Conta criada com sucesso!', 'success')
-
-          setTimeout(() => {
-            this.handleSuccessfulLogin(userData)
-          }, 1500)
-
-          resolve(userData)
-        }, 1000)
-      })
-    },
-
-    handleSuccessfulLogin(userData) {
-      localStorage.setItem('userToken', userData.token)
-      localStorage.setItem('userType', userData.type)
-      localStorage.setItem('userData', JSON.stringify(userData))
-
-      this.showMessage('Login realizado com sucesso!', 'success')
-
-      setTimeout(() => {
-        if (this.userType === 'company') {
-          this.$router.push('/company-profile')
-        } else {
-          this.$router.push('/user-profile')
-        }
-      }, 1000)
-    },
-
-    showMessage(text, type) {
-      this.message = text
-      this.messageType = type
-
-      setTimeout(() => {
-        this.message = ''
-      }, 5000)
-    },
-  },
-}
+const formatPhone = (event) => {
+  let value = event.target.value.replace(/\D/g, '');
+  value = value.slice(0, 11);
+  if (value.length > 2) {
+    value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
+  }
+  if (value.length > 9) {
+    value = `${value.substring(0, 10)}-${value.substring(10)}`;
+  }
+  formData.phone = value;
+};
 </script>
 
 <style scoped>
+/* SEU CSS CONTINUA EXATAMENTE O MESMO. NENHUMA MUDANÇA É NECESSÁRIA AQUI. */
 .login-modal-overlay {
   position: fixed;
   top: 0;

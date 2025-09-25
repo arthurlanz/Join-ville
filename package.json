@@ -17,13 +17,15 @@
     "clsx": "2.1.1",
     "lucide-react": "0.543.0",
     "next": "15.5.2",
+    "pinia": "^3.0.3",
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "swiper": "^11.2.10",
     "tailwind-merge": "3.3.1",
     "tailwindcss-animate": "1.0.7",
     "vue": "^3.3.0",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.2.0",
+    "vue-toastification": "^2.0.0-rc.5"
   },
   "devDependencies": {
     "@types/node": "24.3.1",

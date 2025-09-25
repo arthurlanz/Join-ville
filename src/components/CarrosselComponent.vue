@@ -22,7 +22,7 @@ const events = [
     badge: 'NOVO',
   },
   {
-    id: 9,
+    id: 7,
     title: 'FESTIVAL DE DANÇA',
     subtitle: 'MAIOR FESTIVAL DE DANÇA DO MUNDO',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
@@ -40,7 +40,7 @@ const events = [
     badge: 'FOOD',
   },
   {
-    id: 5,
+    id: 37,
     title: 'JEC KRONA X BLUMENAU',
     subtitle: 'LIGA NACIONAL DE FUTSAL',
     location: 'CENTREVENTOS CAU HANSEN - JOINVILLE - SC',
@@ -49,7 +49,7 @@ const events = [
     badge: 'FUTSAL',
   },
   {
-    id: 11,
+    id: 9,
     title: "ARMANDINHO",
     subtitle: 'SHOW DE REAGE NACIONAL',
     location: 'SQUARE GARDEN',

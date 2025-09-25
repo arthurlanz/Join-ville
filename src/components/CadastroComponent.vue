@@ -4,7 +4,7 @@
       <div class="cadastro-content">
         <div class="cadastro-text">
           <h2>Crie, divulgue e conecte seus eventos com a maior cidade de SC</h2>
-          
+
           <div class="features">
             <div class="feature">
               <div class="feature-icon">📝</div>
@@ -12,7 +12,7 @@
                 <strong>Publicação grátis:</strong> sem taxa de adesão ou mensalidade.
               </div>
             </div>
-            
+
             <div class="feature">
               <div class="feature-icon">🏢</div>
               <div class="feature-text">
@@ -20,13 +20,13 @@
               </div>
             </div>
           </div>
-          
+
           <div class="cadastro-buttons">
             <button @click="handleCadastroClick" class="btn-primary">Cadastre seu evento</button>
             <router-link to="/tutorial" class="btn-secondary">Veja como funciona</router-link>
           </div>
         </div>
-        
+
         <div class="cadastro-illustration">
           <img src="/pessoastrabalhando.png" alt="Ilustração de pessoas trabalhando" />
         </div>
@@ -35,27 +35,24 @@
   </section>
 </template>
 
-<script>
-export default {
-  name: 'CadastroComponent',
-  methods: {
-    handleCadastroClick() {
-      // Verificar se o usuário está logado
-      const userToken = localStorage.getItem('userToken')
-      const userType = localStorage.getItem('userType')
-      
-      if (userToken && userType === 'company') {
-        // Se for empresa logada, redirecionar para o perfil da empresa
-        this.$router.push('/company-profile')
-      } else if (userToken && userType === 'user') {
-        // Se for usuário comum logado, mostrar mensagem
-        alert('Para cadastrar eventos, você precisa de uma conta de empresa com CNPJ válido.')
-        this.$router.push('/login')
-      } else {
-        // Se não estiver logado, redirecionar para login
-        this.$router.push('/login')
-      }
-    }
+<script setup>
+import { useRouter } from 'vue-router';
+import { useToastStore } from '@/stores/toast';
+
+const toastStore = useToastStore();
+const router = useRouter();
+
+function handleCadastroClick() {
+  const userToken = localStorage.getItem('userToken');
+  const userType = localStorage.getItem('userType');
+
+  if (userToken && userType === 'company') {
+    router.push('/company-profile');
+  } else if (userToken && userType === 'user') {
+    toastStore.error('Para cadastrar eventos, você precisa de uma conta de empresa com CNPJ válido.');
+    router.push('/login');
+  } else {
+    router.push('/login');
   }
 }
 </script>
@@ -169,16 +166,16 @@ export default {
     margin: 2rem 1rem 0;
     padding: 2rem 1rem;
   }
-  
+
   .cadastro-content {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .cadastro-text h2 {
     font-size: 2rem;
   }
-  
+
   .cadastro-buttons {
     justify-content: center;
   }

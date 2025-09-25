@@ -5,19 +5,23 @@
         <div class="header-content">
           <div class="company-logo">
             <div class="logo-circle">
-              <img v-if="companyProfile.avatar" :src="companyProfile.avatar" :alt="companyProfile.name" />
+              <img
+                v-if="companyProfile.avatar"
+                :src="companyProfile.avatar"
+                :alt="companyProfile.name"
+              />
               <font-awesome-icon icon="building" v-else />
             </div>
-            <input 
-              ref="avatarInput" 
-              type="file" 
-              accept="image/*" 
-              @change="handleAvatarChange" 
+            <input
+              ref="avatarInput"
+              type="file"
+              accept="image/*"
+              @change="handleAvatarChange"
               style="display: none"
             />
-            <button @click="selectAvatar" class="change-logo-btn">Alterar foto</button>
+            <button v-if="editMode" @click="selectAvatar" class="change-logo-btn">Alterar foto</button>
           </div>
-          
+
           <div class="company-info">
             <h1>{{ companyProfile.name }}</h1>
             <p>{{ companyProfile.cnpj }}</p>
@@ -37,13 +41,9 @@
               </div>
             </div>
           </div>
-          
+
           <div class="profile-actions">
-            <button @click="createEvent" class="btn-create">
-              <font-awesome-icon icon="plus" />
-              Criar evento
-            </button>
-            <button @click="editMode = !editMode" class="btn-edit">
+            <button @click="toggleEditMode" class="btn-edit">
               <font-awesome-icon icon="edit" />
               {{ editMode ? 'Cancelar' : 'Editar perfil' }}
             </button>
@@ -59,160 +59,81 @@
     <div class="profile-content">
       <div class="container">
         <div class="profile-tabs">
-          <button 
-            :class="{ active: activeTab === 'company' }" 
-            @click="activeTab = 'company'"
+          <button
+            :class="{ active: activeTab === 'profile' }"
+            @click="activeTab = 'profile'"
             class="tab-btn"
           >
-            🏢 Empresa
+            🏢 Perfil da Empresa
           </button>
-          <button 
-            :class="{ active: activeTab === 'events' }" 
+          <button
+            :class="{ active: activeTab === 'events' }"
             @click="activeTab = 'events'"
             class="tab-btn"
           >
-            📅 Meus Eventos
-          </button>
-          <button 
-            :class="{ active: activeTab === 'analytics' }" 
-            @click="activeTab = 'analytics'"
-            class="tab-btn"
-          >
-            📊 Estatísticas
-          </button>
-          <button 
-            :class="{ active: activeTab === 'settings' }" 
-            @click="activeTab = 'settings'"
-            class="tab-btn"
-          >
-            ⚙️ Configurações
+            🎉 Meus Eventos
           </button>
         </div>
 
-        <!-- Aba Empresa -->
-        <div v-if="activeTab === 'company'" class="tab-content">
-          <div class="company-section">
+        <!-- Aba Perfil -->
+        <div v-if="activeTab === 'profile'" class="tab-content">
+          <div class="profile-section">
             <h2>Informações da Empresa</h2>
-            
             <form v-if="editMode" @submit.prevent="saveProfile" class="edit-form">
               <div class="form-row">
                 <div class="form-group">
-                  <label>Nome da empresa</label>
-                  <input 
-                    type="text" 
-                    v-model="editData.name" 
-                    required 
-                  />
+                  <label>Nome da Empresa</label>
+                  <input type="text" v-model="editData.name" required />
                 </div>
-                
                 <div class="form-group">
-                  <label>Email</label>
-                  <input 
-                    type="email" 
-                    v-model="editData.email" 
-                    required 
-                  />
+                  <label>Email de Contato</label>
+                  <input type="email" v-model="editData.email" required disabled />
                 </div>
               </div>
-              
               <div class="form-row">
                 <div class="form-group">
                   <label>CNPJ</label>
-                  <input 
-                    type="text" 
-                    v-model="editData.cnpj" 
-                    required 
-                    disabled
-                  />
-                  <small>CNPJ não pode ser alterado</small>
+                  <input type="text" v-model="editData.cnpj" required @input="formatCnpj" />
                 </div>
-                
                 <div class="form-group">
                   <label>Telefone</label>
-                  <input 
-                    type="text" 
-                    v-model="editData.phone" 
-                    placeholder="(47) 99999-9999"
-                    @input="formatPhone"
-                  />
+                  <input type="text" v-model="editData.phone" @input="formatPhone" />
                 </div>
               </div>
-              
               <div class="form-group">
-                <label>Endereço</label>
-                <input 
-                  type="text" 
-                  v-model="editData.address" 
-                  placeholder="Endereço completo"
-                />
+                <label>Descrição</label>
+                <textarea v-model="editData.description" rows="4"></textarea>
               </div>
-              
-              <div class="form-group">
-                <label>Descrição da empresa</label>
-                <textarea 
-                  v-model="editData.description" 
-                  rows="4"
-                  placeholder="Conte mais sobre sua empresa..."
-                ></textarea>
-              </div>
-              
-              <div class="form-group">
-                <label>Website</label>
-                <input 
-                  type="url" 
-                  v-model="editData.website" 
-                  placeholder="https://www.suaempresa.com.br"
-                />
-              </div>
-              
               <div class="form-actions">
                 <button type="submit" class="btn-save" :disabled="saving">
                   {{ saving ? 'Salvando...' : 'Salvar alterações' }}
                 </button>
-                <button type="button" @click="cancelEdit" class="btn-cancel">
-                  Cancelar
-                </button>
+                <button type="button" @click="toggleEditMode" class="btn-cancel">Cancelar</button>
               </div>
             </form>
-            
-            <div v-else class="company-info-display">
+
+            <div v-else class="profile-info">
               <div class="info-grid">
                 <div class="info-item">
-                  <label>Nome da empresa</label>
+                  <label>Nome da Empresa</label>
                   <p>{{ companyProfile.name }}</p>
                 </div>
-                
                 <div class="info-item">
-                  <label>Email</label>
+                  <label>Email de Contato</label>
                   <p>{{ companyProfile.email }}</p>
                 </div>
-                
                 <div class="info-item">
                   <label>CNPJ</label>
-                  <p>{{ companyProfile.cnpj }}</p>
+                  <p>{{ companyProfile.cnpj || 'Não informado' }}</p>
                 </div>
-                
                 <div class="info-item">
                   <label>Telefone</label>
                   <p>{{ companyProfile.phone || 'Não informado' }}</p>
                 </div>
               </div>
-              
               <div class="description-section">
                 <label>Descrição</label>
-                <p class="description-text">
-                  {{ companyProfile.description || 'Nenhuma descrição cadastrada.' }}
-                </p>
-              </div>
-              
-              <div class="contact-info" v-if="companyProfile.website || companyProfile.address">
-                <div v-if="companyProfile.address" class="contact-item">
-                  <strong>Endereço:</strong> {{ companyProfile.address }}
-                </div>
-                <div v-if="companyProfile.website" class="contact-item">
-                  <strong>Website:</strong> 
-                  <a :href="companyProfile.website" target="_blank">{{ companyProfile.website }}</a>
-                </div>
+                <p>{{ companyProfile.description || 'Nenhuma descrição informada.' }}</p>
               </div>
             </div>
           </div>
@@ -223,175 +144,42 @@
           <div class="events-section">
             <div class="section-header">
               <h2>Meus Eventos</h2>
-              <button @click="createEvent" class="btn-create-small">
-                <font-awesome-icon icon="plus" />
-                Criar novo evento
+              <button @click="navigateToCreateEvent" class="btn-create-event">
+                <font-awesome-icon icon="plus" /> Criar Novo Evento
               </button>
             </div>
-            
-            <div class="events-filter">
-              <select v-model="eventsFilter">
-                <option value="all">Todos os eventos</option>
-                <option value="active">Ativos</option>
-                <option value="draft">Rascunhos</option>
-                <option value="ended">Finalizados</option>
-              </select>
-            </div>
-            
-            <div v-if="filteredEvents.length" class="events-grid">
-              <div v-for="event in filteredEvents" :key="event.id" class="event-card-company">
-                <div class="event-image">
-                  <img :src="event.image" :alt="event.title" />
-                  <div :class="['event-status', event.status]">
-                    {{ getStatusText(event.status) }}
-                  </div>
+
+            <div v-if="events.length" class="events-list">
+              <div v-for="event in events" :key="event.id" class="event-item">
+                <div class="event-thumbnail">
+                  <img :src="event.foto" :alt="event.nome" v-if="event.foto" />
+                  <div v-else class="placeholder-image">🎉</div>
                 </div>
-                <div class="event-info">
-                  <h3>{{ event.title }}</h3>
-                  <p class="event-date">📅 {{ formatDate(event.date) }}</p>
-                  <p class="event-location">📍 {{ event.location }}</p>
-                  <div class="event-metrics">
-                    <span><font-awesome-icon icon="eye" /> {{ event.views }} visualizações</span>
-                    <span><font-awesome-icon icon="users" /> {{ event.interested }} interessados</span>
-                  </div>
-                  <div class="event-actions">
-                    <button @click="editEvent(event.id)" class="btn-edit-event">
-                      <font-awesome-icon icon="edit" />
-                      Editar
-                    </button>
-                    <button @click="viewEvent(event.id)" class="btn-view-event">
-                      <font-awesome-icon icon="eye" />
-                      Ver
-                    </button>
-                    <button @click="deleteEvent(event.id)" class="btn-delete-event">
-                      <font-awesome-icon icon="trash" />
-                    </button>
-                  </div>
+                <div class="event-details">
+                  <h4>{{ event.nome }}</h4>
+                  <p>{{ formatDate(event.data_inicio) }} - {{ event.endereco }}</p>
+                </div>
+                <div class="event-actions">
+                  <button @click="editEvent(event.id)" class="btn-edit-event">Editar</button>
+                  <button @click="confirmDeleteEvent(event.id)" class="btn-delete-event">
+                    🗑️ Excluir
+                  </button>
                 </div>
               </div>
             </div>
-            
+
             <div v-else class="empty-state">
-              <h3>Nenhum evento encontrado</h3>
-              <p>Você ainda não criou nenhum evento. Comece agora!</p>
-              <button @click="createEvent" class="btn-create-first">
-                <font-awesome-icon icon="plus" />
+              <p>Você ainda não criou nenhum evento.</p>
+              <button @click="navigateToCreateEvent" class="btn-explore">
                 Criar meu primeiro evento
               </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aba Estatísticas -->
-        <div v-if="activeTab === 'analytics'" class="tab-content">
-          <div class="analytics-section">
-            <h2>Estatísticas dos Eventos</h2>
-            
-            <div class="metrics-grid">
-              <div class="metric-card">
-                <div class="metric-icon">👥</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.totalViews }}</h3>
-                  <p>Visualizações totais</p>
-                </div>
-              </div>
-              
-              <div class="metric-card">
-                <div class="metric-icon">❤️</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.totalInterested }}</h3>
-                  <p>Total de interessados</p>
-                </div>
-              </div>
-              
-              <div class="metric-card">
-                <div class="metric-icon">📈</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.avgRating }}</h3>
-                  <p>Avaliação média</p>
-                </div>
-              </div>
-              
-              <div class="metric-card">
-                <div class="metric-icon">🎯</div>
-                <div class="metric-info">
-                  <h3>{{ companyStats.conversionRate }}%</h3>
-                  <p>Taxa de interesse</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="chart-placeholder">
-              <h3>Desempenho dos Eventos</h3>
-              <div class="chart-info">
-                <p>📊 Gráficos e estatísticas detalhadas serão implementados aqui</p>
-                <p>• Visualizações por período</p>
-                <p>• Eventos mais populares</p>
-                <p>• Análise de público-alvo</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Aba Configurações -->
-        <div v-if="activeTab === 'settings'" class="tab-content">
-          <div class="settings-section">
-            <h2>Configurações</h2>
-            
-            <div class="setting-group">
-              <h3>Notificações</h3>
-              <div class="setting-item">
-                <label class="switch">
-                  <input type="checkbox" v-model="settings.emailNotifications">
-                  <span class="slider"></span>
-                </label>
-                <div class="setting-text">
-                  <strong>Notificações por email</strong>
-                  <p>Receba atualizações sobre seus eventos</p>
-                </div>
-              </div>
-              
-              <div class="setting-item">
-                <label class="switch">
-                  <input type="checkbox" v-model="settings.eventReminders">
-                  <span class="slider"></span>
-                </label>
-                <div class="setting-text">
-                  <strong>Lembretes de eventos</strong>
-                  <p>Receba lembretes antes dos seus eventos</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="setting-group">
-              <h3>Privacidade</h3>
-              <div class="setting-item">
-                <label class="switch">
-                  <input type="checkbox" v-model="settings.publicProfile">
-                  <span class="slider"></span>
-                </label>
-                <div class="setting-text">
-                  <strong>Perfil público</strong>
-                  <p>Permitir que outros usuários vejam informações da empresa</p>
-                </div>
-              </div>
-            </div>
-            
-            <div class="setting-group danger-zone">
-              <h3>Zona de Perigo</h3>
-              <div class="danger-actions">
-                <button class="btn-danger" @click="showDeleteModal = true">
-                  Excluir conta da empresa
-                </button>
-                <p>Esta ação não pode ser desfeita. Todos os eventos serão removidos.</p>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal de confirmação de logout -->
+    <!-- Modal Logout -->
     <div v-if="showLogoutModal" class="modal-overlay" @click="showLogoutModal = false">
       <div class="modal" @click.stop>
         <h3>Confirmar logout</h3>
@@ -403,252 +191,290 @@
       </div>
     </div>
 
-    <!-- Modal de exclusão de conta -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click="showDeleteModal = false">
+    <!-- Modal Exclusão de Evento -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click="closeDeleteModal">
       <div class="modal" @click.stop>
-        <h3>Excluir conta da empresa</h3>
-        <p>Esta ação é irreversível. Todos os seus eventos serão removidos permanentemente.</p>
+        <h3>Confirmar Exclusão</h3>
+        <p>Tem certeza que deseja excluir este evento?</p>
         <div class="modal-actions">
-          <button @click="confirmDelete" class="btn-danger">Sim, excluir</button>
-          <button @click="showDeleteModal = false" class="btn-cancel">Cancelar</button>
+          <button @click="performDeleteEvent" class="btn-confirm">Sim, excluir</button>
+          <button @click="closeDeleteModal" class="btn-cancel">Cancelar</button>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'CompanyProfile',
-  data() {
-    return {
-      activeTab: 'company',
-      editMode: false,
-      saving: false,
-      showLogoutModal: false,
-      showDeleteModal: false,
-      eventsFilter: 'all',
-      
-      companyProfile: {
-        name: 'Empresa Exemplo Ltda',
-        email: 'contato@empresaexemplo.com.br',
-        cnpj: '12.345.678/0001-90',
-        phone: '(47) 3333-4444',
-        address: 'Rua das Empresas, 123 - Centro, Joinville - SC',
-        description: 'Somos uma empresa especializada em eventos corporativos e culturais em Joinville.',
-        website: 'https://www.empresaexemplo.com.br',
-        avatar: null
-      },
-      
-      editData: {},
-      
-      companyStats: {
-        totalEvents: 15,
-        activeEvents: 8,
-        totalViews: 12500,
-        totalInterested: 850,
-        avgRating: 4.7,
-        conversionRate: 6.8
-      },
-      
-      companyEvents: [
-        {
-          id: 1,
-          title: 'Workshop de Marketing Digital',
-          date: '2025-10-15',
-          location: 'Centro de Convenções',
-          image: '/gastronomia/festivalgastronomicobanner.jpg',
-          status: 'active',
-          views: 1250,
-          interested: 85
-        },
-        {
-          id: 2,
-          title: 'Feira de Empreendedorismo',
-          date: '2025-11-20',
-          location: 'Expoville',
-          image: '/classicosdejoinville/festivaldancabanner.jpeg',
-          status: 'draft',
-          views: 320,
-          interested: 12
-        },
-        {
-          id: 3,
-          title: 'Conferência Tech Joinville',
-          date: '2024-08-10',
-          location: 'Centreventos Cau Hansen',
-          image: '/festaseshows/matuebanner.png',
-          status: 'ended',
-          views: 3200,
-          interested: 280
-        }
-      ],
-      
-      settings: {
-        emailNotifications: true,
-        eventReminders: true,
-        publicProfile: true
-      }
-    }
-  },
-  
-  computed: {
-    filteredEvents() {
-      if (this.eventsFilter === 'all') {
-        return this.companyEvents
-      }
-      return this.companyEvents.filter(event => event.status === this.eventsFilter)
-    }
-  },
-  
-  created() {
-    // Carregar dados da empresa do localStorage
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-    if (userData.name) {
-      this.companyProfile.name = userData.name
-      this.companyProfile.email = userData.email
-    }
-    const savedAvatar = localStorage.getItem('userAvatar')
-    if (savedAvatar) {
-      this.companyProfiler.avatar = savedAvatar
-    }
-    
-    // Copia dados para edição
-    this.editData = { ...this.companyProfile }
-  },
-  
-  methods: {
-        selectAvatar() {
-      this.$refs.avatarInput.click()
-    },
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/services/api'
+import { useToastStore } from '@/stores/toast'
 
-    handleAvatarChange(event) {
-      const file = event.target.files[0]
-      if (file) {
-        // Validar tipo de arquivo
-        if (!file.type.startsWith('image/')) {
-          alert('Por favor, selecione apenas arquivos de imagem.')
-          return
-        }
+const router = useRouter()
+const toastStore = useToastStore()
 
-        // Validar tamanho do arquivo (máximo 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          alert('A imagem deve ter no máximo 5MB.')
-          return
-        }
+const avatarInput = ref(null)
+const activeTab = ref('profile')
+const editMode = ref(false)
+const saving = ref(false)
+const showLogoutModal = ref(false)
+const newAvatarFile = ref(null)
 
-        // Ler o arquivo e converter para base64
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          this.companyProfile.avatar = e.target.result
-          // Salvar no localStorage
-          localStorage.setItem('userAvatar', e.target.result)
-          
-          // Mostrar mensagem de sucesso
-          alert('Foto alterada com sucesso!')
-        }
-        reader.onerror = () => {
-          alert('Erro ao carregar a imagem. Tente novamente.')
-        }
-        reader.readAsDataURL(file)
-      }
-    },
+const companyProfile = ref({
+  id: null,
+  name: '',
+  email: '',
+  cnpj: '',
+  phone: '',
+  description: '',
+  avatar: null,
+})
+const editData = ref({})
+const companyStats = ref({
+  totalEvents: 0,
+  activeEvents: 0,
+  totalViews: 0,
+})
+const events = ref([])
 
-    logout() {
-      this.showLogoutModal = true
-    },
-    
-    confirmLogout() {
-      // Limpar dados de autenticação
-      localStorage.removeItem('userToken')
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userData')
-      
-      // Redirecionar para home
-      this.$router.push('/')
-    },
-    
-    confirmDelete() {
-      // TODO: Implementar exclusão da conta via API
-      localStorage.removeItem('userToken')
-      localStorage.removeItem('userType')
-      localStorage.removeItem('userData')
-      
-      this.$router.push('/')
-    },
-    
-    cancelEdit() {
-      this.editMode = false
-      this.editData = { ...this.companyProfile }
-    },
-    
-    saveProfile() {
-      this.saving = true
-      
-      // TODO: Integrar com API Django
-      setTimeout(() => {
-        this.companyProfile = { ...this.editData }
-        
-        // Atualizar localStorage
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}')
-        userData.name = this.companyProfile.name
-        userData.email = this.companyProfile.email
-        localStorage.setItem('userData', JSON.stringify(userData))
-        
-        this.editMode = false
-        this.saving = false
-      }, 1000)
-    },
-    
-    formatPhone(event) {
-      let value = event.target.value.replace(/\D/g, '')
-      value = value.replace(/^(\d{2})(\d)/, '($1) $2')
-      value = value.replace(/(\d{4})(\d{4})$/, '$1-$2')
-      this.editData.phone = value
-    },
-    
-    formatDate(date) {
-      if (!date) return ''
-      return new Date(date).toLocaleDateString('pt-BR')
-    },
-    
-    getStatusText(status) {
-      const statusMap = {
-        active: 'Ativo',
-        draft: 'Rascunho',
-        ended: 'Finalizado'
-      }
-      return statusMap[status] || status
-    },
-    
-    createEvent() {
-      // TODO: Implementar criação de evento
-      alert('Funcionalidade de criação de eventos será implementada em breve!')
-    },
-    
-    editEvent(eventId) {
-      // TODO: Implementar edição de evento
-      console.log('Editar evento:', eventId)
-    },
-    
-    viewEvent(eventId) {
-      this.$router.push(`/event/${eventId}`)
-    },
-    
-    deleteEvent(eventId) {
-      if (confirm('Tem certeza que deseja excluir este evento?')) {
-        this.companyEvents = this.companyEvents.filter(event => event.id !== eventId)
-        this.companyStats.totalEvents--
-        if (this.companyEvents.find(e => e.id === eventId)?.status === 'active') {
-          this.companyStats.activeEvents--
-        }
-      }
-    }
+// Modal de exclusão
+const showDeleteModal = ref(false)
+const eventToDelete = ref(null)
+
+function confirmDeleteEvent(eventId) {
+  eventToDelete.value = eventId
+  showDeleteModal.value = true
+}
+
+function closeDeleteModal() {
+  showDeleteModal.value = false
+  eventToDelete.value = null
+}
+
+async function performDeleteEvent() {
+  if (!eventToDelete.value) return
+
+  try {
+    await api.deleteEvent(eventToDelete.value)
+    events.value = events.value.filter((e) => e.id !== eventToDelete.value)
+    toastStore.success('Evento excluído com sucesso!')
+  } catch (err) {
+    console.error('Erro ao excluir evento:', err)
+    toastStore.error('Erro ao excluir evento.')
+  } finally {
+    closeDeleteModal()
   }
 }
+
+// --- Funções de perfil ---
+async function fetchCompany() {
+  try {
+    const res = await api.getCurrentUser()
+    const c = res.data
+    companyProfile.value = {
+      id: c.id,
+      name: c.nome_empresa || '',
+      email: c.email,
+      cnpj: c.cnpj || '',
+      phone: c.telefone || '',
+      description: c.descricao || '',
+      avatar: c.avatar || null,
+    }
+    editData.value = { ...companyProfile.value }
+  } catch (err) {
+    console.error('Erro ao buscar dados da empresa:', err)
+    toastStore.error('Erro ao carregar perfil da empresa.')
+  }
+}
+
+async function fetchCompanyEvents() {
+  try {
+    const res = await api.getCompanyEvents()
+    events.value = res.data
+    companyStats.value.totalEvents = events.value.length
+    companyStats.value.activeEvents = events.value.filter((e) => e.ativo).length
+  } catch (err) {
+    console.error('Erro ao buscar eventos da empresa:', err)
+    toastStore.error('Não foi possível carregar os eventos da empresa.')
+  }
+}
+
+function selectAvatar() {
+  avatarInput.value.click()
+}
+
+function handleAvatarChange(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  newAvatarFile.value = file
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    companyProfile.value.avatar = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+function toggleEditMode() {
+  editMode.value = !editMode.value
+  if (!editMode.value) {
+    newAvatarFile.value = null
+    fetchCompany()
+  }
+}
+
+async function saveProfile() {
+  saving.value = true
+  const formData = new FormData()
+  formData.append('nome_empresa', editData.value.name)
+  formData.append('cnpj', (editData.value.cnpj || '').replace(/\D/g, ''))
+  formData.append('telefone', editData.value.phone || '')
+  formData.append('descricao', editData.value.description || '')
+  if (newAvatarFile.value) formData.append('avatar', newAvatarFile.value)
+
+  try {
+    const res = await api.updateUser(formData)
+    const c = res.data
+    companyProfile.value = {
+      id: c.id,
+      name: c.nome_empresa || '',
+      email: c.email,
+      cnpj: c.cnpj || '',
+      phone: c.telefone || '',
+      description: c.descricao || '',
+      avatar: c.avatar || null,
+    }
+    editMode.value = false
+    newAvatarFile.value = null
+    toastStore.success('Perfil da empresa atualizado com sucesso!')
+  } catch (err) {
+    console.error('Erro ao salvar perfil da empresa:', err)
+    toastStore.error('Erro ao salvar perfil da empresa.')
+  } finally {
+    saving.value = false
+  }
+}
+
+function logout() {
+  showLogoutModal.value = true
+}
+
+function confirmLogout() {
+  localStorage.clear()
+  router.push('/')
+  toastStore.info('Logout realizado com sucesso.')
+}
+
+function formatCnpj(event) {
+  let value = event.target.value.replace(/\D/g, '')
+  value = value.substring(0, 14)
+  value = value.replace(/^(\d{2})(\d)/, '$1.$2')
+  value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+  value = value.replace(/\.(\d{3})(\d)/, '.$1/$2')
+  value = value.replace(/(\d{4})(\d)/, '$1-$2')
+  editData.value.cnpj = value
+}
+
+function formatPhone(event) {
+  let value = event.target.value.replace(/\D/g, '')
+  value = value.substring(0, 11)
+  if (value.length > 10) value = value.replace(/^(\d\d)(\d{5})(\d{4}).*/, '($1) $2-$3')
+  else if (value.length > 5) value = value.replace(/^(\d\d)(\d{4})(\d{0,4}).*/, '($1) $2-$3')
+  else if (value.length > 2) value = value.replace(/^(\d\d)(\d{0,5}).*/, '($1) $2')
+  else value = value.replace(/^(\d*)/, '($1')
+  editData.value.phone = value
+}
+
+function formatDate(date) {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+}
+
+function navigateToCreateEvent() {
+  router.push('/create-event')
+}
+
+async function editEvent(eventId) {
+  router.push(`/edit-event/${eventId}`)
+}
+
+onMounted(async () => {
+  await fetchCompany()
+  await fetchCompanyEvents()
+})
 </script>
 
 <style scoped>
+.btn-delete-event {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-delete-event:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+.modal h3 {
+  margin-bottom: 1rem;
+  color: #e74c3c;
+}
+.modal p {
+  margin-bottom: 2rem;
+  color: #333;
+}
+.modal-actions {
+  display: flex;
+  justify-content: space-around;
+}
+.btn-confirm {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-cancel {
+  background-color: #ccc;
+  color: #333;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.btn-confirm:hover {
+  background-color: #c0392b;
+}
+.btn-cancel:hover {
+  background-color: #999;
+}
+
 .company-profile-page {
   min-height: 100vh;
   background: #f8f9fa;
@@ -750,7 +576,9 @@ export default {
   gap: 1rem;
 }
 
-.btn-create, .btn-edit, .btn-logout {
+.btn-create,
+.btn-edit,
+.btn-logout {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -775,7 +603,91 @@ export default {
 .btn-logout:hover {
   background: rgba(220, 53, 69, 0.8);
 }
-
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+.event-thumbnail {
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.event-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.placeholder-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9ecef;
+  font-size: 2rem;
+}
+.event-details {
+  flex: 1;
+}
+.event-details h4 {
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+.event-details p {
+  color: #666;
+  font-size: 0.9rem;
+}
+.event-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.btn-edit-event,
+.btn-delete-event {
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.btn-edit-event {
+  background-color: #e3f2fd;
+  color: #1e4d8b;
+}
+.btn-delete-event {
+  background-color: #fbeae9;
+  color: #d9534f;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+.btn-create-event {
+  background: #1e4d8b;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 .profile-content {
   padding: 2rem 0;
 }
@@ -810,7 +722,10 @@ export default {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
 }
 
-.company-section h2, .events-section h2, .analytics-section h2, .settings-section h2 {
+.company-section h2,
+.events-section h2,
+.analytics-section h2,
+.settings-section h2 {
   color: #1a1a1a;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
@@ -835,7 +750,9 @@ export default {
   font-weight: 500;
 }
 
-.form-group input, .form-group textarea, .form-group select {
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
@@ -843,7 +760,8 @@ export default {
   font-size: 1rem;
 }
 
-.form-group input:focus, .form-group textarea:focus {
+.form-group input:focus,
+.form-group textarea:focus {
   outline: none;
   border-color: #1e4d8b;
 }
@@ -866,7 +784,8 @@ export default {
   margin-top: 2rem;
 }
 
-.btn-save, .btn-cancel {
+.btn-save,
+.btn-cancel {
   padding: 0.75rem 1.5rem;
   border-radius: 6px;
   cursor: pointer;
@@ -1024,7 +943,8 @@ export default {
   color: #1a1a1a;
 }
 
-.event-date, .event-location {
+.event-date,
+.event-location {
   color: #666;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
@@ -1044,7 +964,9 @@ export default {
   margin-top: 1rem;
 }
 
-.btn-edit-event, .btn-view-event, .btn-delete-event {
+.btn-edit-event,
+.btn-view-event,
+.btn-delete-event {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
@@ -1181,19 +1103,19 @@ export default {
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 34px;
 }
 
 .slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 26px;
   width: 26px;
   left: 4px;
   bottom: 4px;
   background-color: white;
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 
@@ -1300,23 +1222,23 @@ input:checked + .slider:before {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .profile-tabs {
     flex-direction: column;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .events-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .metrics-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .company-stats {
     justify-content: center;
   }
