@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:8000/api/'
+axios.defaults.baseURL = 'http://https://join-villeapi.fabricadesoftware.ifc.edu.br/api/'
 
 
 axios.interceptors.request.use(
