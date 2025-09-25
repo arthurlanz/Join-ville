@@ -1,7 +1,7 @@
 // services/apiService.js
 import axios from 'axios'
 
-const API_BASE_URL = 'http://https://join-villeapi.fabricadesoftware.ifc.edu.br/api'
+const API_BASE_URL = 'https://join-villeapi.fabricadesoftware.ifc.edu.br/api'
 
 // Configuração do axios
 const api = axios.create({
