@@ -1,9 +1,8 @@
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiService } from '@/services/apiService'
 import SearchBar from '@/components/SearchBarComponent.vue'
-
 
 const router = useRouter()
 const q = ref('')
@@ -11,41 +10,41 @@ const selectedCategory = ref('')
 const selectedDate = ref('')
 const events = ref([])
 
-const onSubmit = async () => {
-  try {
-    const response = await api.get('/events/', {
-      params: {
-        search: q.value,
-        category: selectedCategory.value,
-        date: selectedDate.value
-      }
-    })
-    events.value = response.data
-    router.push({ name: 'SearchResults', query: { q: q.value, category: selectedCategory.value, date: selectedDate.value } })
-  } catch (error) {
-    console.error('Erro na busca:', error)
-  }
-}
-
 const isScrolled = ref(false)
 const isLoggedIn = ref(false)
 const userType = ref('')
 const userName = ref('')
 const isMobileMenuOpen = ref(false)
 
-const favoriteEvents = ref([]);
+const favoriteEvents = ref([])
 
+// --- Funções para favoritos ---
 function loadFavorites() {
   try {
-    const favorites = localStorage.getItem('favoriteEvents');
-    if (favorites) favoriteEvents.value = JSON.parse(favorites);
-  } catch (error) {
-    favoriteEvents.value = [];
+    const favorites = localStorage.getItem('favoriteEvents')
+    favoriteEvents.value = favorites ? JSON.parse(favorites) : []
+  } catch {
+    favoriteEvents.value = []
   }
 }
 
-const quantidade = computed(() => favoriteEvents.value.length);
+function toggleFavorite(eventId) {
+  const index = favoriteEvents.value.indexOf(eventId)
+  if (index > -1) favoriteEvents.value.splice(index, 1)
+  else favoriteEvents.value.push(eventId)
 
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value))
+}
+
+function onStorageUpdate(event) {
+  if (event.key === 'favoriteEvents') {
+    loadFavorites()
+  }
+}
+
+const quantidade = computed(() => favoriteEvents.value.length)
+
+// --- Login ---
 const checkLoginStatus = () => {
   const token = localStorage.getItem('userToken')
   const type = localStorage.getItem('userType')
@@ -95,21 +94,22 @@ onMounted(() => {
   }
 
   window.addEventListener('scroll', scrollHandler)
+  window.addEventListener('storage', onStorageUpdate)
   checkLoginStatus()
-  window.addEventListener('storage', checkLoginStatus)
-  intervalId = setInterval(checkLoginStatus, 1000)
-  loadFavorites();
+
+  // Atualiza favoritos a cada 500ms para mudanças no mesmo componente
+  loadFavorites()
+  intervalId = setInterval(loadFavorites, 500)
 })
 
 onUnmounted(() => {
   if (scrollHandler) window.removeEventListener('scroll', scrollHandler)
-  window.removeEventListener('storage', checkLoginStatus)
+  window.removeEventListener('storage', onStorageUpdate)
   if (intervalId) clearInterval(intervalId)
 })
 </script>
 
 <template>
-
   <header :class="['site-header', { scrolled: isScrolled }]">
     <div class="slogan-bar">
       <span>Explore, Avalie e Viva Joinville de Verdade</span>
@@ -152,7 +152,7 @@ onUnmounted(() => {
         </div>
       </div>
     </div>
-  <search-bar></search-bar>
+    <search-bar></search-bar>
   </header>
 </template>
 

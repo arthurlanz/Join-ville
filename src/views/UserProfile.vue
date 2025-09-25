@@ -137,33 +137,34 @@
         <div v-if="activeTab === 'favorites'" class="tab-content">
           <div class="favorites-section">
             <h2>Eventos Favoritados</h2>
-            <div v-if="favoriteEvents.length" class="events-grid">
-              <div v-for="event in favoriteEvents" :key="event.id" class="event-card">
-                <div class="event-image" @click="viewEvent(event.id)">
-                  <img :src="event.foto || '/default-event.jpg'" :alt="event.nome" />
-                </div>
-                <div class="event-info">
-                  <h3 @click="viewEvent(event.id)">{{ event.nome }}</h3>
-                  <p class="event-date">📅 {{ formatDate(event.data_inicio) }}</p>
-                  <p class="event-location">📍 {{ event.endereco }}</p>
-                  <div class="event-actions">
-                    <button @click="viewEvent(event.id)" class="btn-view">
-                      <font-awesome-icon icon="eye" />
-                      Ver evento
-                    </button>
-                    <button @click="removeFromFavorites(event.id)" class="btn-remove">
-                      ❤️ Remover
-                    </button>
-                  </div>
-                </div>
-              </div>
+
+            <div v-if="isLoadingFavorites" class="loading-container">
+              <div class="loading-spinner"></div>
+              <p>Carregando favoritos...</p>
             </div>
-            <div v-else class="empty-state">
+
+            <div v-else-if="favoriteEvents.length === 0" class="empty-state">
               <p>Você ainda não favoritou nenhum evento.</p>
               <button @click="$router.push('/')" class="btn-explore">Explorar eventos</button>
             </div>
+
+            <div v-else class="events-grid">
+              <div v-for="eventId in favoriteEvents" :key="eventId" class="event-card">
+                <div class="event-image" @click="viewEvent(getEventById(eventId))">
+                  <img :src="getEventById(eventId)?.image || '/default-event.jpg'" :alt="getEventById(eventId)?.title" />
+                  <div class="event-date-badge">{{ formatDate(getEventById(eventId)?.date) }}</div>
+                </div>
+                <div class="event-info">
+                  <h3 @click="viewEvent(getEventById(eventId))">{{ getEventById(eventId)?.title }}</h3>
+                  <p class="event-location">{{ getEventById(eventId)?.location }}</p>
+                  <button @click="toggleFavorite(eventId)" class="btn-remove">❤️ Remover</button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
+
       </div>
     </div>
 
@@ -186,6 +187,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/services/api';
 import { useToastStore } from '@/stores/toast';
+import { eventService } from '@/services/eventService.js';
 
 const router = useRouter();
 const toastStore = useToastStore();
@@ -210,15 +212,13 @@ const editData = ref({});
 const newAvatarFile = ref(null);
 
 const userStats = ref({ favoritedEvents: 0, attendedEvents: 0 });
+const availableInterests = ['Música','Tecnologia','Esportes','Arte','Gastronomia','Negócios','Educação','Saúde','Cultura','Entretenimento'];
 
-const availableInterests = [
-  'Música','Tecnologia','Esportes','Arte','Gastronomia',
-  'Negócios','Educação','Saúde','Cultura','Entretenimento'
-];
-
+const allEvents = ref([]);
 const favoriteEvents = ref([]);
+const isLoadingFavorites = ref(true);
 
-// Funções
+// Funções do perfil
 async function fetchUser() {
   try {
     const res = await api.getCurrentUser();
@@ -235,16 +235,6 @@ async function fetchUser() {
     editData.value = { ...userProfile.value };
   } catch {
     toastStore.error('Não foi possível carregar os dados do usuário.');
-  }
-}
-
-async function fetchFavorites() {
-  try {
-    const res = await api.getFavorites();
-    favoriteEvents.value = res.data.map(f => f.evento);
-    userStats.value.favoritedEvents = favoriteEvents.value.length;
-  } catch {
-    toastStore.error('Não foi possível carregar os favoritos.');
   }
 }
 
@@ -297,7 +287,6 @@ async function saveProfile() {
 }
 
 function logout() { showLogoutModal.value = true; }
-
 function confirmLogout() {
   localStorage.clear();
   router.push('/');
@@ -316,24 +305,41 @@ function formatDate(date) {
   return new Date(date).toLocaleDateString('pt-BR',{ timeZone:'UTC' });
 }
 
-function viewEvent(id) { router.push(`/event/${id}`); }
-
-async function removeFromFavorites(eventoId) {
+// Funções favoritos
+async function loadAllEvents() {
   try {
-    const favorito = (await api.getFavorites()).data.find(f => f.evento.id===eventoId);
-    if(!favorito){ toastStore.error('Favorito não encontrado.'); return; }
-    await api.removeFavorite(favorito.id);
-    favoriteEvents.value = favoriteEvents.value.filter(e => e.id !== eventoId);
-    userStats.value.favoritedEvents--;
-    toastStore.info('Evento removido dos favoritos.');
-  } catch { toastStore.error('Não foi possível remover o favorito.'); }
+    const events = await eventService.getAllEvents();
+    allEvents.value = events || [];
+  } catch (err) { console.error('Erro ao carregar eventos:', err); }
 }
 
+function loadFavorites() {
+  try {
+    const favorites = localStorage.getItem('favoriteEvents');
+    favoriteEvents.value = favorites ? JSON.parse(favorites) : [];
+    userStats.value.favoritedEvents = favoriteEvents.value.length;
+  } catch { favoriteEvents.value = []; }
+  finally { isLoadingFavorites.value = false; }
+}
+
+function getEventById(id) { return allEvents.value.find(ev => ev.id === id) || {}; }
+function viewEvent(event) { if (event?.id) router.push({ name: 'EventDetails', params: { id: event.id } }); }
+function toggleFavorite(eventId) {
+  const index = favoriteEvents.value.indexOf(eventId);
+  if (index > -1) favoriteEvents.value.splice(index, 1);
+  else favoriteEvents.value.push(eventId);
+  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value));
+  userStats.value.favoritedEvents = favoriteEvents.value.length;
+}
+
+// Lifecycle
 onMounted(async () => {
   await fetchUser();
-  await fetchFavorites();
+  await loadAllEvents();
+  loadFavorites();
 });
 </script>
+
 
 <style scoped>
 .profile-page {
