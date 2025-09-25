@@ -52,7 +52,6 @@
         <div class="profile-tabs">
           <button :class="{ active: activeTab === 'profile' }" @click="activeTab='profile'" class="tab-btn">👤 Meu Perfil</button>
           <button :class="{ active: activeTab === 'favorites' }" @click="activeTab='favorites'" class="tab-btn">❤️ Favoritos</button>
-          <button :class="{ active: activeTab === 'history' }" @click="activeTab='history'" class="tab-btn">📅 Histórico</button>
         </div>
 
         <!-- Tab Perfil -->
@@ -164,11 +163,6 @@
               <button @click="$router.push('/')" class="btn-explore">Explorar eventos</button>
             </div>
           </div>
-        </div>
-
-        <!-- Tab Histórico -->
-        <div v-if="activeTab === 'history'" class="tab-content">
-          <p>Em construção...</p>
         </div>
       </div>
     </div>
