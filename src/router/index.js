@@ -6,17 +6,36 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'Home', // maiúsculo pra bater com teu App.vue
       component: HomeView,
     },
     {
       path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
+      name: 'About',
       component: () => import('../views/AboutView.vue'),
     },
+    {
+      path: '/search',
+      name: 'SearchResultsView',
+      component: () => import('../views/SearchResultsView.vue'),
+    },
+    {
+      path: '/evento/:id',
+      name: 'EventDetails', // rota de detalhe de evento
+      component: () => import('../views/EventDetails.vue'),
+      props: true, // passa o ID como prop
+    },
+    {
+      path: 'create-event',
+      name: 'CreateEvent', // rota de criação de evento
+      component: () => import('../views/CreateEvent.vue'),
+    },
+    {
+      path: '/login',
+      name: 'LoginPage',
+      component: () => import('../views/LoginView.vue'),
+    },
+
   ],
 })
 
