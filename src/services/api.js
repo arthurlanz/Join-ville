@@ -41,6 +41,12 @@ export default {
   }),
   deleteEvent: (id) => apiClient.delete(`eventos/${id}/`),
 
+  // ---------- CHAT ----------
+  getChatRooms: () => apiClient.get('chat/'),
+  startChat: (empresaId) => apiClient.post('chat/', { empresa_id: empresaId }),
+  getChatRoomDetails: (roomId) => apiClient.get(`chat/${roomId}/`),
+  getChatMessages: (roomId) => apiClient.get(`chat/${roomId}/messages/`),
+
   // ---------- FAVORITOS ----------
   getFavorites: () => apiClient.get('favoritos/'),
   addFavorite: (data) => apiClient.post('favoritos/', data),

@@ -3,7 +3,9 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiService } from '@/services/apiService'
 import SearchBar from '@/components/SearchBarComponent.vue'
+import { useAuthStore } from '@/stores/auth'
 
+const authStore = useAuthStore()
 const router = useRouter()
 const q = ref('')
 const selectedCategory = ref('')
@@ -11,9 +13,6 @@ const selectedDate = ref('')
 const events = ref([])
 
 const isScrolled = ref(false)
-const isLoggedIn = ref(false)
-const userType = ref('')
-const userName = ref('')
 const isMobileMenuOpen = ref(false)
 
 const favoriteEvents = ref([])
@@ -44,359 +43,479 @@ function onStorageUpdate(event) {
 
 const quantidade = computed(() => favoriteEvents.value.length)
 
-// --- Login ---
-const checkLoginStatus = () => {
-  const token = localStorage.getItem('userToken')
-  const type = localStorage.getItem('userType')
-  const userData = localStorage.getItem('userData')
+// --- Dados do Usuário ---
+// Usa os getters da Pinia Store para reatividade
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const userType = computed(() => authStore.userType)
+const userName = computed(() => authStore.user?.first_name || authStore.user?.nome_empresa || 'Usuário')
+const userAvatar = computed(() => authStore.user?.avatar || '/default-avatar.png')
+const userId = computed(() => authStore.user?.id)
 
-  if (token && type) {
-    isLoggedIn.value = true
-    userType.value = type
-
-    if (userData) {
-      const user = JSON.parse(userData)
-      userName.value = type === 'company' ? (user.companyName || user.name) : user.name
-    }
-  } else {
-    isLoggedIn.value = false
-    userType.value = ''
-    userName.value = ''
+// --- Funções de Navegação e Logout ---
+const goToProfile = () => {
+  if (!isAuthenticated.value) {
+    // Redireciona para o modal de login se não estiver logado
+    router.push({ name: 'Home', query: { showLogin: 'true' } })
+    return
   }
+
+  if (userType.value === 'USUARIO') {
+    router.push({ name: 'UserProfile' })
+  } else if (userType.value === 'EMPRESA') {
+    router.push({ name: 'CompanyProfile' })
+  }
+  isMobileMenuOpen.value = false
 }
 
-const profileRoute = computed(() => {
-  if (!isLoggedIn.value) return '/login'
-  return userType.value === 'company' ? '/company-profile' : '/user-profile'
-})
+const handleLogout = () => {
+  authStore.logout()
+  isMobileMenuOpen.value = false
+}
 
-const profileLabel = computed(() => {
-  if (!isLoggedIn.value) return 'Entrar'
-  const name = userName.value || (userType.value === 'company' ? 'Empresa' : 'Usuário')
-  return name.length > 15 ? name.substring(0, 15) + '...' : name
-})
+// Rotas principais de navegação para mobile e desktop
+const navItems = computed(() => [
+  { name: 'Home', path: '/', icon: 'fa-solid fa-home' },
+  { name: 'Favoritos', path: '/favorites', icon: 'fa-solid fa-heart' },
+  { name: 'Eventos', path: '/category', icon: 'fa-solid fa-calendar-days' },
+  { name: 'Chat', path: '/chat', icon: 'fa-solid fa-users', requiresAuth: true }, // Nova rota de Chat
+  // A rota de perfil é tratada pelo botão de avatar
+])
 
-const profileIcon = computed(() => {
-  if (!isLoggedIn.value) return 'user'
-  return userType.value === 'company' ? 'building' : 'user'
-})
+// Rotas de Ação para empresas
+const companyActions = [
+  { name: 'Criar Evento', path: '/create-event', icon: 'fa-solid fa-plus' },
+  { name: 'Meus Eventos', path: '/company-profile', icon: 'fa-solid fa-chart-line' },
+]
+
+
+// --- Configuração do Scroll e Menu Mobile ---
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 0
+}
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
-let scrollHandler
-let intervalId
-
 onMounted(() => {
-  scrollHandler = () => {
-    isScrolled.value = window.scrollY > 10
-  }
-
-  window.addEventListener('scroll', scrollHandler)
-  window.addEventListener('storage', onStorageUpdate)
-  checkLoginStatus()
-
-  // Atualiza favoritos a cada 500ms para mudanças no mesmo componente
   loadFavorites()
-  intervalId = setInterval(loadFavorites, 500)
+  window.addEventListener('storage', onStorageUpdate)
+  window.addEventListener('scroll', handleScroll)
 })
 
 onUnmounted(() => {
-  if (scrollHandler) window.removeEventListener('scroll', scrollHandler)
   window.removeEventListener('storage', onStorageUpdate)
-  if (intervalId) clearInterval(intervalId)
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
 <template>
-  <header :class="['site-header', { scrolled: isScrolled }]">
-    <div class="slogan-bar">
-      <span>Explore, Avalie e Viva Joinville de Verdade</span>
-    </div>
+  <header :class="{ scrolled: isScrolled }">
+    <div class="header-content container">
+      <router-link to="/" class="logo">
+        <img src="/logotipo.png" alt="JoinVille Logo" />
+        <span class="logo-text">JoinVille</span>
+      </router-link>
 
-    <div class="nav-area">
-      <div class="container">
-        <router-link to="/" class="brand">
-          <img src="/logotipo.png" alt="JoinVille" />
-        </router-link>
+      <div class="search-bar-desktop">
+        <SearchBar />
+      </div>
 
-        <!-- Botão Mobile -->
-        <button class="mobile-menu-btn" @click="toggleMobileMenu">
-          <span></span><span></span><span></span>
-        </button>
+      <nav :class="['main-nav', { 'mobile-open': isMobileMenuOpen }]">
+        <div class="search-bar-mobile">
+          <SearchBar />
+        </div>
+        <ul>
+          <li v-for="item in navItems" :key="item.name">
+            <router-link :to="item.path" @click="isMobileMenuOpen = false" v-if="!item.requiresAuth || isAuthenticated">
+              <font-awesome-icon :icon="item.icon" class="nav-icon" />
+              {{ item.name }}
+              <span v-if="item.name === 'Favoritos'" class="badge">{{ quantidade }}</span>
+            </router-link>
+          </li>
+          <li v-if="userType === 'EMPRESA'">
+            <div class="dropdown">
+              <button class="nav-link dropdown-toggle">
+                <font-awesome-icon icon="fa-solid fa-building" class="nav-icon" />
+                Empresa
+              </button>
+              <div class="dropdown-menu">
+                <router-link
+                  v-for="action in companyActions"
+                  :key="action.name"
+                  :to="action.path"
+                  @click="isMobileMenuOpen = false"
+                >
+                  <font-awesome-icon :icon="action.icon" class="dropdown-icon" />
+                  {{ action.name }}
+                </router-link>
+              </div>
+            </div>
+          </li>
+        </ul>
 
-        <!-- Menu -->
-        <nav class="main-nav" :class="{ 'mobile-open': isMobileMenuOpen }">
-          <ul>
-            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Gastronomia' } }">Gastronomia</router-link></li>
-            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Clássicos de Joinville' } }">Clássicos de Joinville</router-link></li>
-            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Festas e Shows' } }">Festas e shows</router-link></li>
-            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Esportes' } }">Esportes</router-link></li>
-            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Atividades ao Ar Livre' } }">Atividades ao ar livre</router-link></li>
-            <li><router-link :to="{ name: 'CategoryPage', params: { categoryName: 'Cultura' } }">Cultura</router-link></li>
-          </ul>
-        </nav>
+        <div class="mobile-actions" v-if="isAuthenticated">
+          <button @click="goToProfile" class="mobile-action-item">
+            <img :src="userAvatar" alt="Avatar" class="profile-avatar" />
+            <span class="user-name-mobile">{{ userName }}</span>
+          </button>
 
-        <!-- Ações -->
-        <div class="actions">
-          <router-link to="/favorites" class="icon-btn">
-            <font-awesome-icon icon="fa-solid fa-heart" style="color: #11508e" size="lg" />
-            <span v-if="quantidade > 0" class="badge">{{ quantidade }}</span>
+          <router-link
+            v-if="userType === 'EMPRESA'"
+            v-for="action in companyActions"
+            :key="action.name"
+            :to="action.path"
+            @click="isMobileMenuOpen = false"
+            class="mobile-action-item"
+          >
+            <font-awesome-icon :icon="action.icon" />
+            {{ action.name }}
           </router-link>
 
-          <router-link :to="profileRoute" class="profile-btn">
-            <font-awesome-icon :icon="profileIcon" />
-            <span class="profile-text">{{ profileLabel }}</span>
-          </router-link>
+          <button @click="handleLogout" class="mobile-action-item logout-btn">
+            <font-awesome-icon icon="fa-solid fa-sign-out-alt" />
+            Sair
+          </button>
+        </div>
+      </nav>
+      <div class="header-actions">
+        <button v-if="!isAuthenticated" @click="goToProfile" class="login-btn">Entrar / Cadastrar</button>
+        <div v-else class="profile-dropdown-desktop">
+          <button @click="goToProfile" class="profile-btn">
+            <img :src="userAvatar" :alt="userName" class="profile-avatar" />
+            <span class="user-name-desktop">{{ userName }}</span>
+          </button>
+          <div class="profile-dropdown-menu">
+            <router-link :to="{ name: userType === 'USUARIO' ? 'UserProfile' : 'CompanyProfile' }">
+              <font-awesome-icon :icon="userType === 'EMPRESA' ? 'fa-solid fa-building' : 'fa-solid fa-user'" />
+              Meu Perfil
+            </router-link>
+            <router-link to="/chat">
+                <font-awesome-icon icon="fa-solid fa-users" />
+                Mensagens
+            </router-link>
+            <button @click="handleLogout">
+              <font-awesome-icon icon="fa-solid fa-sign-out-alt" />
+              Sair
+            </button>
+          </div>
         </div>
       </div>
+
+      <button class="mobile-menu-btn" @click="toggleMobileMenu">
+        <font-awesome-icon :icon="isMobileMenuOpen ? 'fa-solid fa-times' : 'fa-solid fa-bars'" />
+      </button>
     </div>
-    <search-bar></search-bar>
   </header>
+
+  <div class="mobile-menu-overlay" v-if="isMobileMenuOpen" @click="toggleMobileMenu"></div>
 </template>
 
 <style scoped>
-
-.site-header {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-  transition: all 0.3s ease;
-  box-shadow: none;
-  background-color: white;
+/* Variáveis de cor (se não estiver em um arquivo global) */
+:root {
+  --primary-color: #1e4d8b;
+  --secondary-color: #21a179;
+  --text-color: #333;
+  --gray-light: #f7f7f7;
 }
 
+header {
+  position: sticky;
+  top: 0;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  transition: box-shadow 0.3s ease;
+}
 
-.site-header.scrolled {
+header.scrolled {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-
-.slogan-bar {
-  background: #11508e;
-  color: #fff;
-  font-family: 'Istok Web', sans-serif;
-  line-height: 1;
-  padding: 0.65rem 1rem;
-  text-align: center;
-}
-
-
-.nav-area {
-  background: #f7f7f7;
-  color: #11508e;
-  margin: 0;
-}
-
-
-.container {
-  max-width: 1200px;
-  padding: 0.6rem 24px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+.header-content {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  padding: 15px 0;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
 
-.brand img {
-  height: 36px;
+.logo img {
+  height: 40px;
+  margin-right: 8px;
+}
+
+.logo-text {
   display: block;
+}
+
+/* --- Search Bar --- */
+.search-bar-desktop {
+  flex-grow: 1;
+  max-width: 400px;
+  margin: 0 30px;
+}
+
+.search-bar-mobile {
+  display: none; /* Esconde no desktop */
+  padding: 10px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* --- Navegação Principal (Desktop) --- */
+.main-nav {
+  display: flex;
+  align-items: center;
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+}
+
+.main-nav a,
+.dropdown-toggle {
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 500;
+  padding: 8px 0;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.main-nav a:hover,
+.router-link-active,
+.dropdown-toggle:hover {
+  color: var(--secondary-color);
+}
+
+.nav-icon {
+  font-size: 1.1rem;
+}
+
+/* Badge de Favoritos */
+.badge {
+  background: #ff4d4d;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* Dropdown da Empresa (Desktop) */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  padding: 8px 0;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  padding: 10px 0;
+  display: none;
+  z-index: 1000;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+  background: var(--gray-light);
+  color: var(--primary-color);
+}
+
+.dropdown-icon {
+    font-size: 1rem;
+}
+
+/* --- Ações do Header (Desktop) --- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.login-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-btn:hover {
+  background: #153c6a;
+}
+
+/* Botão de Perfil/Dropdown (Desktop) */
+.profile-dropdown-desktop {
+  position: relative;
+  /* Use 'inline-block' para que o dropdown funcione */
+  display: inline-block;
+}
+
+.profile-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-color);
+  transition: color 0.2s ease;
+}
+
+.profile-btn:hover {
+  color: var(--secondary-color);
+}
+
+.user-name-desktop {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+}
+
+.profile-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  padding: 10px 0;
+  display: none;
+  z-index: 1000;
+}
+
+.profile-dropdown-desktop:hover .profile-dropdown-menu {
+  display: block;
+}
+
+.profile-dropdown-menu a,
+.profile-dropdown-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  white-space: nowrap;
+  font-size: 0.95rem;
+  color: var(--text-color);
+  text-decoration: none;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-dropdown-menu a:hover,
+.profile-dropdown-menu button:hover {
+  background: var(--gray-light);
+  color: var(--primary-color);
+}
+
+.profile-dropdown-menu button {
+  color: #ff4d4d; /* Cor para o botão Sair */
+}
+
+.profile-dropdown-menu button:hover {
+  background: #ffebeb;
 }
 
 
 .mobile-menu-btn {
   display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 30px;
-  height: 22px;
-  background: transparent;
+  background: none;
   border: none;
+  font-size: 1.5rem;
   cursor: pointer;
-  padding: 0;
-  z-index: 1002;
+  color: var(--text-color);
+  padding: 5px;
 }
-
-.mobile-menu-btn span {
-  display: block;
-  height: 3px;
-  width: 100%;
-  background: #11508e;
-  border-radius: 3px;
-  transition: all 0.3s ease;
-}
-
-
-.main-nav ul {
-  display: flex;
-  gap: 20px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.main-nav a {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #11508e;
-  text-decoration: none;
-  padding: 0.25rem 0;
-  white-space: nowrap;
-  transition: color 0.3s ease;
-}
-
-.main-nav a:hover {
-  color: #0066cc;
-}
-
 
 .mobile-actions {
   display: none;
 }
 
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 15px;
+.mobile-menu-overlay {
+  display: none;
 }
 
-.icon-btn {
-  background: transparent;
-  border: 0;
-  padding: 5px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.3s ease;
-}
-
-.profile-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 14px;
-  background: #fff;
-  border: 1px solid rgba(17, 80, 142, 0.2);
-  border-radius: 18px;
-  cursor: pointer;
-  text-decoration: none;
-  color: #11508e;
-  transition: all 0.3s ease;
-  font-size: 0.85rem;
-  font-weight: 500;
-  min-width: fit-content;
-  max-width: 200px;
-}
-
-.profile-btn:hover {
-  background: #f0f8ff;
-  border-color: #11508e;
-  transform: translateY(-1px);
-}
-
-.profile-text {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-
-.search-line {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 4px 24px 18px;
-}
-
-.search {
-  position: relative;
-  width: 520px;
-  margin: 0 auto;
-}
-
-.search .icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1rem;
-  opacity: 0.6;
-}
-
-.search input {
-  width: 100%;
-  height: 40px;
-  padding: 0 14px 0 38px;
-  border: 1px solid rgba(17, 80, 142, 0.25);
-  background: #fff;
-  color: #11508e;
-  border-radius: 20px;
-  outline: none;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.search input:focus {
-  border-color: #11508e;
-  box-shadow: 0 0 0 3px rgba(17, 80, 142, 0.1);
-}
-
-.search input::placeholder {
-  color: rgba(17, 80, 142, 0.6);
-}
-
-.badge{
-  position: relative;
-  top: -10px;
-  right: 8px;
-  border: 1px solid #11508e;
-  color: #11508e;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 5px;
-  border-radius: 12px;
-  line-height: 1;
-}
-
-
-@media (max-width: 1200px) {
-  .main-nav ul {
-    gap: 15px;
+/* --- Media Queries (Ajustes para Mobile) --- */
+@media (max-width: 992px) {
+  .header-content {
+    padding: 10px 20px;
   }
-  .main-nav a {
-    font-size: 0.85rem;
-  }
-}
 
-@media (max-width: 1100px) {
-  .container {
-    gap: 15px;
+  .logo {
+    order: 1;
   }
-  .main-nav ul {
-    gap: 12px;
-  }
-  .main-nav a {
-    font-size: 0.8rem;
-  }
-}
 
-@media (max-width: 900px) {
-  .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .search-bar-desktop {
+    display: none;
+  }
+
+  .header-actions {
+    display: none;
   }
 
   .mobile-menu-btn {
@@ -404,6 +523,16 @@ onUnmounted(() => {
     order: 2;
   }
 
+  .search-bar-mobile {
+      display: block; /* Mostra no mobile */
+  }
+
+  /* Oculta o texto do logo no mobile */
+  .logo-text {
+      display: none;
+  }
+
+  /* Estilização do Menu Mobile */
   .main-nav {
     position: fixed;
     top: 0;
@@ -414,8 +543,10 @@ onUnmounted(() => {
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
     transition: left 0.3s ease;
     z-index: 1001;
-    padding-top: 80px;
+    padding-top: 60px; /* Espaço para o header */
     overflow-y: auto;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .main-nav.mobile-open {
@@ -424,76 +555,81 @@ onUnmounted(() => {
 
   .main-nav ul {
     flex-direction: column;
-    padding: 20px;
+    padding: 10px 20px;
     gap: 0;
+    width: 100%;
+    border-top: 1px solid #f0f0f0;
   }
 
+  /* Garante que o menu Empresa não apareça como dropdown */
   .main-nav li {
-    border-bottom: 1px solid #f0f0f0;
+    width: 100%;
   }
 
   .main-nav a {
-    display: block;
+    display: flex;
+    justify-content: flex-start;
     padding: 15px 0;
     font-size: 1rem;
+    border-bottom: 1px solid #f0f0f0;
   }
 
+  /* Esconde o dropdown da empresa no mobile e mostra os links como itens normais */
+  .dropdown {
+      display: none;
+  }
+
+  /* Mostra as Ações Móveis */
   .mobile-actions {
     display: flex;
     flex-direction: column;
     padding: 20px;
     border-top: 2px solid #f0f0f0;
     gap: 15px;
+    width: 100%;
   }
 
   .mobile-action-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
+    padding: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--text-color);
     text-decoration: none;
-    color: #11508e;
     font-weight: 500;
   }
 
-  .actions {
-    display: none;
+  .mobile-action-item:hover {
+    background: #f0f0f0;
+    border-radius: 8px;
   }
 
-  .search {
-    width: 90%;
-    max-width: 400px;
-  }
-}
-
-@media (max-width: 600px) {
-  .slogan-bar {
-    font-size: 0.85rem;
-    padding: 0.5rem 0.5rem;
+  .logout-btn {
+      color: #ff4d4d;
+      font-weight: 600;
   }
 
-  .search-line {
-    padding: 4px 16px 18px;
+  .user-name-mobile {
+    font-weight: 600;
   }
 
-  .brand img {
+  .profile-avatar {
+    width: 30px;
     height: 30px;
   }
 
-  .main-nav {
-    width: 250px;
+  .mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
   }
-}
-
-.search .filter {
-  margin-left: 8px;
-  padding: 6px 10px;
-  border: 1px solid rgba(17, 80, 142, 0.25);
-  border-radius: 10px;
-  font-size: 0.85rem;
-  color: #11508e;
-  background: #fff;
 }
 </style>
