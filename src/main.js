@@ -22,10 +22,13 @@ import CreateEvent from "./views/CreateEvent.vue"
 import EditEvent from "./views/EditEvent.vue"
 import ChatListView from './views/ChatListView.vue';
 import ChatRoomView from './views/ChatRoomView.vue';
+import CategoriesListPage from './views/CategoriesListPage.vue';
+
 // Font Awesome
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
-import { faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine} from "@fortawesome/free-solid-svg-icons"
+// Ícones atualizados para o novo header e página de categorias
+import { faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils, faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch } from "@fortawesome/free-solid-svg-icons"
 import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons"
 import { faFacebook, faInstagram } from "@fortawesome/free-brands-svg-icons"
 import { faShare } from "@fortawesome/free-solid-svg-icons"
@@ -34,14 +37,15 @@ import { faShare } from "@fortawesome/free-solid-svg-icons"
 library.add(
   faUser, faHome, faFacebook, faInstagram, faHeartSolid, faHeartRegular,
   faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit,
-  faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine, faShare
+  faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine, faShare,
+  faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils,
+  faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch// <- faCalendarStar REMOVIDO DESTA LISTA
 )
 
 // Auth Guard para rotas protegidas
 const requiresAuth = (to, from, next) => {
-  // CORREÇÃO: Lendo 'accessToken'
-  const isAuthenticated = localStorage.getItem('accessToken')
-  if (isAuthenticated) {
+  const authStore = useAuthStore()
+  if (authStore.isAuthenticated) {
     next()
   } else {
     next('/login')
@@ -50,15 +54,11 @@ const requiresAuth = (to, from, next) => {
 
 // Guard para empresas
 const requiresCompany = (to, from, next) => {
-  const userType = localStorage.getItem('userType')
-  // CORREÇÃO: Lendo 'accessToken'
-  const isAuthenticated = localStorage.getItem('accessToken')
-
-  // CORREÇÃO: Comparando com 'EMPRESA' em MAIÚSCULAS
-  if (isAuthenticated && userType === 'EMPRESA') {
+  const authStore = useAuthStore()
+  if (authStore.isAuthenticated && authStore.userType === 'EMPRESA') {
     next()
-  } else if (isAuthenticated) {
-    next('/user-profile')
+  } else if (authStore.isAuthenticated) {
+    next('/user-profile') // Redireciona usuário padrão
   } else {
     next('/login')
   }
@@ -76,6 +76,11 @@ const routes = [
     name: "EventDetails",
     component: EventDetails,
     props: true,
+  },
+  {
+    path: "/categories", // Rota para a nova página de listagem de categorias
+    name: "CategoriesList",
+    component: CategoriesListPage,
   },
   {
     path: "/category/:categoryName",
@@ -127,14 +132,14 @@ const routes = [
     path: "/chat",
     name: "ChatList",
     component: ChatListView,
-    beforeEnter: requiresAuth, // Protege a rota
+    beforeEnter: requiresAuth,
   },
   {
     path: "/chat/:id",
     name: "ChatRoom",
     component: ChatRoomView,
     props: true,
-    beforeEnter: requiresAuth, // Protege a rota
+    beforeEnter: requiresAuth,
   },
   {
   path: "/search",
@@ -151,13 +156,24 @@ const router = createRouter({
   },
 })
 
+// Adicionado para que os guards possam usar a store
+import { useAuthStore } from './stores/auth';
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  // Se a store não estiver inicializada e houver token, inicializa
+  if (!authStore.isAuthenticated && localStorage.getItem('accessToken')) {
+    authStore.initializeAuth();
+  }
+  next();
+});
+
+
 const app = createApp(App)
 
 app.component("font-awesome-icon", FontAwesomeIcon)
-app.use(createPinia()) // ← Ativa Pinia antes de usar stores
+app.use(createPinia())
 app.use(router)
-  // Configuração global do Toast
-  app.use(Toast, {
+app.use(Toast, {
     transition: "Vue-Toastification__bounce",
     maxToasts: 20,
     newestOnTop: true,
