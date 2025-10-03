@@ -1,32 +1,27 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue'; // Importado 'ref' e 'onMounted'
+import { computed, ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAuthStore } from '@/stores/auth'; // Importado authStore para checar o usuário na montagem
+import { useAuthStore } from '@/stores/auth';
 
 import HeaderComponent from './components/HeaderComponent.vue';
 import CarrosselComponent from './components/CarrosselComponent.vue';
 import CadastroComponent from './components/CadastroComponent.vue';
 import FooterComponent from './components/FooterComponent.vue';
-import LoginPage from './views/LoginPage.vue'; // Componente LoginPage importado
+import LoginPage from './views/LoginPage.vue';
 
 const route = useRoute();
-const authStore = useAuthStore(); // Instanciando a store
-const showLoginModal = ref(false); // Estado para controlar a visibilidade do modal
+const authStore = useAuthStore();
+const showLoginModal = ref(false);
 
-// Verifica se a rota atual é a Home
 const isHomePage = computed(() => route.name === 'Home');
 
-// Lista de rotas que não devem mostrar header e footer
-const noLayoutRoutes = ['LoginPage', 'ChatRoom']; // Mantenho LoginPage, mas adiciono ChatRoom (opcional, mas comum)
+const noLayoutRoutes = ['LoginPage', 'ChatRoom'];
 const shouldShowLayout = computed(() => !noLayoutRoutes.includes(route.name));
 
-
-// Ação para fechar o modal
 const closeModal = () => {
   showLoginModal.value = false;
 };
 
-// Se tivermos um token, tentamos buscar os dados do usuário na montagem
 onMounted(() => {
   authStore.fetchUser();
 });
@@ -36,11 +31,11 @@ onMounted(() => {
   <div id="app">
     <HeaderComponent v-if="shouldShowLayout" @open-login="showLoginModal = true" />
 
-    <CarrosselComponent v-if="isHomePage" />
-
-    <router-view />
-
-    <CadastroComponent v-if="isHomePage" />
+    <main class="main-content">
+      <CarrosselComponent v-if="isHomePage" />
+      <router-view />
+      <CadastroComponent v-if="isHomePage" />
+    </main>
 
     <FooterComponent v-if="shouldShowLayout" />
 
@@ -49,7 +44,6 @@ onMounted(() => {
 </template>
 
 <style>
-/* ... (Seus estilos globais) ... */
 * {
   margin: 0;
   padding: 0;
@@ -63,7 +57,6 @@ body {
   line-height: 1.6;
 }
 
-/* Container de conteúdo principal */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -76,7 +69,6 @@ body {
   }
 }
 
-/* Espaçamentos consistentes */
 .section-spacing {
   padding: 4rem 0;
 }
@@ -87,7 +79,6 @@ body {
   }
 }
 
-/* Cards globais */
 .card {
   background: white;
   border-radius: 12px;
@@ -99,7 +90,6 @@ body {
   padding: 2rem;
 }
 
-/* Forms globais */
 .form-group {
   margin-bottom: 1.5rem;
 }
@@ -125,7 +115,6 @@ body {
   border-color: #1e4d8b;
 }
 
-/* Botões globais */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -145,5 +134,10 @@ body {
 
 .btn-primary:hover {
   background-color: #153c6d;
+}
+
+/* 🔹 ajuste para compensar o header fixo */
+.main-content {
+  padding-top: 80px; /* mesma altura do Header */
 }
 </style>

@@ -22,49 +22,59 @@ import CreateEvent from "./views/CreateEvent.vue"
 import EditEvent from "./views/EditEvent.vue"
 import ChatListView from './views/ChatListView.vue';
 import ChatRoomView from './views/ChatRoomView.vue';
-import CategoriesListPage from './views/CategoriesListPage.vue';
+import CategoriesListPage from './views/CategoriesListPage.vue'; // Componente importado
 
 // Font Awesome
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
-// Ícones atualizados para o novo header e página de categorias
-import { faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils, faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch } from "@fortawesome/free-solid-svg-icons"
-import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons"
-import { faFacebook, faInstagram } from "@fortawesome/free-brands-svg-icons"
-import { faShare } from "@fortawesome/free-solid-svg-icons"
 
-// Adiciona os ícones à biblioteca
+// Ícones Solid (fas) - CORRIGIDO: Adicionado faComment e faSignInAlt
+import {
+  faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash,
+  faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers,
+  faChartLine, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette,
+  faUtensils, faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm,
+  faSearch, faCommentDots, faComment, faSignInAlt,
+} from "@fortawesome/free-solid-svg-icons"
+
+// Ícones Regular (far)
+import { faHeart } from "@fortawesome/free-regular-svg-icons"
+
+// Ícones de Marca (fab) - CORRIGIDO: Importado para resolver os erros de Instagram e Facebook
+import { faInstagram, faFacebook } from "@fortawesome/free-brands-svg-icons"
+
 library.add(
-  faUser, faHome, faFacebook, faInstagram, faHeartSolid, faHeartRegular,
-  faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit,
-  faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine, faShare,
-  faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils,
-  faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch// <- faCalendarStar REMOVIDO DESTA LISTA
+  faUser, faHome, faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle,
+  faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine,
+  faHeart, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils,
+  faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch,
+  faCommentDots, faComment, faSignInAlt, // Ícones Solid
+  faInstagram, faFacebook // Ícones Brands
 )
 
-// Auth Guard para rotas protegidas
+// --- Guarda de Rota ---
+import { useAuthStore } from './stores/auth';
+
 const requiresAuth = (to, from, next) => {
-  const authStore = useAuthStore()
-  if (authStore.isAuthenticated) {
-    next()
+  const authStore = useAuthStore();
+  if (!authStore.isAuthenticated) {
+    next({ name: 'LoginPage' });
   } else {
-    next('/login')
+    next();
   }
-}
+};
 
-// Guard para empresas
 const requiresCompany = (to, from, next) => {
-  const authStore = useAuthStore()
-  if (authStore.isAuthenticated && authStore.userType === 'EMPRESA') {
-    next()
-  } else if (authStore.isAuthenticated) {
-    next('/user-profile') // Redireciona usuário padrão
+  const authStore = useAuthStore();
+  if (!authStore.isAuthenticated || authStore.userType !== 'EMPRESA') {
+    next({ name: 'Home' }); // Redireciona para a Home ou outra página
   } else {
-    next('/login')
+    next();
   }
-}
+};
 
-// ROTAS CORRIGIDAS
+
+// --- Definição de Rotas ---
 const routes = [
   {
     path: "/",
@@ -78,11 +88,6 @@ const routes = [
     props: true,
   },
   {
-    path: "/categories", // Rota para a nova página de listagem de categorias
-    name: "CategoriesList",
-    component: CategoriesListPage,
-  },
-  {
     path: "/category/:categoryName",
     name: "CategoryPage",
     component: CategoryPage,
@@ -92,6 +97,7 @@ const routes = [
     path: "/favorites",
     name: "FavoritesPage",
     component: FavoritesPage,
+    beforeEnter: requiresAuth,
   },
   {
     path: "/login",
@@ -116,7 +122,7 @@ const routes = [
     component: TutorialPage,
   },
   {
-     path: "/create-event",
+    path: "/create-event",
     name: "CreateEvent",
     component: CreateEvent,
     beforeEnter: requiresCompany,
@@ -142,6 +148,11 @@ const routes = [
     beforeEnter: requiresAuth,
   },
   {
+    path: "/categories",
+    name: "CategoriesListPage",
+    component: CategoriesListPage,
+  },
+  {
   path: "/search",
   name: "SearchResultsView",
   component: () => import("./views/SearchResultsView.vue"),
@@ -157,12 +168,11 @@ const router = createRouter({
 })
 
 // Adicionado para que os guards possam usar a store
-import { useAuthStore } from './stores/auth';
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
-  // Se a store não estiver inicializada e houver token, inicializa
+  // CORREÇÃO: Chamando fetchUser() ao invés de initializeAuth()
   if (!authStore.isAuthenticated && localStorage.getItem('accessToken')) {
-    authStore.initializeAuth();
+    authStore.fetchUser();
   }
   next();
 });
@@ -171,17 +181,21 @@ router.beforeEach((to, from, next) => {
 const app = createApp(App)
 
 app.component("font-awesome-icon", FontAwesomeIcon)
-app.use(createPinia())
+app.use(createPinia()) // ← Ativa Pinia antes de usar stores
 app.use(router)
 app.use(Toast, {
-    transition: "Vue-Toastification__bounce",
-    maxToasts: 20,
-    newestOnTop: true,
     position: POSITION.TOP_RIGHT,
+    timeout: 3000,
     closeOnClick: true,
     pauseOnFocusLoss: true,
-    pauseOnHover: false,
-    draggable: false,
+    pauseOnHover: true,
+    draggable: true,
+    draggablePercent: 0.66,
+    showCloseButtonOnHover: false,
     hideProgressBar: true,
-  });
+    closeButton: "button",
+    icon: true,
+    rtl: false
+});
+
 app.mount("#app")
