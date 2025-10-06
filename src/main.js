@@ -3,17 +3,12 @@ import { createRouter, createWebHistory } from "vue-router"
 import { createPinia } from "pinia"
 import App from "./App.vue"
 import "@/plugins/axios"
-
-
 import Toast, { POSITION } from "vue-toastification";
 import "vue-toastification/dist/index.css";
-// Importação dos componentes de página
 import MainComponent from "./components/MainComponent.vue"
 import EventDetails from "./components/EventDetails.vue"
 import CategoryPage from "./views/CategoryPage.vue"
 import FavoritesPage from "./views/FavoritesPage.vue"
-
-// Novas páginas de autenticação e perfis
 import LoginPage from "./views/LoginPage.vue"
 import UserProfile from "./views/UserProfile.vue"
 import CompanyProfile from "./views/CompanyProfile.vue"
@@ -22,13 +17,9 @@ import CreateEvent from "./views/CreateEvent.vue"
 import EditEvent from "./views/EditEvent.vue"
 import ChatListView from './views/ChatListView.vue';
 import ChatRoomView from './views/ChatRoomView.vue';
-import CategoriesListPage from './views/CategoriesListPage.vue'; // Componente importado
-
-// Font Awesome
+import CategoriesListPage from './views/CategoriesListPage.vue';
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
-
-// Ícones Solid (fas) - CORRIGIDO: Adicionado faComment e faSignInAlt
 import {
   faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash,
   faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers,
@@ -36,11 +27,7 @@ import {
   faUtensils, faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm,
   faSearch, faCommentDots, faComment, faSignInAlt,
 } from "@fortawesome/free-solid-svg-icons"
-
-// Ícones Regular (far)
 import { faHeart } from "@fortawesome/free-regular-svg-icons"
-
-// Ícones de Marca (fab) - CORRIGIDO: Importado para resolver os erros de Instagram e Facebook
 import { faInstagram, faFacebook } from "@fortawesome/free-brands-svg-icons"
 
 library.add(
@@ -48,8 +35,8 @@ library.add(
   faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine,
   faHeart, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils,
   faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch,
-  faCommentDots, faComment, faSignInAlt, // Ícones Solid
-  faInstagram, faFacebook // Ícones Brands
+  faCommentDots, faComment, faSignInAlt,
+  faInstagram, faFacebook
 )
 
 // --- Guarda de Rota ---
@@ -88,11 +75,11 @@ const routes = [
     props: true,
   },
   {
-    path: "/category/:categoryName",
-    name: "CategoryPage",
-    component: CategoryPage,
-    props: true,
-  },
+  path: "/category/:categoryName",
+  name: "CategoryPage",
+  component: CategoryPage,
+  props: route => ({ categoryName: route.params.categoryName })
+},
   {
     path: "/favorites",
     name: "FavoritesPage",

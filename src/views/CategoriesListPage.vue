@@ -1,83 +1,76 @@
-<script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import api from '@/services/api'; // Este é o seu serviço de API
-
-const categories = ref([]);
-const router = useRouter();
-
-// Mapeamento de ícones para categorias (exemplo)
-const categoryIcons = {
-  'Música': 'fa-solid fa-music',
-  'Tecnologia': 'fa-solid fa-laptop-code',
-  'Esportes': 'fa-solid fa-futbol',
-  'Arte': 'fa-solid fa-palette',
-  'Gastronomia': 'fa-solid fa-utensils',
-  'Negócios': 'fa-solid fa-briefcase',
-  'Educação': 'fa-solid fa-book-open',
-  'Saúde': 'fa-solid fa-heart-pulse',
-  'Cultura': 'fa-solid fa-masks-theater',
-  'Entretenimento': 'fa-solid fa-film',
-};
-
-async function fetchCategories() {
-  try {
-    const response = await api.getCategories(); // api.get('/categorias/')
-
-    // CORREÇÃO CRÍTICA: Sua API (DRF) retorna { results: [...] }.
-    // Você precisa acessar o array 'results' dentro do response.data.
-    // Usamos response.data.results para garantir o array correto.
-    categories.value = response.data.results || response.data;
-  } catch (error) {
-    console.error("Erro ao buscar categorias:", error);
-    // Fallback para uma lista estática se a API falhar ou não existir
-    categories.value = [
-      { id: 1, nome: 'Música' },
-      { id: 2, nome: 'Tecnologia' },
-      { id: 3, nome: 'Esportes' },
-      { id: 4, nome: 'Arte' },
-      { id: 5, nome: 'Gastronomia' },
-      { id: 6, nome: 'Negócios' },
-    ];
-  }
-}
-
-function navigateToCategory(category) {
-  // A rota CategoryPage requer o parâmetro categoryName
-  router.push({ name: 'CategoryPage', params: { categoryName: category.nome } });
-}
-
-onMounted(fetchCategories);
-</script>
-
 <template>
-  <div class="categories-page">
+  <div class="categories-list-page">
     <div class="container">
-      <h1 class="page-title">Explore por Categoria</h1>
-      <p class="page-subtitle">Encontre eventos que combinam com você</p>
+      <h1 class="page-title">Explore as Categorias de Eventos</h1>
+      <p class="page-subtitle">Encontre o evento perfeito para você.</p>
 
-      <div class="categories-grid">
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Carregando categorias...</p>
+      </div>
+
+      <div v-else-if="categories.length" class="categories-grid">
         <div
           v-for="category in categories"
-          :key="category.id"
+          :key="category.id || category.nome"
           class="category-card"
           @click="navigateToCategory(category)"
         >
           <div class="category-icon">
-            <font-awesome-icon :icon="categoryIcons[category.nome] || 'fa-solid fa-calendar-days'" />
+            <font-awesome-icon icon="fa-solid fa-calendar-days" />
           </div>
           <h3 class="category-name">{{ category.nome }}</h3>
         </div>
+      </div>
+
+      <div v-else class="empty-state">
+        <p>Nenhuma categoria encontrada no momento.</p>
       </div>
     </div>
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { eventService } from '@/services/eventService.js'
+import { useToastStore } from '@/stores/toast'
+
+const categories = ref([])
+const router = useRouter()
+const toast = useToastStore()
+const isLoading = ref(true)
+
+async function fetchCategories() {
+  isLoading.value = true
+  try {
+    // Chama o novo método do eventService para buscar todas as categorias
+    const fetchedCategories = await eventService.getFullCategories()
+    categories.value = fetchedCategories
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error)
+    toast.error('Erro ao carregar a lista de categorias.')
+    categories.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function navigateToCategory(category) {
+  // Navega para a rota de detalhe de categoria, que está em /category/:categoryName
+  router.push({ name: 'CategoryPage', params: { categoryName: category.nome } })
+}
+
+onMounted(() => {
+  fetchCategories()
+})
+</script>
+
 <style scoped>
-/* O restante do CSS permanece o mesmo */
-.categories-page {
+/* Estilos simplificados para a lista de categorias */
+.categories-list-page {
   padding: 4rem 1rem;
-  background-color: #f8f9fa;
+  min-height: 80vh;
 }
 .container {
   max-width: 900px;
@@ -106,25 +99,49 @@ onMounted(fetchCategories);
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
 }
+
 .category-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #1e4d8b;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .category-icon {
-  font-size: 2.5rem;
-  color: #1e4d8b;
+  font-size: 3rem;
+  color: #1e4d8b; /* Cor principal */
   margin-bottom: 1rem;
 }
 
 .category-name {
   font-size: 1.2rem;
   color: #333;
+  margin: 0;
   font-weight: 600;
+}
+
+.loading-container,
+.empty-state {
+  margin-top: 4rem;
+  color: #666;
+  text-align: center;
+}
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #1e4d8b;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>
