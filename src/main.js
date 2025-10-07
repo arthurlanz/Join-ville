@@ -1,64 +1,67 @@
 import { createApp } from "vue"
 import { createRouter, createWebHistory } from "vue-router"
-import { createPinia } from "pinia"  // ← Importa Pinia
+import { createPinia } from "pinia"
 import App from "./App.vue"
 import "@/plugins/axios"
-
-
 import Toast, { POSITION } from "vue-toastification";
 import "vue-toastification/dist/index.css";
-// Importação dos componentes de página
 import MainComponent from "./components/MainComponent.vue"
 import EventDetails from "./components/EventDetails.vue"
 import CategoryPage from "./views/CategoryPage.vue"
 import FavoritesPage from "./views/FavoritesPage.vue"
-
-// Novas páginas de autenticação e perfis
 import LoginPage from "./views/LoginPage.vue"
 import UserProfile from "./views/UserProfile.vue"
 import CompanyProfile from "./views/CompanyProfile.vue"
 import TutorialPage from "./views/TutorialPage.vue"
 import CreateEvent from "./views/CreateEvent.vue"
 import EditEvent from "./views/EditEvent.vue"
-// Font Awesome
+import ChatListView from './views/ChatListView.vue';
+import ChatRoomView from './views/ChatRoomView.vue';
+import CategoriesListPage from './views/CategoriesListPage.vue';
 import { library } from "@fortawesome/fontawesome-svg-core"
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome"
-import { faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine} from "@fortawesome/free-solid-svg-icons"
-import { faHeart as faHeartRegular } from "@fortawesome/free-regular-svg-icons"
-import { faFacebook, faInstagram } from "@fortawesome/free-brands-svg-icons"
+import {
+  faUser, faHome, faHeart as faHeartSolid, faCalendarDays, faLocationDot, faTrash,
+  faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers,
+  faChartLine, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette,
+  faUtensils, faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm,
+  faSearch, faCommentDots, faComment, faSignInAlt, faSun
+} from "@fortawesome/free-solid-svg-icons"
+import { faHeart } from "@fortawesome/free-regular-svg-icons"
+import { faInstagram, faFacebook } from "@fortawesome/free-brands-svg-icons"
 
-// Adiciona os ícones à biblioteca
 library.add(
-  faUser, faHome, faFacebook, faInstagram, faHeartSolid, faHeartRegular,
-  faCalendarDays, faLocationDot, faTrash, faCheckCircle, faEdit,
-  faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine
+  faUser, faHome, faHeartSolid, faCalendarDays, faLocationDot, faTrash, faCheckCircle,
+  faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers, faChartLine,
+  faHeart, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils,
+  faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch,
+  faCommentDots, faComment, faSignInAlt,
+  faInstagram, faFacebook, faSun
 )
 
-// Auth Guard para rotas protegidas
+// --- Guarda de Rota ---
+import { useAuthStore } from './stores/auth';
+
 const requiresAuth = (to, from, next) => {
-  const isAuthenticated = localStorage.getItem('userToken')
-  if (isAuthenticated) {
-    next()
+  const authStore = useAuthStore();
+  if (!authStore.isAuthenticated) {
+    next({ name: 'LoginPage' });
   } else {
-    next('/login')
+    next();
   }
-}
+};
 
-// Guard para empresas
 const requiresCompany = (to, from, next) => {
-  const userType = localStorage.getItem('userType')
-  const isAuthenticated = localStorage.getItem('userToken')
-
-  if (isAuthenticated && userType === 'company') {
-    next()
-  } else if (isAuthenticated) {
-    next('/user-profile')
+  const authStore = useAuthStore();
+  if (!authStore.isAuthenticated || authStore.userType !== 'EMPRESA') {
+    next({ name: 'Home' }); // Redireciona para a Home ou outra página
   } else {
-    next('/login')
+    next();
   }
-}
+};
 
-// ROTAS CORRIGIDAS
+
+// --- Definição de Rotas ---
 const routes = [
   {
     path: "/",
@@ -72,15 +75,16 @@ const routes = [
     props: true,
   },
   {
-    path: "/category/:categoryName",
-    name: "CategoryPage",
-    component: CategoryPage,
-    props: true,
-  },
+  path: "/category/:categoryName",
+  name: "CategoryPage",
+  component: CategoryPage,
+  props: route => ({ categoryName: route.params.categoryName })
+},
   {
     path: "/favorites",
     name: "FavoritesPage",
     component: FavoritesPage,
+    beforeEnter: requiresAuth,
   },
   {
     path: "/login",
@@ -105,7 +109,7 @@ const routes = [
     component: TutorialPage,
   },
   {
-     path: "/create-event",
+    path: "/create-event",
     name: "CreateEvent",
     component: CreateEvent,
     beforeEnter: requiresCompany,
@@ -116,6 +120,24 @@ const routes = [
     component: EditEvent,
     props: true,
     beforeEnter: requiresCompany,
+  },
+  {
+    path: "/chat",
+    name: "ChatList",
+    component: ChatListView,
+    beforeEnter: requiresAuth,
+  },
+  {
+    path: "/chat/:id",
+    name: "ChatRoom",
+    component: ChatRoomView,
+    props: true,
+    beforeEnter: requiresAuth,
+  },
+  {
+    path: "/categories",
+    name: "CategoriesListPage",
+    component: CategoriesListPage,
   },
   {
   path: "/search",
@@ -132,21 +154,35 @@ const router = createRouter({
   },
 })
 
+// Adicionado para que os guards possam usar a store
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  // CORREÇÃO: Chamando fetchUser() ao invés de initializeAuth()
+  if (!authStore.isAuthenticated && localStorage.getItem('accessToken')) {
+    authStore.fetchUser();
+  }
+  next();
+});
+
+
 const app = createApp(App)
 
 app.component("font-awesome-icon", FontAwesomeIcon)
 app.use(createPinia()) // ← Ativa Pinia antes de usar stores
 app.use(router)
-  // Configuração global do Toast
-  app.use(Toast, {
-    transition: "Vue-Toastification__bounce",
-    maxToasts: 20,
-    newestOnTop: true,
+app.use(Toast, {
     position: POSITION.TOP_RIGHT,
+    timeout: 3000,
     closeOnClick: true,
     pauseOnFocusLoss: true,
-    pauseOnHover: false,
-    draggable: false,
+    pauseOnHover: true,
+    draggable: true,
+    draggablePercent: 0.66,
+    showCloseButtonOnHover: false,
     hideProgressBar: true,
-  });
+    closeButton: "button",
+    icon: true,
+    rtl: false
+});
+
 app.mount("#app")

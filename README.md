@@ -1,35 +1,26 @@
-# Join-ville
+# Join-Ville
 
-This template should help get you started developing with Vue 3 in Vite.
+O **Join-Ville** é uma plataforma desenvolvida para reunir, organizar e divulgar os principais eventos da cidade de Joinville. O projeto tem como objetivo auxiliar o acesso da comunidade a atividades culturais, esportivas e de lazer, ao mesmo tempo em que oferece às empresas e organizadores um espaço seguro e confiável para divulgar seus eventos.
 
-## Recommended IDE Setup
+## Funcionalidades
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Cadastro de eventos**: Somente empresas com CNPJ válido podem cadastrar eventos, garantindo a credibilidade e autenticidade das informações.
+- **Informações dos eventos**: Cada evento contém dados como nome, datas, endereço, descrição e fotos opcionais.
+- **Categorias de eventos**: Os eventos são organizados em seis categorias:
+  - Gastronomia
+  - Clássicos de Joinville
+  - Festas e Shows
+  - Esportes
+  - Atividades ao ar livre
+  - Cultura
+- **Filtros de busca**: Permite filtrar eventos por categoria, data, nota de avaliação e ordem alfabética.
 
-## Customize configuration
+## Objetivo
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+O projeto visa facilitar o acesso da comunidade de Joinville a eventos culturais, esportivos e de lazer, além de proporcionar um espaço confiável e seguro para os organizadores.
 
-## Project Setup
+## Como usar
 
-```sh
-npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
-```
+1. Cadastre-se como empresa com CNPJ válido para começar a cadastrar seus eventos.
+2. Explore os eventos por categoria, data e outros filtros.
+3. Participe e divulgue eventos de sua cidade!

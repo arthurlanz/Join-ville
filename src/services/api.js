@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api/',
+  baseURL: 'https://join-villeapi.fabricadesoftware.ifc.edu.br/api/',
   // Não definir Content-Type global
 });
 
@@ -40,6 +40,12 @@ export default {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   deleteEvent: (id) => apiClient.delete(`eventos/${id}/`),
+
+  // ---------- CHAT ----------
+  getChatRooms: () => apiClient.get('chat/'),
+  startChat: (empresaId) => apiClient.post('chat/', { empresa_id: empresaId }),
+  getChatRoomDetails: (roomId) => apiClient.get(`chat/${roomId}/`),
+  getChatMessages: (roomId) => apiClient.get(`chat/${roomId}/messages/`),
 
   // ---------- FAVORITOS ----------
   getFavorites: () => apiClient.get('favoritos/'),

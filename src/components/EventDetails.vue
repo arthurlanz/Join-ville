@@ -34,40 +34,54 @@
           <h2>Sobre o Evento</h2>
           <p>{{ getEventDescription(event) }}</p>
           <div class="action-buttons">
+            <button
+              v-if="authStore.isAuthenticated && authStore.user?.tipo_usuario === 'USUARIO'"
+              class="chat-btn"
+              @click="startChat"
+            >
+              <font-awesome-icon icon="fa-solid fa-comments" />
+              Conversar com Organizador
+            </button>
+
+            <button
+              class="favorite-btn"
+              @click="toggleFavorite(event.id)"
+              :class="{ 'is-favorite': isFavorite(event.id) }"
+            >
+              <font-awesome-icon
+                :icon="isFavorite(event.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"
+              />
+              {{ isFavorite(event.id) ? 'Desfavoritar' : 'Favoritar' }}
+            </button>
+
             <button class="share-btn" @click="shareEvent">
               <font-awesome-icon icon="fa-solid fa-share" />
               Compartilhar
             </button>
-            <button
-              class="favorite-btn"
-              :class="{ 'is-favorited': isFavorite(event.id) }"
-              @click="toggleFavorite(event.id)"
-            >
-              <font-awesome-icon :icon="isFavorite(event.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" />
-              {{ isFavorite(event.id) ? 'Remover dos Favoritos' : 'Adicionar aos Favoritos' }}
-            </button>
           </div>
         </div>
 
-        <div class="event-sidebar">
-          <h3>Detalhes</h3>
-          <div class="detail-item">
-            <strong>Categoria</strong>
-            <p>{{ event.category }}</p>
+        <aside class="event-sidebar">
+          <div class="details-box">
+            <h3>Detalhes</h3>
+            <div class="detail-item">
+              <strong>Tipo</strong>
+              <p>{{ event.category }}</p>
+            </div>
+            <div class="detail-item">
+              <strong>Horário</strong>
+              <p>{{ event.time }}</p>
+            </div>
+            <div class="detail-item">
+              <strong>Preço</strong>
+              <p>{{ event.price }}</p>
+            </div>
           </div>
-          <div class="detail-item" v-if="event.price">
-            <strong>Preço</strong>
-            <p>{{ event.price }}</p>
+          <div class="details-box">
+            <h3>Organizador</h3>
+            <p>{{ event.organizer?.nome || event.organizer?.nome_empresa || 'Empresa' }}</p>
           </div>
-          <div class="detail-item" v-if="event.duration">
-            <strong>Duração</strong>
-            <p>{{ event.duration }}</p>
-          </div>
-          <div class="detail-item" v-if="event.organizer">
-            <strong>Organizador</strong>
-            <p>{{ event.organizer }}</p>
-          </div>
-        </div>
+        </aside>
       </div>
     </div>
 
@@ -79,10 +93,19 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router' // Adicionado useRouter
 import { eventService } from '@/services/eventService.js'
+import { useToastStore } from '@/stores/toast'
+import { useAuthStore } from '@/stores/auth'
+import { useChatStore } from '@/stores/chat'
+import { use } from 'react'
 
 const route = useRoute()
+const router = useRouter() // Instanciando o router
+// --- CORREÇÃO DE ERRO: Instanciar Stores ---
+const authStore = useAuthStore()
+const chatStore = useChatStore()
+const toast = useToastStore()
 const event = ref(null)
 const favoriteEvents = ref([])
 
@@ -91,7 +114,6 @@ const loadEvent = async (id) => {
   event.value = allEvents.find(e => e.id === parseInt(id))
 }
 
-// Carrega na montagem
 onMounted(() => {
   loadEvent(route.params.id)
 
@@ -99,7 +121,6 @@ onMounted(() => {
   if (favorites) favoriteEvents.value = JSON.parse(favorites)
 })
 
-// Observa mudanças no id da rota
 watch(
   () => route.params.id,
   (newId) => {
@@ -138,6 +159,34 @@ const shareEvent = () => {
 
 const getEventDescription = (ev) =>
   ev.description || `Participe do evento ${ev.title || 'sem título'} em ${ev.location || 'local indefinido'}.`
+
+// --- IMPLEMENTAÇÃO DA FUNÇÃO startChat ---
+const startChat = async () => {
+    if (!event.value || !authStore.isAuthenticated) return
+
+    // ASSUME: O ID do organizador/empresa está no objeto 'event'.
+    // Use a propriedade correta do seu modelo de evento (ex: event.organizer_id)
+    const empresaId = event.value.empresa_id || event.value.organizer_id || event.value.organizer?.id;
+
+    if (!empresaId) {
+        alert("Erro: ID do organizador não encontrado.");
+        return;
+    }
+
+    try {
+        // 1. Chama a ação da Store para criar/obter a sala de chat
+        const room = await chatStore.startChatWith(empresaId);
+
+        // 2. Redireciona para a sala de chat
+        if (room && room.id) {
+            router.push({ name: 'ChatRoom', params: { id: room.id } });
+        }
+    } catch (e) {
+        // Trate a falha de chat aqui, se necessário (ex: usuário não tem permissão)
+        toast.error("Não foi possível iniciar o chat.");
+        console.error("Falha ao iniciar chat:", e);
+    }
+}
 </script>
 
 <style scoped>

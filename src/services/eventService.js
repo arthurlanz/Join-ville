@@ -39,12 +39,14 @@ export const eventService = {
     } catch (error) {
       console.error('Erro ao carregar da API, usando dados mock:', error)
       this._eventosCache = allEventsMock
-      this._categoriasCache = Object.keys(categoryMapping).map(nome => ({ nome }))
+      // Garante que o mock tenha id, se necessário, para evitar erros de key no Vue
+      this._categoriasCache = Object.keys(categoryMapping).map((nome, index) => ({ id: index + 1, nome }))
       return false
     }
   },
 
   _transformEventos(eventosApi) {
+    if (!eventosApi) return []
     return eventosApi.map(evento => ({
       id: evento.id,
       title: evento.nome || evento.title,
@@ -87,8 +89,19 @@ export const eventService = {
   },
 
   async getEventsByCategory(categoryName) {
+    // ADICIONADO: Cheque de segurança para evitar o TypeError
+    if (!categoryName) return []
     const eventos = await this.getAllEvents()
     return eventos.filter(e => e.category?.trim().toLowerCase() === categoryName.trim().toLowerCase())
+  },
+
+  /**
+   * NOVO MÉTODO: Retorna o array completo de objetos de categoria.
+   */
+  async getFullCategories() {
+    if (!this._categoriasCache || await this._shouldRefreshCache()) await this._refreshCache()
+    // Retorna o array de objetos { id: ..., nome: ... }
+    return this._categoriasCache || []
   },
 
   async getEventCategories() {
@@ -98,12 +111,12 @@ export const eventService = {
 
   async getUserFavorites(usuarioId) {
     try {
-      const favoritos = await apiService.getFavoritos(usuarioId)
+      const favorites = localStorage.getItem('joinville:favoriteEvents')
+      const favoriteIds = favorites ? JSON.parse(favorites) : []
+
       const eventos = await this.getAllEvents()
-      return eventos.filter(evento =>
-        favoritos.results?.some(fav => fav.evento === evento.id) ||
-        favoritos.some?.(fav => fav.evento === evento.id)
-      )
+      return eventos.filter(evento => favoriteIds.includes(evento.id))
+
     } catch (error) {
       console.error('Erro ao buscar favoritos:', error)
       return []
@@ -112,7 +125,12 @@ export const eventService = {
 
   async addToFavorites(usuarioId, eventoId) {
     try {
-      await apiService.addFavorito(usuarioId, eventoId)
+      const favorites = localStorage.getItem('joinville:favoriteEvents')
+      const favoriteIds = favorites ? JSON.parse(favorites) : []
+      if (!favoriteIds.includes(eventoId)) {
+        favoriteIds.push(eventoId)
+        localStorage.setItem('joinville:favoriteEvents', JSON.stringify(favoriteIds))
+      }
       return true
     } catch (error) {
       console.error('Erro ao adicionar aos favoritos:', error)
@@ -122,8 +140,13 @@ export const eventService = {
 
   async removeFromFavorites(usuarioId, eventoId) {
     try {
-      const favorito = await apiService.getFavoritoByUserAndEvent(usuarioId, eventoId)
-      if (favorito) await apiService.removeFavorito(favorito.id)
+      const favorites = localStorage.getItem('joinville:favoriteEvents')
+      const favoriteIds = favorites ? JSON.parse(favorites) : []
+      const index = favoriteIds.indexOf(eventoId)
+      if (index > -1) {
+        favoriteIds.splice(index, 1)
+        localStorage.setItem('joinville:favoriteEvents', JSON.stringify(favoriteIds))
+      }
       return true
     } catch (error) {
       console.error('Erro ao remover dos favoritos:', error)
