@@ -25,7 +25,7 @@ import {
   faCheckCircle, faEdit, faBuilding, faCog, faSignOutAlt, faEye, faPlus, faUsers,
   faChartLine, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette,
   faUtensils, faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm,
-  faSearch, faCommentDots, faComment, faSignInAlt,
+  faSearch, faCommentDots, faComment, faSignInAlt, faSun
 } from "@fortawesome/free-solid-svg-icons"
 import { faHeart } from "@fortawesome/free-regular-svg-icons"
 import { faInstagram, faFacebook } from "@fortawesome/free-brands-svg-icons"
@@ -36,7 +36,7 @@ library.add(
   faHeart, faBars, faTimes, faMusic, faLaptopCode, faFutbol, faPalette, faUtensils,
   faBriefcase, faBookOpen, faHeartPulse, faMasksTheater, faFilm, faSearch,
   faCommentDots, faComment, faSignInAlt,
-  faInstagram, faFacebook
+  faInstagram, faFacebook, faSun
 )
 
 // --- Guarda de Rota ---

@@ -475,7 +475,7 @@ watch(
   padding: 1.5rem;
   border-top: 1px solid #f0f0f0;
 }
-.logout-btn {
+.btn-logout {
   width: 100%;
   display: flex;
   align-items: center;
@@ -490,7 +490,7 @@ watch(
   font-weight: 600;
   transition: background-color 0.2s ease;
 }
-.logout-btn:hover {
+.btn-logout:hover {
   background-color: #c82333;
 }
 .overlay {
@@ -592,15 +592,6 @@ watch(
   background-color: #1a4178;
   color: white;
 }
-.btn-logout {
-  background-color: rgba(255, 0, 0, 0.753);
-  color: white;
-  border-color: #dc3545;
-}
-.btn-logout:hover {
-  background-color: #f8d7da;
-}
-
 /* --- Modal de Pesquisa --- */
 .search-modal-overlay {
   position: fixed;

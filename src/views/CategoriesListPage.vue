@@ -17,7 +17,7 @@
           @click="navigateToCategory(category)"
         >
           <div class="category-icon">
-            <font-awesome-icon icon="fa-solid fa-calendar-days" />
+            <font-awesome-icon :icon="category.icon" />
           </div>
           <h3 class="category-name">{{ category.nome }}</h3>
         </div>
@@ -36,6 +36,18 @@ import { useRouter } from 'vue-router'
 import { eventService } from '@/services/eventService.js'
 import { useToastStore } from '@/stores/toast'
 
+// NOVO: Mapeamento de ícones para as categorias (os nomes devem ser exatos)
+const categoryIconMap = {
+  // Ajuste se o nome da categoria na sua API for diferente (ex: "Festas e shows")
+  'Festas e Shows': 'fa-solid fa-music',
+  Gastronomia: 'fa-solid fa-utensils',
+  'Clássicos de Joinville': 'fa-solid fa-masks-theater',
+  Esportes: 'fa-solid fa-futbol',
+  'Atividades ao Ar Livre': 'fa-solid fa-sun',
+  Cultura: 'fa-solid fa-book-open',
+  Outros: 'fa-solid fa-calendar-days', // Padrão
+}
+
 const categories = ref([])
 const router = useRouter()
 const toast = useToastStore()
@@ -44,9 +56,14 @@ const isLoading = ref(true)
 async function fetchCategories() {
   isLoading.value = true
   try {
-    // Chama o novo método do eventService para buscar todas as categorias
     const fetchedCategories = await eventService.getFullCategories()
-    categories.value = fetchedCategories
+
+    // ATUALIZAÇÃO: Adiciona a propriedade 'icon' a cada objeto de categoria
+    categories.value = fetchedCategories.map((cat) => ({
+      ...cat,
+      // NOVO: Checa se cat.nome é uma string antes de tentar usar no mapeamento.
+      icon: categoryIconMap[cat.nome] || categoryIconMap['Outros'],
+    }))
   } catch (error) {
     console.error('Erro ao buscar categorias:', error)
     toast.error('Erro ao carregar a lista de categorias.')
@@ -57,7 +74,6 @@ async function fetchCategories() {
 }
 
 function navigateToCategory(category) {
-  // Navega para a rota de detalhe de categoria, que está em /category/:categoryName
   router.push({ name: 'CategoryPage', params: { categoryName: category.nome } })
 }
 
@@ -67,11 +83,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estilos simplificados para a lista de categorias */
+/* ... (Seus estilos) ... */
 .categories-list-page {
   padding: 4rem 1rem;
   min-height: 80vh;
 }
+/* ... (restante do seu <style scoped>) ... */
 .container {
   max-width: 900px;
   margin: 0 auto;
