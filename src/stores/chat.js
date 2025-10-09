@@ -29,33 +29,31 @@ export const useChatStore = defineStore('chat', {
     },
 
     async startChatWith(empresaId) {
-        this.loading = true;
-        try {
-            // 🔑 CORREÇÃO: Envia o ID como um objeto de payload
-            const payload = { empresa_id: empresaId };
-            const response = await api.post('/chat/', payload); // Ajuste para usar api.post se for o caso
+      this.loading = true
+      try {
+        // ✅ Envia corretamente como objeto
+        const response = await api.startChat(empresaId)
 
-            // Verifica se a sala já existe na lista
-            const existingRoom = this.chatRooms.find(room => room.id === response.data.id);
-            if (!existingRoom) {
-                this.chatRooms.unshift(response.data);
-            }
-            return response.data;
-        } catch (error) {
-            console.error("Erro ao iniciar chat:", error.response?.data);
-            this.error = "Não foi possível iniciar o chat. Por favor, tente novamente.";
-            return null;
-        } finally {
-            this.loading = false;
+        const existingRoom = this.chatRooms.find(room => room.id === response.data.id)
+        if (!existingRoom) {
+          this.chatRooms.unshift(response.data)
         }
+        return response.data
+      } catch (error) {
+        console.error("Erro ao iniciar chat:", error.response?.data)
+        this.error = "Não foi possível iniciar o chat."
+        return null
+      } finally {
+        this.loading = false
+      }
     },
 
     async fetchMessages(roomId) {
       this.loading = true;
       try {
         const [messagesResponse, roomResponse] = await Promise.all([
-            api.getChatMessages(roomId),
-            api.getChatRoomDetails(roomId)
+          api.getChatMessages(roomId),
+          api.getChatRoomDetails(roomId)
         ]);
         this.messages = messagesResponse.data;
         this.activeRoom = roomResponse.data;
@@ -68,33 +66,34 @@ export const useChatStore = defineStore('chat', {
     },
 
     connectWebSocket(roomId) {
-      if (this.socket) {
-        this.socket.close();
-      }
+  if (this.socket) {
+    this.socket.close()
+  }
 
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-          console.error("Token não encontrado para conexão WebSocket.");
-          this.error = "Você precisa estar logado para usar o chat.";
-          return;
-      }
+  const token = localStorage.getItem('accessToken')
+  if (!token) {
+    console.error("Token não encontrado")
+    return
+  }
 
-      // ATENÇÃO: Troque 'ws://' por 'wss://' em produção
-      // E use o endereço da sua API
-      const wsUrl = `wss://join-villeapi.fabricadesoftware.ifc.edu.br/ws/chat/${roomId}/?token=${token}`;
+  // ✅ URL corrigida
+  const wsUrl = `ws://localhost:8000/ws/chat/${roomId}/?token=${token}`
 
-      this.socket = new WebSocket(wsUrl);
+  // Em produção, use:
+  // const wsUrl = `wss://join-villeapi.fabricadesoftware.ifc.edu.br/ws/chat/${roomId}/?token=${token}`
 
-      this.socket.onopen = () => console.log("WebSocket conectado!");
+  this.socket = new WebSocket(wsUrl)
 
-      this.socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        this.messages.push(data);
-      };
+  this.socket.onopen = () => console.log("WebSocket conectado!")
 
-      this.socket.onclose = () => console.log("WebSocket desconectado.");
-      this.socket.onerror = (error) => console.error("Erro no WebSocket: ", error);
-    },
+  this.socket.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    this.messages.push(data)
+  }
+
+  this.socket.onclose = () => console.log("WebSocket desconectado")
+  this.socket.onerror = (error) => console.error("Erro WebSocket:", error)
+},
 
     sendMessage(messageContent) {
       if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -105,12 +104,12 @@ export const useChatStore = defineStore('chat', {
     },
 
     clearChatState() {
-        if (this.socket) {
-            this.socket.close();
-        }
-        this.activeRoom = null;
-        this.messages = [];
-        this.socket = null;
+      if (this.socket) {
+        this.socket.close();
+      }
+      this.activeRoom = null;
+      this.messages = [];
+      this.socket = null;
     }
   },
 });
