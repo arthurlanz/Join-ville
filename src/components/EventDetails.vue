@@ -188,7 +188,7 @@
 
               <p class="cta-note">
                 <font-awesome-icon icon="info-circle" />
-                Este é um evento gratuito. Não há venda de ingressos.
+                Informações sobre a venda de ingressos serão enviadas pela empresa organizadora.
               </p>
             </div>
           </div>
@@ -746,11 +746,12 @@ const goBack = () => router.go(-1)
 
 /* Sidebar */
 .sidebar-column {
-  position: sticky;
+  position: relative;
   top: 100px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  margin-top: 100px;
 }
 
 .info-card,
