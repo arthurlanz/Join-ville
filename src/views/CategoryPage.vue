@@ -3,13 +3,13 @@
     <div class="container">
       <h1 class="page-title">{{ categoryName }}</h1>
 
-      <div v-if="events.length > 0" class="events-grid">
-        <div
-          v-for="event in events"
-          :key="event.id"
-          class="event-card"
-          @click="openEvent(event)"
-        >
+      <div v-if="isLoading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Carregando eventos da categoria...</p>
+      </div>
+
+      <div v-else-if="events.length > 0" class="events-grid">
+        <div v-for="event in events" :key="event.id" class="event-card" @click="openEvent(event)">
           <div class="event-image">
             <img :src="event.image" :alt="event.title" />
             <div class="event-date-badge">{{ event.date }}</div>
@@ -21,7 +21,9 @@
                 @click.stop="toggleFavorite(event.id)"
                 class="favorite-btn"
                 :class="{ 'is-favorited': isFavorite(event.id) }"
-                :aria-label="isFavorite(event.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+                :aria-label="
+                  isFavorite(event.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'
+                "
               >
                 <font-awesome-icon
                   :icon="isFavorite(event.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"
@@ -42,84 +44,93 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { eventService } from '@/services/eventService.js';
-import { useToastStore } from '@/stores/toast';
+import { ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { eventService } from '@/services/eventService.js'
+import { useToastStore } from '@/stores/toast'
 
 // Props
 const props = defineProps({
   categoryName: {
     type: String,
     required: true,
-  }
-});
+  },
+})
 
 // Router
-const router = useRouter();
+const router = useRouter()
 
 // Toast store
-const toast = useToastStore();
+const toast = useToastStore()
 
 // Refs
-const events = ref([]);
-const isLoading = ref(false);
-const favoriteEvents = ref([]);
+const events = ref([])
+const isLoading = ref(false) // Adicionado state de loading
+const favoriteEvents = ref([])
 
 // Watcher para categoria (executa imediatamente ao montar)
 watch(
   () => props.categoryName,
   async (newCategoryName) => {
-    isLoading.value = true;
+    // NOVO: Cheque de segurança para sair imediatamente se a prop estiver faltando
+    if (!newCategoryName) {
+      console.warn('CategoryPage renderizada sem categoryName.')
+      isLoading.value = false
+      events.value = []
+      return
+    }
+
+    isLoading.value = true
 
     try {
-      events.value = await eventService.getEventsByCategory(newCategoryName);
+      events.value = await eventService.getEventsByCategory(newCategoryName)
 
       if (events.value.length > 0) {
-        toast.info(`Eventos da categoria "${newCategoryName}" carregados!`);
+        toast.info(`Eventos da categoria "${newCategoryName}" carregados!`)
       } else {
-        toast.info(`Nenhum evento encontrado em "${newCategoryName}".`);
+        toast.info(`Nenhum evento encontrado em "${newCategoryName}".`)
       }
 
-      loadFavorites();
+      loadFavorites()
     } catch (error) {
-      console.error(error);
-      events.value = [];
-      toast.error("Erro ao carregar eventos. Tente novamente mais tarde.");
+      console.error('Erro ao buscar eventos por categoria:', error)
+      events.value = []
+      toast.error('Erro ao carregar eventos. Tente novamente mais tarde.')
     } finally {
-      isLoading.value = false;
+      isLoading.value = false
     }
   },
   { immediate: true }
-);
+)
 
 // Métodos
 function openEvent(event) {
-  router.push(`/evento/${event.id}`);
+  router.push(`/evento/${event.id}`)
 }
 
 function loadFavorites() {
-  const favorites = localStorage.getItem('favoriteEvents');
-  favoriteEvents.value = favorites ? JSON.parse(favorites) : [];
+  // Use uma chave consistente
+  const favorites = localStorage.getItem('joinville:favoriteEvents')
+  favoriteEvents.value = favorites ? JSON.parse(favorites) : []
 }
 
 function toggleFavorite(eventId) {
-  const index = favoriteEvents.value.indexOf(eventId);
+  const index = favoriteEvents.value.indexOf(eventId)
   if (index > -1) {
-    favoriteEvents.value.splice(index, 1);
+    favoriteEvents.value.splice(index, 1)
   } else {
-    favoriteEvents.value.push(eventId);
+    favoriteEvents.value.push(eventId)
   }
-  localStorage.setItem('favoriteEvents', JSON.stringify(favoriteEvents.value));
+  localStorage.setItem('joinville:favoriteEvents', JSON.stringify(favoriteEvents.value))
 }
 
 function isFavorite(eventId) {
-  return favoriteEvents.value.includes(eventId);
+  return favoriteEvents.value.includes(eventId)
 }
 </script>
 
 <style scoped>
-/* Reaproveite os estilos do event-card da página inicial */
+/* ... (Seus estilos existentes) ... */
 .category-page {
   padding: 40px 20px;
 }
@@ -217,9 +228,15 @@ function isFavorite(eventId) {
   animation: heartbeat 0.6s ease-in-out;
 }
 @keyframes heartbeat {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .event-location {
   color: #666;
@@ -231,5 +248,29 @@ function isFavorite(eventId) {
   font-weight: 600;
   font-size: 16px;
   margin-top: auto;
+}
+
+/* Estilos para Loading */
+.loading-container {
+  margin-top: 4rem;
+  text-align: center;
+  color: #666;
+}
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0066cc;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

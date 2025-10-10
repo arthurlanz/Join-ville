@@ -156,9 +156,13 @@
 <script setup>
 import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/services/api'; // Importando nosso serviço de API
+import api from '@/services/api';
+// --- PASSO 1: Importar a store de autenticação ---
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+// --- PASSO 2: Instanciar a store ---
+const authStore = useAuthStore();
 
 const isLogin = ref(true);
 const userType = ref('user');
@@ -179,7 +183,16 @@ const formData = reactive({
 });
 
 const closeModal = () => {
-  router.push('/');
+  // Redireciona para a página de perfil correta após o login
+  if (authStore.isAuthenticated) {
+    if (authStore.userType === 'EMPRESA') {
+      router.push('/company-profile');
+    } else {
+      router.push('/user-profile');
+    }
+  } else {
+    router.push('/');
+  }
 };
 
 const toggleMode = () => {
@@ -244,43 +257,23 @@ const handleLogin = async () => {
       password: formData.password,
     });
 
-    // --- tokens vindos do backend ---
-    const access = response.data?.access;
-    const refresh = response.data?.refresh;
-    const user = response.data?.user || {};
-
-    if (access) {
-      localStorage.setItem('accessToken', access);
-      localStorage.setItem('userToken', access); // compatibilidade
-    }
-    if (refresh) {
-      localStorage.setItem('refreshToken', refresh);
-    }
-
-    // --- normaliza e salva os dados do usuário ---
-    const userData = {
-      id: user.id || null,
-      name: user.first_name || user.username || user.nome_empresa || '',
-      email: user.email || '',
-      tipo_usuario: user.tipo_usuario || '',
-      nome_empresa: user.nome_empresa || '',
-      cnpj: user.cnpj || '',
-      telefone: user.telefone || ''
-    };
-    localStorage.setItem('userData', JSON.stringify(userData));
-
-    // --- define tipo para perfis ---
-    const tipo = user.tipo_usuario === 'EMPRESA' ? 'company' : 'user';
-    localStorage.setItem('userType', tipo);
+    // --- PASSO 3: Centralizar a lógica na store ---
+    // Em vez de manipular o localStorage aqui, chamamos a action da store.
+    // A store será responsável por salvar o estado e o localStorage.
+    authStore.setAuthData(response);
 
     showMessage('Login realizado com sucesso!', 'success');
     setTimeout(() => closeModal(), 1500);
+
   } catch (err) {
     console.error('Erro de login:', err);
-    showMessage('Erro ao fazer login. Verifique email e senha.', 'error');
+    // Sua API de login retorna um 'detail' em caso de erro 401
+    const errorMessage = err.response?.data?.detail || 'Erro ao fazer login. Verifique email e senha.';
+    showMessage(errorMessage, 'error');
   }
 };
 
+// A função de registro continua a mesma, está ótima!
 const handleRegister = async () => {
   if (userType.value === 'user') {
     const userData = {
@@ -308,7 +301,7 @@ const handleRegister = async () => {
   }, 2000);
 };
 
-// --- formatações ---
+// --- formatações (sem alterações) ---
 const formatCNPJ = (event) => {
   let value = event.target.value.replace(/\D/g, '');
   value = value.slice(0, 14);
@@ -333,7 +326,6 @@ const formatPhone = (event) => {
 </script>
 
 <style scoped>
-/* SEU CSS CONTINUA EXATAMENTE O MESMO. NENHUMA MUDANÇA É NECESSÁRIA AQUI. */
 .login-modal-overlay {
   position: fixed;
   top: 0;
