@@ -265,8 +265,7 @@ watch(
   top: 0;
   left: 0;
   width: 100%;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: #f7f7f7;
   z-index: 50;
   transition: all 0.3s ease;
 }
@@ -491,7 +490,7 @@ watch(
   transition: background-color 0.2s ease;
 }
 .btn-logout:hover {
-  background-color: #c82333;
+  background-color: #f8d7da;
 }
 .overlay {
   position: fixed;

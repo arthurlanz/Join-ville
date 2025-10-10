@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const apiClient = axios.create({
   baseURL: 'https://join-villeapi.fabricadesoftware.ifc.edu.br/api/',
-  // Não definir Content-Type global
 });
 
 apiClient.interceptors.request.use(
@@ -41,14 +40,34 @@ export default {
   }),
   deleteEvent: (id) => apiClient.delete(`eventos/${id}/`),
 
+  // 🆕 INTERESSE EM EVENTOS
+  showInterestInEvent: (eventId) => apiClient.post(`eventos/${eventId}/show_interest/`),
+
   // ---------- CHAT ----------
   getChatRooms: () => apiClient.get('chat/'),
   startChat: (empresaId) => apiClient.post('chat/', { empresa_id: empresaId }),
   getChatRoomDetails: (roomId) => apiClient.get(`chat/${roomId}/`),
   getChatMessages: (roomId) => apiClient.get(`chat/${roomId}/messages/`),
+  getChatUnreadCount: () => apiClient.get('chat/unread_count/'),
 
   // ---------- FAVORITOS ----------
   getFavorites: () => apiClient.get('favoritos/'),
   addFavorite: (data) => apiClient.post('favoritos/', data),
   removeFavorite: (id) => apiClient.delete(`favoritos/${id}/`),
+
+  // 🆕 PERFIL PÚBLICO DE EMPRESA
+  getCompanyPublicProfile: (id) => apiClient.get(`usuarios/${id}/public_profile/`),
+
+  // 🆕 FOLLOW/UNFOLLOW
+  followCompany: (id) => apiClient.post(`usuarios/${id}/follow/`),
+  unfollowCompany: (id) => apiClient.delete(`usuarios/${id}/unfollow/`),
+  getFollowingCompanies: () => apiClient.get('usuarios/following/'),
+
+  // 🆕 DASHBOARD ANALYTICS (EMPRESAS)
+  getDashboardAnalytics: () => apiClient.get('usuarios/dashboard_analytics/'),
+
+  // 🆕 AVALIAÇÕES DE EMPRESAS
+  getCompanyReviews: (empresaId) => apiClient.get(`avaliacoes-empresas/?empresa=${empresaId}`),
+  createCompanyReview: (data) => apiClient.post('avaliacoes-empresas/', data),
+  getMyReviews: () => apiClient.get('avaliacoes-empresas/my_reviews/'),
 };
